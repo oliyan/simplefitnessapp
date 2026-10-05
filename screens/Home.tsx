@@ -19,7 +19,7 @@ export default function Home({ navigation }: any) {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.headerContainer}>
         {/* App Title */}
-        <Text style={[styles.title, { color: theme.text }]}>Simple.</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Urudhi</Text>
       </View>
 
       {/* Create a Workout Section */}
@@ -66,36 +66,11 @@ export default function Home({ navigation }: any) {
             <TouchableOpacity
               style={[
                 styles.communityButton,
-                { backgroundColor: '#121212' },
-              ]}
-              onPress={() => Linking.openURL('https://discord.gg/A38Ny7UggP')}
-            >
-              <View style={styles.communityButtonContent}>
-                <Ionicons
-                  name='logo-discord'
-                  size={scale(20)}
-                  color={'#FFFFFF'}
-                  style={styles.communityButtonIcon}
-                />
-                <Text
-                  style={[
-                    styles.communityButtonText,
-                    { color: '#FFFFFF' },
-                  ]}
-                >
-                  {t('Discord')}
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.communityButton,
                 { backgroundColor: '#FFFFFF' },
               ]}
               onPress={() =>
                 Linking.openURL(
-                  'https://github.com/basarsubasi/simplefitnessapp',
+                  'https://github.com/oliyan/simplefitnessapp',
                 )
               }
             >

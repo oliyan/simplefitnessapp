@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##############################################################################
-# Simple Fitness App - One-Time Setup Script
+# Urudhi - One-Time Setup Script
 # Run this script ONCE to install all prerequisites for Android builds
 ##############################################################################
 
@@ -233,7 +233,7 @@ verify_setup() {
 main() {
     echo -e "${GREEN}"
     echo "╔══════════════════════════════════════════════════════════╗"
-    echo "║     Simple Fitness App - One-Time Setup Script          ║"
+    echo "║     Urudhi - One-Time Setup Script                      ║"
     echo "╚══════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     echo ""

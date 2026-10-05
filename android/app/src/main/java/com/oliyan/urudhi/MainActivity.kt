@@ -1,4 +1,4 @@
-package tr.com.basarsubasi.simplefitnessapp
+package com.oliyan.urudhi
 
 import android.os.Build
 import android.os.Bundle

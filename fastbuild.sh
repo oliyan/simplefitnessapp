@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##############################################################################
-# Simple Fitness App - FAST Incremental Build Script
+# Urudhi - FAST Incremental Build Script
 # Use this for quick rebuilds when you only changed a few files
 # Falls back to full build if needed
 ##############################################################################
@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANDROID_DIR="$PROJECT_ROOT/android"
 APK_OUTPUT="$ANDROID_DIR/app/build/outputs/apk/release/app-release.apk"
-DESKTOP_APK="$HOME/Desktop/SimpleFitness.apk"
+DESKTOP_APK="$HOME/Desktop/Urudhi.apk"
 
 ##############################################################################
 # Helper Functions
@@ -134,7 +134,7 @@ install_to_device() {
 main() {
     echo -e "${GREEN}"
     echo "╔══════════════════════════════════════════════════════════╗"
-    echo "║      Simple Fitness App - FAST Build Script             ║"
+    echo "║      Urudhi - FAST Build Script                         ║"
     echo "║      (Incremental - for quick iterations)                ║"
     echo "╚══════════════════════════════════════════════════════════╝"
     echo -e "${NC}"

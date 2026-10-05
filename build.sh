@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##############################################################################
-# Simple Fitness App - Android Build Script
+# Urudhi - Android Build Script
 # Run this script after every code change to build a signed APK
 ##############################################################################
 
@@ -18,7 +18,7 @@ NC='\033[0m' # No Color
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANDROID_DIR="$PROJECT_ROOT/android"
 APK_OUTPUT="$ANDROID_DIR/app/build/outputs/apk/release/app-release.apk"
-DESKTOP_APK="$HOME/Desktop/SimpleFitness.apk"
+DESKTOP_APK="$HOME/Desktop/Urudhi.apk"
 
 # Keystore configuration
 KEYSTORE_FILE="$ANDROID_DIR/app/my-release-key.keystore"
@@ -160,7 +160,7 @@ create_keystore() {
         -validity 10000 \
         -storepass android \
         -keypass android \
-        -dname "CN=Simple Fitness, OU=Dev, O=Personal, L=City, S=State, C=US" \
+        -dname "CN=Urudhi, OU=Dev, O=Personal, L=City, S=State, C=US" \
         2>/dev/null
     
     if [ -f "$KEYSTORE_FILE" ]; then
@@ -345,7 +345,7 @@ install_to_device() {
 main() {
     echo -e "${GREEN}"
     echo "╔══════════════════════════════════════════════════════════╗"
-    echo "║         Simple Fitness App - Build Script               ║"
+    echo "║         Urudhi - Build Script                           ║"
     echo "╚══════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     
@@ -380,7 +380,7 @@ main() {
     echo -e "${BLUE}APK Location:${NC} $DESKTOP_APK"
     echo ""
     echo -e "${YELLOW}To install on your Pixel:${NC}"
-    echo "  1. Copy SimpleFitness.apk from Desktop to your phone"
+    echo "  1. Copy Urudhi.apk from Desktop to your phone"
     echo "  2. Tap the APK file and install"
     echo ""
     echo "  Or use ADB: adb install $DESKTOP_APK"

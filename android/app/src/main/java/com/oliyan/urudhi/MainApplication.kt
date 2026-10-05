@@ -1,4 +1,4 @@
-package tr.com.basarsubasi.simplefitnessapp
+package com.oliyan.urudhi
 
 import android.app.Application
 import android.content.res.Configuration

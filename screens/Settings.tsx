@@ -652,37 +652,11 @@ export default function Settings() {
             <TouchableOpacity
               style={[
                 styles.dataManagementButton,
-                { backgroundColor: '#121212' },
-              ]}
-              onPress={() => Linking.openURL('https://discord.gg/A38Ny7UggP')}
-            >
-              <View style={styles.dataManagementButtonContent}>
-                <Ionicons
-                  name='logo-discord'
-                  size={25}
-                  color={'#FFFFFF'}
-                  style={styles.dataButtonIcon}
-                />
-                <Text
-                  style={[
-                    styles.dataManagementButtonText,
-                    { color: '#FFFFFF' },
-                  ]}
-                  numberOfLines={3}
-                >
-                  {t('Discord')}
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.dataManagementButton,
                 { backgroundColor: '#FFFFFF' },
               ]}
               onPress={() =>
                 Linking.openURL(
-                  'https://github.com/basarsubasi/simplefitnessapp',
+                  'https://github.com/oliyan/simplefitnessapp',
                 )
               }
             >
