@@ -13,6 +13,7 @@
   import { GestureHandlerRootView } from 'react-native-gesture-handler';
   import { createNativeStackNavigator } from '@react-navigation/native-stack';
   import WorkoutDetails from './screens/WorkoutDetails';
+  import GeneratePlan from './screens/GeneratePlan';
   import MyCalendar from './screens/MyCalendar';
   import LogWorkout from './screens/LogWorkout';
   import MyProgress from './screens/MyProgress';
@@ -124,6 +125,7 @@
   export type WorkoutStackParamList = {
     WorkoutsList: undefined; // No parameters for this route
     CreateWorkout: undefined; // No parameters for this route
+    GeneratePlan: undefined;
     WorkoutDetails: { workout_id: number }; // Add this
     EditWorkout: { workout_id: number }; // Only `workout_id` for editing a workout
     TemplateList: undefined;
@@ -176,6 +178,11 @@
           name="CreateWorkout"
           component={CreateWorkout}
           options={{ title: 'Create Workout' }}
+        />
+        <WorkoutStackScreen.Screen
+          name='GeneratePlan'
+          component={GeneratePlan}
+          options={{ title: 'GeneratePlan' }}
         />
         <WorkoutStackScreen.Screen
           name='WorkoutDetails'

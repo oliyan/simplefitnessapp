@@ -89,6 +89,21 @@ export default function WorkoutList({
             {
               backgroundColor: theme.card,
               borderColor: theme.border,
+            },
+          ]}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('GeneratePlan')}
+        >
+          <Text style={[styles.workoutText, { color: theme.text }]}>{t('planGenerateEntry')}</Text>
+          <Ionicons name="sparkles-outline" size={20} color={theme.text} />
+        </TouchableOpacity>
+
+      <TouchableOpacity
+          style={[
+            styles.workoutCard,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
 
             },
           ]}

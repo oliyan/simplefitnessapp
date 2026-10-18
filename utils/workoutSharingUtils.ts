@@ -7,7 +7,7 @@ import slugify from 'slugify';
 
 
 // Define the structure of the exported JSON
-interface ExportedExercise {
+export interface ExportedExercise {
   exercise_name: string;
   sets: number;
   reps: number;
@@ -16,12 +16,12 @@ interface ExportedExercise {
   exercise_notes: string | null;
 }
 
-interface ExportedDay {
+export interface ExportedDay {
   day_name: string;
   exercises: ExportedExercise[];
 }
 
-interface ExportedWorkout {
+export interface ExportedWorkout {
   workout_name: string;
   days: ExportedDay[];
 }
@@ -102,6 +102,49 @@ export const exportWorkout = async (db: any, workoutId: number) => {
 };
 
 /**
+ * Inserts a workout (with its days and exercises) in one transaction.
+ * Callers must make sure the name is free; Workouts.workout_name is UNIQUE.
+ * @returns the new workout_id
+ */
+export const insertWorkoutData = async (db: any, workoutData: ExportedWorkout): Promise<number> => {
+  let newWorkoutId: number | undefined;
+
+  await db.withTransactionAsync(async () => {
+    // Insert workout
+    const workoutResult = await db.runAsync('INSERT INTO Workouts (workout_name) VALUES (?)', [workoutData.workout_name]);
+    newWorkoutId = workoutResult.lastInsertRowId;
+
+    if (!newWorkoutId) {
+      throw new Error('Failed to create new workout.');
+    }
+
+    // Insert days and exercises
+    for (const day of workoutData.days) {
+      const dayResult = await db.runAsync('INSERT INTO Days (workout_id, day_name) VALUES (?, ?)', [newWorkoutId, day.day_name]);
+      const newDayId = dayResult.lastInsertRowId;
+
+      if (!newDayId) {
+        throw new Error(`Failed to create day: ${day.day_name}`);
+      }
+
+      for (const exercise of day.exercises) {
+        await db.runAsync(
+          'INSERT INTO Exercises (day_id, exercise_name, sets, reps, web_link, muscle_group, exercise_notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [newDayId, exercise.exercise_name, exercise.sets, exercise.reps, exercise.web_link || null, exercise.muscle_group || null, exercise.exercise_notes || null]
+        );
+      }
+    }
+  });
+
+  return newWorkoutId as number;
+};
+
+export const workoutNameExists = async (db: any, workoutName: string): Promise<boolean> => {
+  const existing = await db.getFirstAsync('SELECT workout_id FROM Workouts WHERE workout_name = ?', [workoutName]);
+  return !!existing;
+};
+
+/**
  * Imports a workout from a JSON string into the database.
  * @param db - The SQLite database connection object.
  * @param jsonString - The JSON string representing the workout.
@@ -117,45 +160,16 @@ export const importWorkout = async (db: any, jsonString: string): Promise<boolea
       }
       
       // Check if workout name already exists
-      const workoutName = workoutData.workout_name;
-      const existingWorkout = await db.getFirstAsync('SELECT workout_id FROM Workouts WHERE workout_name = ?', [workoutName]);
-
-      if (existingWorkout) {
+      if (await workoutNameExists(db, workoutData.workout_name)) {
         Alert.alert(i18n.t('importFailedTitle'), i18n.t('workoutAlreadyExistsError'));
         return false;
       }
   
-      await db.withTransactionAsync(async () => {
-        // Insert workout
-        const workoutResult = await db.runAsync('INSERT INTO Workouts (workout_name) VALUES (?)', [workoutName]);
-        const newWorkoutId = workoutResult.lastInsertRowId;
-  
-        if (!newWorkoutId) {
-          throw new Error('Failed to create new workout.');
-        }
-  
-        // Insert days and exercises
-        for (const day of workoutData.days) {
-          const dayResult = await db.runAsync('INSERT INTO Days (workout_id, day_name) VALUES (?, ?)', [newWorkoutId, day.day_name]);
-          const newDayId = dayResult.lastInsertRowId;
-  
-          if (!newDayId) {
-            throw new Error(`Failed to create day: ${day.day_name}`);
-          }
-  
-          for (const exercise of day.exercises) {
-            await db.runAsync(
-              'INSERT INTO Exercises (day_id, exercise_name, sets, reps, web_link, muscle_group, exercise_notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-              [newDayId, exercise.exercise_name, exercise.sets, exercise.reps, exercise.web_link || null, exercise.muscle_group || null, exercise.exercise_notes || null]
-            );
-          }
-        }
-      });
-  
+      await insertWorkoutData(db, workoutData);
       return true;
     } catch (error) {
       console.error('Error importing workout:', error);
       Alert.alert(i18n.t('importFailedTitle'), i18n.t('fileNotSelectedError'));
       return false;
     }
-  }; 
+  };
