@@ -1,183 +1,340 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Dimensions, Linking } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
-import { ScaledSheet, scale } from 'react-native-size-matters'; // Import ScaledSheet for scaling
-import { useTranslation } from 'react-i18next';
+import React, { useCallback, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Linking } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useSQLiteContext } from 'expo-sqlite';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
+import { useSettings } from '../context/SettingsContext';
+import {
+  buildWeek,
+  dayDiff,
+  findPersonalRecords,
+  nextUpcoming,
+  PersonalRecord,
+  SetRow,
+  WeekCell,
+  weekStart,
+  weekVolumes,
+  weeklyStreak,
+  WorkoutRow,
+} from '../utils/dashboardStats';
+import { dateToWeekday, WEEKDAY_LETTERS, weekdayShort } from '../utils/weekdays';
 
+interface Dashboard {
+  workoutCount: number;
+  rows: WorkoutRow[];
+  week: WeekCell[];
+  streak: number;
+  volume: { thisWeek: number; lastWeek: number };
+  records: PersonalRecord[];
+}
 
+const formatDM = (date: Date) =>
+  `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
 
+const formatVolume = (value: number) => (value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value)));
 
-
-const { height } = Dimensions.get('window'); // Get screen height for dynamic sizing
-
+// Home: a dashboard of today, this week, streak, volume and recent records, all computed
+// from the workouts you have scheduled and logged.
 export default function Home({ navigation }: any) {
-  const { theme } = useTheme(); // Get the current theme
-  const { t } = useTranslation(); // Initialize translations
+  const db = useSQLiteContext();
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+  const { weightFormat } = useSettings();
+
+  const [data, setData] = useState<Dashboard | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        try {
+          const today = new Date();
+          const since = Math.floor(
+            new Date(today.getFullYear(), today.getMonth(), today.getDate() - 730).getTime() / 1000,
+          );
+          const [countRow] = await db.getAllAsync<{ c: number }>('SELECT COUNT(*) AS c FROM Workouts;');
+          const rows = await db.getAllAsync<WorkoutRow>(
+            `SELECT w.workout_log_id, w.workout_date, w.workout_name, w.day_name,
+                    EXISTS(SELECT 1 FROM Weight_Log x WHERE x.workout_log_id = w.workout_log_id) AS logged
+             FROM Workout_Log w WHERE w.workout_date >= ?;`,
+            [since],
+          );
+          const sets = await db.getAllAsync<SetRow>(
+            `SELECT w.workout_date AS d, wl.exercise_name AS name, wl.weight_logged AS wt, wl.reps_logged AS reps
+             FROM Weight_Log wl JOIN Workout_Log w ON w.workout_log_id = wl.workout_log_id
+             ORDER BY w.workout_date, wl.weight_log_id;`,
+          );
+          if (!active) return;
+          setData({
+            workoutCount: countRow?.c ?? 0,
+            rows,
+            week: buildWeek(rows, today),
+            streak: weeklyStreak(rows, today),
+            volume: weekVolumes(sets, today),
+            records: findPersonalRecords(sets, 3),
+          });
+        } catch (error) {
+          console.error('Error loading dashboard:', error);
+        }
+      })();
+      return () => {
+        active = false;
+      };
+    }, [db]),
+  );
+
+  const today = new Date();
+
+  const relativeDay = (workoutDate: number): string => {
+    const diff = dayDiff(workoutDate, today);
+    if (diff === 0) return t('Today');
+    if (diff === 1) return t('Tomorrow');
+    if (diff === -1) return t('Yesterday');
+    if (diff < 0 && diff > -30) return t('dashDaysAgo', { count: -diff });
+    const date = new Date(workoutDate * 1000);
+    return `${weekdayShort(dateToWeekday(date))} ${formatDM(date)}`;
+  };
+
+  const card = [styles.card, { backgroundColor: theme.card, borderColor: theme.border }];
+  const heading = [styles.heading, { color: theme.text }];
+  const muted = { color: theme.text, opacity: 0.65 };
+
+  const bigButton = (label: string, onPress: () => void, filled = true) => (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.button,
+        filled
+          ? { backgroundColor: theme.buttonBackground }
+          : { backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 },
+      ]}
+    >
+      <Text style={{ color: filled ? theme.buttonText : theme.text, fontWeight: '700', fontSize: 16 }}>{label}</Text>
+    </TouchableOpacity>
+  );
+
+  const goToCalendar = () => navigation.navigate('My Calendar');
+  const goToWorkouts = (screen: string) => navigation.navigate('My Workouts', { screen });
+
+  const renderToday = (d: Dashboard) => {
+    const todayCell = d.week.find((c) => c.isToday);
+    const sessions = todayCell?.workouts ?? [];
+    const pending = sessions.filter((s) => !s.logged);
+
+    if (sessions.length > 0) {
+      return (
+        <View style={card}>
+          <Text style={heading}>{t('Today')}</Text>
+          {sessions.map((s) => (
+            <View key={s.workout_log_id} style={styles.todayRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.todayName, { color: theme.text }]}>{s.day_name}</Text>
+                <Text style={muted}>{s.workout_name}</Text>
+              </View>
+              {s.logged ? (
+                <View style={styles.doneBadge}>
+                  <Ionicons name="checkmark-circle" size={22} color={theme.text} />
+                  <Text style={{ color: theme.text, fontWeight: '700', marginLeft: 6 }}>{t('dashDone')}</Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.startButton, { backgroundColor: theme.buttonBackground }]}
+                  onPress={() =>
+                    navigation.navigate('My Calendar', {
+                      screen: 'StartedWorkoutInterface',
+                      params: { workout_log_id: s.workout_log_id },
+                    })
+                  }
+                >
+                  <Text style={{ color: theme.buttonText, fontWeight: '700' }}>{t('dashStart')}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+          {pending.length === 0 && <Text style={[muted, { marginTop: 6 }]}>{t('dashAllDone')}</Text>}
+        </View>
+      );
+    }
+
+    const next = nextUpcoming(d.rows, today);
+    return (
+      <View style={card}>
+        <Text style={heading}>{t('dashRestDay')}</Text>
+        {next ? (
+          <Text style={{ color: theme.text, fontSize: 16 }}>
+            {t('dashNext', { when: relativeDay(next.workout_date), name: next.day_name })}
+          </Text>
+        ) : (
+          <>
+            <Text style={muted}>{t('dashNothingPlanned')}</Text>
+            {bigButton(t('dashSchedule'), () => navigation.navigate('My Calendar', { screen: 'SchedulePlan' }))}
+          </>
+        )}
+      </View>
+    );
+  };
+
+  const renderWeek = (d: Dashboard) => {
+    const planned = d.week.filter((c) => c.workouts.length > 0);
+    const done = planned.filter((c) => c.state === 'done').length;
+    return (
+      <TouchableOpacity style={card} activeOpacity={0.8} onPress={goToCalendar}>
+        <View style={styles.weekHeader}>
+          <Text style={heading}>{t('dashThisWeek')}</Text>
+          {planned.length > 0 && <Text style={muted}>{t('dashWeekSummary', { done, total: planned.length })}</Text>}
+        </View>
+        <View style={styles.weekRow}>
+          {d.week.map((cell, index) => (
+            <View key={index} style={styles.dayCol}>
+              <Text style={[styles.dayLetter, { color: theme.text, opacity: cell.isToday ? 1 : 0.6 }]}>
+                {WEEKDAY_LETTERS[index]}
+              </Text>
+              <View
+                style={[
+                  styles.dayCircle,
+                  { borderColor: theme.text },
+                  cell.state === 'done' && { backgroundColor: theme.buttonBackground, borderColor: theme.buttonBackground },
+                  cell.state === 'planned' && { borderWidth: 2 },
+                  cell.state === 'missed' && { borderStyle: 'dashed', opacity: 0.55 },
+                  cell.state === 'rest' && { borderColor: theme.border },
+                ]}
+              >
+                {cell.state === 'done' && <Ionicons name="checkmark" size={18} color={theme.buttonText} />}
+                {cell.state === 'planned' && <Ionicons name="ellipse" size={8} color={theme.text} />}
+              </View>
+              <View style={[styles.todayBar, { backgroundColor: cell.isToday ? theme.text : 'transparent' }]} />
+            </View>
+          ))}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderStats = (d: Dashboard) => {
+    const { thisWeek, lastWeek } = d.volume;
+    const pct = lastWeek > 0 ? Math.round(((thisWeek - lastWeek) / lastWeek) * 100) : null;
+    const arrow = pct === null ? '' : pct >= 0 ? '▲ ' : '▼ ';
+    return (
+      <View style={styles.statsRow}>
+        <View style={[card, styles.statCard]}>
+          <Text style={[styles.bigNumber, { color: theme.text }]}>{d.streak}</Text>
+          <Text style={[styles.statLabel, { color: theme.text }]}>{t('dashStreak')}</Text>
+        </View>
+        <View style={[card, styles.statCard]}>
+          <Text style={[styles.bigNumber, { color: theme.text }]}>
+            {formatVolume(thisWeek)}
+            <Text style={styles.unit}> {weightFormat}</Text>
+          </Text>
+          <Text style={[styles.statLabel, { color: theme.text }]}>{t('dashVolume')}</Text>
+          <Text style={[muted, { fontSize: 12, marginTop: 2 }]}>
+            {pct === null ? t('dashVolumeNoPrev') : `${arrow}${Math.abs(pct)}% ${t('dashVsLastWeek')}`}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const renderRecords = (d: Dashboard) => (
+    <TouchableOpacity style={card} activeOpacity={0.8} onPress={() => navigation.navigate('My Progress')}>
+      <Text style={heading}>{t('dashPRs')}</Text>
+      {d.records.length === 0 ? (
+        <Text style={muted}>{t('dashPRNone')}</Text>
+      ) : (
+        d.records.map((r, i) => (
+          <View key={i} style={styles.prRow}>
+            <Ionicons name="trophy-outline" size={20} color={theme.text} style={{ marginRight: 10 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.prName, { color: theme.text }]}>{r.name}</Text>
+              <Text style={muted}>
+                {r.wt} {weightFormat} × {r.reps} · {relativeDay(r.d)}
+              </Text>
+            </View>
+          </View>
+        ))
+      )}
+    </TouchableOpacity>
+  );
+
+  const renderWelcome = () => (
+    <View style={card}>
+      <Text style={heading}>{t('dashWelcome')}</Text>
+      <Text style={[muted, { marginBottom: 4 }]}>{t('dashWelcomeBody')}</Text>
+      {bigButton(t('homeCreateWorkout'), () => goToWorkouts('CreateWorkout'))}
+      {bigButton(t('planGenerateEntry'), () => goToWorkouts('GeneratePlan'), false)}
+    </View>
+  );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.headerContainer}>
-        {/* App Title */}
-        <Text style={[styles.title, { color: theme.text }]}>Urudhi</Text>
-        <Text style={[styles.tagline, { color: theme.text }]}>{'by ஒளியன் கலைக்கூடம்'}</Text>
-      </View>
+    <ScrollView
+      style={{ backgroundColor: theme.background }}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={[styles.title, { color: theme.text }]}>Urudhi</Text>
+      <Text style={[styles.tagline, { color: theme.text }]}>{'by ஒளியன் கலைக்கூடம்'}</Text>
 
-      {/* Create a Workout Section */}
-      <View style={[styles.card, { backgroundColor: theme.homeCardColor1 }]}>
-        <Text style={[styles.cardTitle, { color: theme.homeCardText1 }]}>
-        {t('homeCreateWorkout')}
-        </Text>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: theme.homeButtonColor1 }]}
-          onPress={() => navigation.navigate('My Workouts')}
-        >
-          <Text style={[styles.buttonText, { color: theme.homeButtonText1 }]}>{t('homeGotoWorkouts')}</Text>
-        </TouchableOpacity>
-      </View>
+      {data === null ? null : data.workoutCount === 0 && data.rows.length === 0 ? (
+        renderWelcome()
+      ) : (
+        <>
+          {renderToday(data)}
+          {renderWeek(data)}
+          {renderStats(data)}
+          {renderRecords(data)}
+        </>
+      )}
 
-      {/* Schedule Your Workout Section */}
-      <View style={[styles.card, { backgroundColor: theme.homeCardColor3 }]}>
-        <Text style={[styles.cardTitle, { color: theme.homeCardText2 }]}>
-        {t('homeScheduleWorkouts')}
-        </Text>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: theme.homeButtonColor2 }]}
-          onPress={() => navigation.navigate('My Calendar')}
-        >
-          <Text style={[styles.buttonText, { color: theme.homeButtonText2 }]}> {t('homeGotoCalendar')}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Track Your Progress Section */}
-      <View style={[styles.card, { backgroundColor: theme.homeCardColor2 }]}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>
-        {t('homeTrackProgress')}
-        </Text>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: theme.homeButtonColor3 }]}
-          onPress={() => navigation.navigate('My Progress')}
-        >
-          <Text style={[styles.buttonText, { color: theme.homeButtonText3 }]}>{t('homeGotoProgress')}</Text>
-        </TouchableOpacity>
-        
-      </View>
-
-      <View style={styles.communityButtonGroup}>
-            <TouchableOpacity
-              style={[
-                styles.communityButton,
-                { backgroundColor: '#FFFFFF' },
-              ]}
-              onPress={() =>
-                Linking.openURL(
-                  'https://github.com/oliyan/urudhi',
-                )
-              }
-            >
-              <View style={styles.communityButtonContent}>
-                <Ionicons
-                  name='logo-github'
-                  size={scale(20)}
-                  color={'#000000'}
-                  style={styles.communityButtonIcon}
-                />
-                <Text
-                  style={[
-                    styles.communityButtonText,
-                    { color: '#000000' },
-                  ]}
-                >
-                  {t('GitHub')}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-    </View>
+      <TouchableOpacity
+        style={[styles.github, { borderColor: theme.border, backgroundColor: theme.card }]}
+        onPress={() => Linking.openURL('https://github.com/oliyan/urudhi')}
+      >
+        <Ionicons name="logo-github" size={18} color={theme.text} style={{ marginRight: 8 }} />
+        <Text style={{ color: theme.text, fontWeight: '700' }}>{t('GitHub')}</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
-// Home.tsx
-
-const styles = ScaledSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: '25@vs',
-  },
-  headerContainer: {
-    position: 'relative',
-    marginBottom: '15@vs', // Slightly reduced scaled margin
-  },
-  title: {
-    fontSize: '36@s', // Smaller scaled font size
-    fontWeight: '900',
-    textAlign: 'center',
-  },
-  tagline: {
-    fontSize: '14@s',
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  card: {
-    borderRadius: 15, // Keep fixed border radius for better uniformity
-    padding: '13@s', // Slightly reduced padding
-    marginBottom: '12@vs', // Reduced vertical margin
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '140@vs', // Adjusted height to be smaller
-    width: '90%', // Add a width constraint
-    alignSelf: 'center',
-  },
-  cardTitle: {
-    fontSize: '20@s', // Smaller scaled font size
-    fontWeight: '800',
-    textAlign: 'center',
-    lineHeight: '26@s', // Adjusted line height
-  },
-  button: {
-    borderRadius: 20, // Keep fixed radius for consistency
-    paddingVertical: '6@vs', // Slightly reduced padding
-    paddingHorizontal: '14@s', // Adjusted padding
-    marginTop: '8@vs', // Reduced vertical margin
-    alignSelf: 'center',
-  },
-  buttonText: {
-    fontSize: '14@s', // Smaller font size for button text
-    fontWeight: '800',
-  },
-
-  lightGrayText: {
-    color: 'white',
-  },
-  adContainer: {
-    alignItems: 'center',
-  },
-  communityButtonGroup: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: '30@s',
-    marginTop: '10@vs',
-    gap: '10@s',
-    width: '100%',
-    alignSelf: 'center',
-  },
-  communityButton: {
+const styles = StyleSheet.create({
+  container: { paddingHorizontal: 20, paddingTop: 50, paddingBottom: 30 },
+  title: { fontSize: 36, fontWeight: '900', textAlign: 'center' },
+  tagline: { fontSize: 14, textAlign: 'center', opacity: 0.7, marginBottom: 18 },
+  card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 14 },
+  heading: { fontSize: 18, fontWeight: '800', marginBottom: 8 },
+  button: { borderRadius: 24, paddingVertical: 12, alignItems: 'center', marginTop: 10 },
+  todayRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
+  todayName: { fontSize: 22, fontWeight: '800' },
+  startButton: { borderRadius: 20, paddingVertical: 10, paddingHorizontal: 16 },
+  doneBadge: { flexDirection: 'row', alignItems: 'center' },
+  weekHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  weekRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  dayCol: { alignItems: 'center', width: 40 },
+  dayLetter: { fontWeight: '700', marginBottom: 6 },
+  dayCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#000000',
-    borderRadius: 8,
-    paddingVertical: '8@vs',
-    flex: 1,
-  },
-  communityButtonContent: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  communityButtonIcon: {
-    marginRight: '8@s',
-  },
-  communityButtonText: {
-    fontSize: '16@s',
-    fontWeight: '700',
+  todayBar: { height: 3, width: 18, borderRadius: 2, marginTop: 6 },
+  statsRow: { flexDirection: 'row', gap: 12 },
+  statCard: { flex: 1, alignItems: 'center', marginBottom: 14 },
+  bigNumber: { fontSize: 32, fontWeight: '900' },
+  unit: { fontSize: 14, fontWeight: '700' },
+  statLabel: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
+  prRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
+  prName: { fontSize: 16, fontWeight: '700' },
+  github: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    marginTop: 6,
   },
 });

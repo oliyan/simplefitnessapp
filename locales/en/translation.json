@@ -612,7 +612,25 @@
     "planSavedTitle": "Plan saved",
     "planSavedMessage": "Put it on your calendar now?",
     "planScheduleNow": "Schedule it",
-    "planNotNow": "Not now"
+    "planNotNow": "Not now",
+    "dashRestDay": "Rest day",
+    "dashDone": "Done",
+    "dashAllDone": "All done for today. Nice work.",
+    "dashStart": "Start workout",
+    "dashNext": "Next: {{when}} · {{name}}",
+    "dashNothingPlanned": "Nothing is scheduled yet.",
+    "dashSchedule": "Schedule a plan",
+    "dashThisWeek": "This week",
+    "dashWeekSummary": "{{done}} of {{total}} done",
+    "dashStreak": "Week streak",
+    "dashVolume": "Lifted this week",
+    "dashVsLastWeek": "vs last week",
+    "dashVolumeNoPrev": "No data from last week yet",
+    "dashPRs": "Recent personal records",
+    "dashPRNone": "Lift more than your best on an exercise and it shows up here.",
+    "dashDaysAgo": "{{count}} days ago",
+    "dashWelcome": "Welcome to Urudhi",
+    "dashWelcomeBody": "Create your first workout, or let the AI coach build you a plan."
 
     }
   
