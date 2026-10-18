@@ -3,9 +3,15 @@ import * as FileSystem from 'expo-file-system';
 // Make sure to use backticks here:
 const SETTINGS_FILE = `${FileSystem.documentDirectory}userSettings.json`;
 
+// Merges onto whatever is already on disk, so callers that only know about a
+// subset of the settings (e.g. SettingsContext's autosave) can't wipe the rest.
 export const saveSettings = async (settings: object) => {
   try {
-    await FileSystem.writeAsStringAsync(SETTINGS_FILE, JSON.stringify(settings));
+    const existing = (await loadSettings()) ?? {};
+    await FileSystem.writeAsStringAsync(
+      SETTINGS_FILE,
+      JSON.stringify({ ...existing, ...settings }),
+    );
     console.log('Settings saved successfully.');
   } catch (error) {
     console.error('Error saving settings:', error);

@@ -1,0 +1,104 @@
+import { getApiKey } from './secureSettings';
+
+const API_URL = 'https://api.anthropic.com/v1/messages';
+const API_VERSION = '2023-06-01';
+const TIMEOUT_MS = 30000;
+
+export const MODELS = {
+  fast: 'claude-haiku-5-5', // coach notes
+  smart: 'claude-sonnet-5-5', // plan generation / refinement
+} as const;
+
+const NO_KEY_MESSAGE = 'No API key set';
+
+export class LLMAuthError extends Error {}
+export class LLMRateLimitError extends Error {
+  retryAfterSeconds?: number;
+  constructor(message: string, retryAfterSeconds?: number) {
+    super(message);
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+export class LLMNetworkError extends Error {}
+
+interface CallOptions {
+  model?: string;
+  maxTokens?: number;
+}
+
+// Text in, text out. Callers that need structured output validate it themselves.
+export const callClaude = async (
+  prompt: string,
+  { model = MODELS.fast, maxTokens = 1024 }: CallOptions = {},
+): Promise<string> => {
+  const apiKey = await getApiKey();
+  if (!apiKey) {
+    throw new LLMAuthError(NO_KEY_MESSAGE);
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(API_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': API_VERSION,
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+  } catch (error) {
+    throw new LLMNetworkError(
+      error instanceof Error ? error.message : 'Network request failed',
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (response.status === 401 || response.status === 403) {
+    throw new LLMAuthError(`HTTP ${response.status}`);
+  }
+  if (response.status === 429) {
+    const retryAfter = Number(response.headers.get('retry-after'));
+    throw new LLMRateLimitError(
+      'Rate limited',
+      Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined,
+    );
+  }
+  if (!response.ok) {
+    // 4xx other than auth/rate-limit means a bug in our request; make it visible.
+    const body = await response.text().catch(() => '');
+    console.error(`LLM request failed: HTTP ${response.status}`, body);
+    throw new LLMNetworkError(`HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  const text = (data.content ?? [])
+    .filter((block: any) => block.type === 'text')
+    .map((block: any) => block.text)
+    .join('');
+  return text;
+};
+
+export const getUserFacingErrorMessage = (error: unknown): string => {
+  if (error instanceof LLMAuthError) {
+    if (error.message === NO_KEY_MESSAGE) {
+      return 'No API key set - add one in Settings.';
+    }
+    return 'Anthropic rejected your API key - check it in Settings.';
+  }
+  if (error instanceof LLMRateLimitError) {
+    return error.retryAfterSeconds
+      ? `Rate limit reached - try again in ${error.retryAfterSeconds} seconds.`
+      : 'Rate limit reached - try again in a bit.';
+  }
+  return "Couldn't reach the AI service - check your connection and try again.";
+};

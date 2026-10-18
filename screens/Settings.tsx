@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Switch,
+  TextInput,
   ScrollView,
   Alert,
   Linking,
@@ -17,6 +18,8 @@ import { useNotifications } from '../utils/useNotifications';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
+import { getApiKey, saveApiKey, deleteApiKey } from '../utils/secureSettings';
+import { callClaude, getUserFacingErrorMessage, MODELS } from '../utils/llmClient';
 
 export default function Settings() {
   const {
@@ -39,6 +42,55 @@ export default function Settings() {
   // Use the notifications hook to access all notification-related functionality
   const { requestNotificationPermission, cancelAllNotifications } =
     useNotifications();
+
+  // AI Coach: the key itself is never kept in state after saving
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [aiStatus, setAiStatus] = useState<{ ok: boolean; text: string } | null>(null);
+
+  useEffect(() => {
+    getApiKey().then((key) => setHasApiKey(!!key));
+  }, []);
+
+  const handleSaveApiKey = async () => {
+    if (!apiKeyInput.trim()) return;
+    try {
+      await saveApiKey(apiKeyInput);
+      setApiKeyInput('');
+      setHasApiKey(true);
+      setAiStatus({ ok: true, text: t('aiKeySaved') });
+    } catch (error) {
+      console.error('Error saving API key:', error);
+      setAiStatus({ ok: false, text: t('aiKeySaveFailed') });
+    }
+  };
+
+  const handleDeleteApiKey = async () => {
+    try {
+      await deleteApiKey();
+      setHasApiKey(false);
+      setAiStatus(null);
+    } catch (error) {
+      console.error('Error deleting API key:', error);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    setAiStatus(null);
+    try {
+      await callClaude('Reply with the single word: ok', {
+        model: MODELS.fast,
+        maxTokens: 10,
+      });
+      setAiStatus({ ok: true, text: t('aiConnectionOk') });
+    } catch (error) {
+      setAiStatus({ ok: false, text: getUserFacingErrorMessage(error) });
+    } finally {
+      setTestingConnection(false);
+    }
+  };
 
   // Manages whether the language dropdown is visible
   const [languageDropdownVisible, setLanguageDropdownVisible] = useState(false);
@@ -643,6 +695,67 @@ export default function Settings() {
           </View>
         </View>
 
+        {/* --- AI COACH SECTION --- */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>
+            {t('aiCoach')}
+          </Text>
+          <Text style={{ color: theme.text, textAlign: 'center', marginBottom: 12 }}>
+            {hasApiKey ? t('aiKeyIsSet') : t('aiKeyNotSet')}
+          </Text>
+          <TextInput
+            style={[
+              styles.apiKeyInput,
+              { color: theme.text, backgroundColor: theme.card, borderColor: theme.border },
+            ]}
+            value={apiKeyInput}
+            onChangeText={setApiKeyInput}
+            placeholder={t('aiKeyPlaceholder')}
+            placeholderTextColor={theme.border}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <View style={styles.dataManagementButtonGroup}>
+            <TouchableOpacity
+              style={[styles.dataManagementButton, { backgroundColor: theme.buttonBackground }]}
+              onPress={handleSaveApiKey}
+              disabled={!apiKeyInput.trim()}
+            >
+              <Text style={[styles.dataManagementButtonText, { color: theme.buttonText }]}>
+                {t('aiSaveKey')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.dataManagementButton, { backgroundColor: theme.card, borderColor: theme.border }]}
+              onPress={handleTestConnection}
+              disabled={!hasApiKey || testingConnection}
+            >
+              <Text style={[styles.dataManagementButtonText, { color: theme.text }]}>
+                {testingConnection ? t('aiTesting') : t('aiTestConnection')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {hasApiKey && (
+            <TouchableOpacity onPress={handleDeleteApiKey} style={{ marginTop: 12 }}>
+              <Text style={{ color: '#D32F2F', textAlign: 'center', fontWeight: '600' }}>
+                {t('aiDeleteKey')}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {aiStatus && (
+            <Text
+              style={{
+                color: aiStatus.ok ? '#2E7D32' : '#D32F2F',
+                textAlign: 'center',
+                marginTop: 12,
+              }}
+            >
+              {aiStatus.text}
+            </Text>
+          )}
+        </View>
+
         {/* --- NEW COMMUNITY SECTION --- */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
@@ -804,6 +917,14 @@ const styles = StyleSheet.create({
   },
   dataButtonIcon: {
     marginRight: 5,
+  },
+  apiKeyInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    marginBottom: 12,
   },
   dataManagementButtonGroup: {
     flexDirection: 'row',

@@ -17,8 +17,10 @@
     },
     "android": {
       "versionCode": 1,
-      "blockedPermissions": ["android.permission.RECEIVE_BOOT_COMPLETED",
-       "android.permission.RECORD_AUDIO"],
+      "blockedPermissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.RECORD_AUDIO"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/urudhi-icon.png",
         "backgroundColor": "#F1EFE2"
@@ -38,7 +40,8 @@
           "color": "#000000",
           "enableBackgroundRemoteNotifications": false
         }
-      ]
+      ],
+      "expo-secure-store"
     ]
   }
 }
