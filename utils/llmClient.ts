@@ -1,4 +1,5 @@
 import { getApiKey } from './secureSettings';
+import { checkBudget, recordUsage } from './aiUsage';
 import { buildCoachNotePrompt } from './promptTemplates';
 import { buildGeneratePlanPrompt, buildRefinePlanPrompt, PlanRequest } from './promptTemplates';
 import type { CoachNote } from './coachNotesUtils';
@@ -25,6 +26,15 @@ export class LLMRateLimitError extends Error {
   }
 }
 export class LLMBillingError extends Error {}
+export class LLMBudgetError extends Error {
+  spendUsd: number;
+  limitUsd: number;
+  constructor(spendUsd: number, limitUsd: number) {
+    super('Monthly AI limit reached');
+    this.spendUsd = spendUsd;
+    this.limitUsd = limitUsd;
+  }
+}
 export class LLMNetworkError extends Error {}
 
 interface CallOptions {
@@ -46,6 +56,12 @@ export const callClaude = async (
   const apiKey = await getApiKey();
   if (!apiKey) {
     throw new LLMAuthError(NO_KEY_MESSAGE);
+  }
+
+  // The app's own monthly cap; checked before any request leaves the device.
+  const budget = await checkBudget();
+  if (budget.over) {
+    throw new LLMBudgetError(budget.spendUsd, budget.limitUsd);
   }
 
   const controller = new AbortController();
@@ -102,6 +118,12 @@ export const callClaude = async (
   }
 
   const data = await response.json();
+  try {
+    // Output tokens include thinking, so this counts what is actually billed.
+    await recordUsage(model, data.usage?.input_tokens ?? 0, data.usage?.output_tokens ?? 0);
+  } catch (error) {
+    console.error('Could not record AI usage:', error);
+  }
   const text = (data.content ?? [])
     .filter((block: any) => block.type === 'text')
     .map((block: any) => block.text)
@@ -120,6 +142,9 @@ export const getUserFacingErrorMessage = (error: unknown): string => {
     return error.retryAfterSeconds
       ? `Rate limit reached - try again in ${error.retryAfterSeconds} seconds.`
       : 'Rate limit reached - try again in a bit.';
+  }
+  if (error instanceof LLMBudgetError) {
+    return `You've reached your monthly AI limit ($${error.spendUsd.toFixed(2)} of $${error.limitUsd.toFixed(2)}). Raise it in Settings > AI Coach, or wait for next month.`;
   }
   if (error instanceof LLMBillingError) {
     return 'Your Anthropic account is out of credits - add some at console.anthropic.com (Billing).';

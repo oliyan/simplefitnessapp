@@ -1,13 +1,58 @@
 Privacy Policy
 
-Urudhi — by ஒளியன் கலைக்கூடம்
+Urudhi - by ஒளியன் கலைக்கூடம்
 
-Urudhi does not collect, sell, or share any personal data.
+Last updated: 18 October 2026
 
-    Your workouts, settings and preferences are stored only on your device (as needed for app functionality). Urudhi does not send them to any server.
-    The app has permission to access the internet. Currently this is used only for things you trigger yourself, such as opening links. If a feature is added that sends data to an online service, this policy will be updated first and the feature will make clear what is sent.
-    This app does not include analytics, advertising or tracking.
+Summary
 
-If you have questions, please contact me at: ravisank.p@gmail.com.
+Urudhi stores your data on your own device. There is no Urudhi server, no account, no analytics, no advertising and no tracking. The AI Coach features are optional and off until you add your own API key; when you use them, the information described below is sent to Anthropic.
 
-(last updated on 18 October 2026)
+1. Data stored on your device
+
+Your workouts, schedules, logs (weights, reps, difficulty ratings, comments), settings, training profile (equipment and injury notes), imported InBody scans and AI coach notes are stored only on your device. Exporting your data is your choice; the exported file goes wherever you share it.
+
+2. The AI Coach (optional)
+
+The AI Coach features work only if you enter an Anthropic API key in Settings > AI Coach. Without a key, Urudhi sends nothing anywhere.
+
+When you use an AI feature, Urudhi sends a request directly from your device to Anthropic's API (api.anthropic.com), using your key. Depending on the feature, the request can contain:
+
+- Coach notes: today's planned exercises; your recent logged sets (exercise names, weights, reps, difficulty ratings and any comments you wrote) for the muscle groups in today's plan and from the previous 72 hours; your injuries and constraints; and your latest body-composition summary if you have imported InBody data.
+- Generate and refine plan: your answers on the Generate Plan form, your injuries and constraints, your equipment, your latest body-composition summary if imported, the plan draft and the feedback you type.
+- Test connection: a short fixed message.
+
+Nothing is sent unless you press a button that triggers an AI request or open today's workout with a key saved (which generates the coach note once per workout and day).
+
+Urudhi does not send this data to the developer or to any other third party. How Anthropic handles the data you send is governed by Anthropic's terms and privacy policy (anthropic.com), which you accept by creating your Anthropic account and API key. The requests are billed to your Anthropic account.
+
+3. Your API key
+
+Your API key is stored in your device's secure storage (Android Keystore / iOS Keychain) and is never written to the app's regular settings files or exported with your data. You can delete it at any time from Settings > AI Coach. Keep it private; anyone with the key can spend your credits.
+
+4. Spending limit
+
+The app keeps an estimate of your monthly AI spending on your device and stops AI requests when the limit you set is reached. This is an estimate only; set a spend limit in your Anthropic account too.
+
+5. Network access
+
+Urudhi has permission to use the internet. It is used for AI requests (section 2) and to open links you tap, such as the GitHub page. The app does not otherwise make network requests.
+
+6. Deleting your data
+
+- Delete the API key: Settings > AI Coach > Delete key.
+- Delete imported InBody data: Settings > AI Coach > Delete body data.
+- Delete everything else: clear the app's storage in your phone settings, or uninstall the app.
+- Data already sent to Anthropic is handled under Anthropic's policies; deleting it there is done through your Anthropic account.
+
+7. Children
+
+Urudhi does not knowingly collect any data from anyone, including children. The AI features require an adult-held Anthropic account.
+
+8. Changes
+
+If a future version sends data anywhere new, this policy will be updated first and the feature will say what is sent.
+
+Contact
+
+If you have questions, contact: ravisank.p@gmail.com

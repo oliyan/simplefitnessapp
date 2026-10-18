@@ -472,6 +472,12 @@
 
     "aiCoach": "AI Coach",
     "coachNoteTitle": "Coach's note",
+    "aiLimitHeading": "Monthly AI spending limit",
+    "aiUsageThisMonth": "Used this month: ${{spend}} of ${{limit}} ({{calls}} requests)",
+    "aiLimitSave": "Save",
+    "aiLimitSaved": "Limit saved.",
+    "aiLimitInvalid": "Enter an amount above 0 and up to ${{max}}.",
+    "aiLimitNote": "An estimate counted by this app. AI requests stop once it is reached; it resets each calendar month. Also set a spend limit in the Anthropic console - that one is the real cap.",
     "profileHeading": "Training profile",
     "profileConstraints": "Injuries and constraints",
     "profileConstraintsPlaceholder": "e.g. left shoulder pinches on overhead work; no running",

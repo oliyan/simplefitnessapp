@@ -21,6 +21,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { getApiKey, saveApiKey, deleteApiKey } from '../utils/secureSettings';
 import { callClaude, getUserFacingErrorMessage, MODELS } from '../utils/llmClient';
 import CoachProfileSection from '../components/CoachProfileSection';
+import AiBudgetSection from '../components/AiBudgetSection';
 
 export default function Settings() {
   const {
@@ -762,6 +763,7 @@ export default function Settings() {
               {aiStatus.text}
             </Text>
           )}
+          <AiBudgetSection refreshSignal={aiStatus} />
           <CoachProfileSection />
         </View>
 
