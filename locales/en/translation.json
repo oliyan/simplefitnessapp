@@ -593,7 +593,26 @@
     "schedulePlanDoneTitle": "Plan scheduled",
     "schedulePlanDone": "{{added}} sessions added to your calendar.",
     "schedulePlanDoneSkipped": "{{added}} sessions added; {{skipped}} were already on your calendar.",
-    "schedulePlanFailed": "Could not schedule the plan."
+    "schedulePlanFailed": "Could not schedule the plan.",
+    "planAboutYou": "About you",
+    "planYourWeek": "Your week",
+    "planPreferences": "Preferences",
+    "planExperience": "Experience level",
+    "planMainGoal": "Main goal",
+    "planFocus": "Focus areas (up to 3)",
+    "planSessionLength": "Time per session",
+    "planIntensity": "Intensity",
+    "planLikes": "Likes and dislikes",
+    "planLikesPlaceholder": "e.g. no burpees, love pull-ups, avoid overhead pressing",
+    "planInjuriesHeading": "Injuries and constraints",
+    "planInjuriesNone": "None saved. Add them in Settings > AI Coach and every plan will respect them.",
+    "planInjuriesFrom": "From your profile (edit in Settings > AI Coach):",
+    "planDaysCount": "{{count}} training days selected",
+    "planDaysNeeded": "Pick at least one training day.",
+    "planSavedTitle": "Plan saved",
+    "planSavedMessage": "Put it on your calendar now?",
+    "planScheduleNow": "Schedule it",
+    "planNotNow": "Not now"
 
     }
   

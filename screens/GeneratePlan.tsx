@@ -17,14 +17,21 @@ import { useTheme } from '../context/ThemeContext';
 import { WorkoutStackParamList } from '../App';
 import { getApiKey } from '../utils/secureSettings';
 import { generateWorkoutPlan, refineWorkoutPlan, getUserFacingErrorMessage } from '../utils/llmClient';
-import { PlanRequest } from '../utils/promptTemplates';
+import { INTENSITY_HINTS, PlanRequest } from '../utils/promptTemplates';
 import { ExportedWorkout, insertWorkoutData, workoutNameExists } from '../utils/workoutSharingUtils';
 import { EQUIPMENT_OPTIONS, loadCoachProfile } from '../utils/coachProfile';
+import { weekdayShort } from '../utils/weekdays';
 import { loadInBodySnapshots } from '../utils/inbodyStorage';
 import { formatBodyComposition } from '../utils/inbodyParser';
 
 type NavProp = StackNavigationProp<WorkoutStackParamList, 'GeneratePlan'>;
 
+const EXPERIENCE = ['Beginner', 'Intermediate', 'Advanced'];
+const GOALS = ['Build muscle', 'Lose fat', 'Get stronger', 'General fitness'];
+const FOCUS_AREAS = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Glutes', 'Core'];
+const MAX_FOCUS = 3;
+const SESSION_MINUTES = [30, 45, 60, 90];
+const INTENSITIES = Object.keys(INTENSITY_HINTS);
 const SPLITS = ['Push / Pull / Legs', 'Upper / Lower', 'Full Body', 'Bro Split', 'Let the coach decide'];
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const EQUIPMENT = EQUIPMENT_OPTIONS;
@@ -38,12 +45,16 @@ export default function GeneratePlan() {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
-  const [goals, setGoals] = useState('');
+  const [experience, setExperience] = useState(EXPERIENCE[1]);
+  const [mainGoal, setMainGoal] = useState(GOALS[0]);
+  const [focusAreas, setFocusAreas] = useState<string[]>([]);
   const [split, setSplit] = useState(SPLITS[4]);
   const [days, setDays] = useState<string[]>([]);
-  const [timeWindow, setTimeWindow] = useState('');
+  const [sessionMinutes, setSessionMinutes] = useState<number>(60);
+  const [intensity, setIntensity] = useState(INTENSITIES[1]);
   const [equipment, setEquipment] = useState<string[]>(['Full gym']);
   const [notes, setNotes] = useState('');
+  const [savedConstraints, setSavedConstraints] = useState('');
 
   const [draft, setDraft] = useState<ExportedWorkout | null>(null);
   const [previousDraft, setPreviousDraft] = useState<ExportedWorkout | null>(null);
@@ -90,7 +101,9 @@ export default function GeneratePlan() {
   // Equipment starts from the saved profile; toggling it here is for this plan only.
   useEffect(() => {
     loadCoachProfile().then((profile) => {
-      if (mountedRef.current) setEquipment(profile.equipment);
+      if (!mountedRef.current) return;
+      setEquipment(profile.equipment);
+      setSavedConstraints(profile.standingConstraints);
     });
   }, []);
 
@@ -99,10 +112,13 @@ export default function GeneratePlan() {
   const buildRequest = async (): Promise<PlanRequest> => {
     const profile = await loadCoachProfile();
     return {
-      goals,
+      experience,
+      mainGoal,
+      focusAreas,
       split,
       days: WEEKDAYS.filter((d) => days.includes(d)),
-      timeWindow,
+      sessionMinutes,
+      intensity,
       equipment,
       notes,
       constraints: profile.standingConstraints,
@@ -169,7 +185,11 @@ export default function GeneratePlan() {
       }
       const workoutId = await insertWorkoutData(db, { ...draft, workout_name: name });
       savedRef.current = true;
-      navigation.replace('WorkoutDetails', { workout_id: workoutId });
+      // The plan is a normal workout now; offer to put it on the calendar right away.
+      Alert.alert(t('planSavedTitle'), t('planSavedMessage'), [
+        { text: t('planNotNow'), style: 'cancel', onPress: () => navigation.replace('WorkoutDetails', { workout_id: workoutId }) },
+        { text: t('planScheduleNow'), onPress: () => navigation.replace('SchedulePlan', { workout_id: workoutId }) },
+      ], { cancelable: false });
     } catch (error) {
       console.error('Error saving generated plan:', error);
       if (mountedRef.current) Alert.alert(t('planSaveFailed'), t('planSaveErrorMessage'));
@@ -252,34 +272,46 @@ export default function GeneratePlan() {
       >
         <Text style={[styles.title, { color: theme.text }]}>{t('planGenerateTitle')}</Text>
 
-        <Text style={[styles.label, { color: theme.text }]}>{t('planGoals')}</Text>
-        <TextInput
-          style={input({ minHeight: 80, textAlignVertical: 'top' })}
-          value={goals}
-          onChangeText={setGoals}
-          placeholder={t('planGoalsPlaceholder')}
-          placeholderTextColor={theme.border}
-          multiline
-          editable={!busy}
-        />
+        <Text style={[styles.section, { color: theme.text }]}>{t('planAboutYou')}</Text>
 
-        <Text style={[styles.label, { color: theme.text }]}>{t('planSplit')}</Text>
-        <View style={styles.chipRow}>{SPLITS.map((s) => chip(s, split === s, () => setSplit(s)))}</View>
+        <Text style={[styles.label, { color: theme.text }]}>{t('planExperience')}</Text>
+        <View style={styles.chipRow}>{EXPERIENCE.map((e) => chip(e, experience === e, () => setExperience(e)))}</View>
+
+        <Text style={[styles.label, { color: theme.text }]}>{t('planMainGoal')}</Text>
+        <View style={styles.chipRow}>{GOALS.map((g) => chip(g, mainGoal === g, () => setMainGoal(g)))}</View>
+
+        <Text style={[styles.label, { color: theme.text }]}>{t('planFocus')}</Text>
+        <View style={styles.chipRow}>
+          {FOCUS_AREAS.map((f) =>
+            chip(f, focusAreas.includes(f), () => {
+              if (!focusAreas.includes(f) && focusAreas.length >= MAX_FOCUS) return;
+              toggle(focusAreas, setFocusAreas, f);
+            }),
+          )}
+        </View>
+
+        <Text style={[styles.section, { color: theme.text }]}>{t('planYourWeek')}</Text>
 
         <Text style={[styles.label, { color: theme.text }]}>{t('planDays')}</Text>
         <View style={styles.chipRow}>
           {WEEKDAYS.map((d) => chip(d, days.includes(d), () => toggle(days, setDays, d)))}
         </View>
+        <Text style={{ color: theme.text, opacity: 0.6, marginTop: 6 }}>
+          {days.length > 0 ? t('planDaysCount', { count: days.length }) : t('planDaysNeeded')}
+        </Text>
 
-        <Text style={[styles.label, { color: theme.text }]}>{t('planTimeWindow')}</Text>
-        <TextInput
-          style={input()}
-          value={timeWindow}
-          onChangeText={setTimeWindow}
-          placeholder={t('planTimeWindowPlaceholder')}
-          placeholderTextColor={theme.border}
-          editable={!busy}
-        />
+        <Text style={[styles.label, { color: theme.text }]}>{t('planSessionLength')}</Text>
+        <View style={styles.chipRow}>
+          {SESSION_MINUTES.map((m) => chip(`${m} min`, sessionMinutes === m, () => setSessionMinutes(m)))}
+        </View>
+
+        <Text style={[styles.label, { color: theme.text }]}>{t('planSplit')}</Text>
+        <View style={styles.chipRow}>{SPLITS.map((sp) => chip(sp, split === sp, () => setSplit(sp)))}</View>
+
+        <Text style={[styles.section, { color: theme.text }]}>{t('planPreferences')}</Text>
+
+        <Text style={[styles.label, { color: theme.text }]}>{t('planIntensity')}</Text>
+        <View style={styles.chipRow}>{INTENSITIES.map((i) => chip(i, intensity === i, () => setIntensity(i)))}</View>
 
         <Text style={[styles.label, { color: theme.text }]}>{t('planEquipment')}</Text>
         <Text style={{ color: theme.text, opacity: 0.6, marginBottom: 6 }}>{t('planSelectAll')}</Text>
@@ -287,19 +319,31 @@ export default function GeneratePlan() {
           {EQUIPMENT.map((e) => chip(e, equipment.includes(e), () => toggle(equipment, setEquipment, e)))}
         </View>
 
-        <Text style={[styles.label, { color: theme.text }]}>{t('planNotes')}</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('planInjuriesHeading')}</Text>
+        <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          {savedConstraints.trim() ? (
+            <>
+              <Text style={{ color: theme.text, opacity: 0.6, marginBottom: 4 }}>{t('planInjuriesFrom')}</Text>
+              <Text style={{ color: theme.text }}>{savedConstraints.trim()}</Text>
+            </>
+          ) : (
+            <Text style={{ color: theme.text, opacity: 0.6 }}>{t('planInjuriesNone')}</Text>
+          )}
+        </View>
+
+        <Text style={[styles.label, { color: theme.text }]}>{t('planLikes')}</Text>
         <TextInput
           style={input({ minHeight: 80, textAlignVertical: 'top' })}
           value={notes}
           onChangeText={setNotes}
-          placeholder={t('planNotesPlaceholder')}
+          placeholder={t('planLikesPlaceholder')}
           placeholderTextColor={theme.border}
           multiline
           editable={!busy}
         />
 
         {busyIndicator}
-        {bigButton(t('planGenerate'), handleGenerate, busy)}
+        {bigButton(t('planGenerate'), handleGenerate, busy || days.length === 0)}
       </ScrollView>
     );
   }
@@ -322,7 +366,9 @@ export default function GeneratePlan() {
 
       {draft.days.map((day, dayIndex) => (
         <View key={`${day.day_name}-${dayIndex}`} style={[styles.dayCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.dayTitle, { color: theme.text }]}>{day.day_name}</Text>
+          <Text style={[styles.dayTitle, { color: theme.text }]}>
+            {day.weekday ? `${day.day_name} · ${weekdayShort(day.weekday)}` : day.day_name}
+          </Text>
           {day.exercises.map((ex, i) => {
             const unusual = ex.sets > HIGH_SETS || ex.reps > HIGH_REPS;
             return (
@@ -370,7 +416,9 @@ export default function GeneratePlan() {
 const styles = StyleSheet.create({
   content: { padding: 20, paddingTop: 60, paddingBottom: 60 },
   title: { fontSize: 28, fontWeight: '900', textAlign: 'center', marginBottom: 20 },
+  section: { fontSize: 22, fontWeight: '900', marginTop: 26, marginBottom: 2 },
   label: { fontSize: 16, fontWeight: '700', marginTop: 16, marginBottom: 8 },
+  infoCard: { borderWidth: 1, borderRadius: 8, padding: 12 },
   input: { borderWidth: 1, borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12, fontSize: 16 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderWidth: 1, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 14 },

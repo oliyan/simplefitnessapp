@@ -27,24 +27,38 @@ ${context}`;
 // What the Generate Plan form collects. Kept separate from the draft so every
 // refine round re-sends the current answers rather than relying on history.
 export interface PlanRequest {
-  goals: string;
+  experience: string; // Beginner / Intermediate / Advanced
+  mainGoal: string; // e.g. 'Build muscle'
+  focusAreas: string[]; // muscle groups to give extra attention, up to 3
   split: string;
   days: string[]; // e.g. ['Mon', 'Wed', 'Fri']
-  timeWindow: string;
+  sessionMinutes: number | null;
+  intensity: string; // key of INTENSITY_HINTS
   equipment: string[];
-  notes: string;
+  notes: string; // likes and dislikes, anything else typed
   constraints: string; // standing injuries/limitations from the saved profile
   bodyComposition: string | null; // latest InBody summary, if any was imported
 }
 
+// What each intensity choice on the form means to the model.
+export const INTENSITY_HINTS: Record<string, string> = {
+  'Easy start': 'conservative volume and loads; ease into training',
+  Steady: 'moderate volume with sustainable progression',
+  'Push me': 'high effort and higher volume; the person recovers well',
+};
+
 const describeRequest = (r: PlanRequest): string =>
   [
-    `Goals / emphasis: ${r.goals.trim() || 'general strength and muscle'}`,
+    `Experience level: ${r.experience}`,
+    `Main goal: ${r.mainGoal}`,
+    r.focusAreas.length > 0 ? `Focus areas (give these extra attention and volume): ${r.focusAreas.join(', ')}` : null,
     `Preferred split: ${r.split}`,
-    `Training days: ${r.days.length > 0 ? r.days.join(', ') : 'not specified'}${r.timeWindow.trim() ? ` (time per session: ${r.timeWindow.trim()})` : ''}`,
+    `Training days: ${r.days.length > 0 ? `${r.days.join(', ')} (${r.days.length} per week)` : 'not specified'}`,
+    r.sessionMinutes ? `Time per session: about ${r.sessionMinutes} minutes (fit the number of exercises and sets to this)` : null,
+    `Intensity: ${r.intensity} - ${INTENSITY_HINTS[r.intensity] ?? r.intensity}`,
     `Equipment available: ${r.equipment.length > 0 ? r.equipment.join(', ') : 'not specified'}`,
     r.constraints.trim() ? `Standing constraints (always respect these): ${r.constraints.trim()}` : null,
-    r.notes.trim() ? `Other requests for this plan: ${r.notes.trim()}` : null,
+    r.notes.trim() ? `Likes, dislikes and other requests: ${r.notes.trim()}` : null,
     r.bodyComposition ? r.bodyComposition : null,
   ]
     .filter(Boolean)
