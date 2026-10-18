@@ -1,5 +1,6 @@
 import { getApiKey } from './secureSettings';
 import { buildCoachNotePrompt } from './promptTemplates';
+import type { CoachNote } from './coachNotesUtils';
 
 const API_URL = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
@@ -119,15 +120,34 @@ export const getUserFacingErrorMessage = (error: unknown): string => {
   return "Couldn't reach the AI service - check your connection and try again.";
 };
 
-// Returns the note text, or null when the model decided there was nothing to say.
-export const generateCoachNote = async (context: string): Promise<string | null> => {
+// Returns the note, or null when the model decided there was nothing to say.
+export const generateCoachNote = async (context: string): Promise<CoachNote | null> => {
   const text = (
     await callClaude(buildCoachNotePrompt(context), {
       model: MODELS.fast,
-      maxTokens: 300,
+      maxTokens: 600,
       lowEffort: true,
     })
   ).trim();
-  if (!text || /^none\b/i.test(text)) return null;
-  return text;
+  if (!text || /^none/i.test(text)) return null;
+
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end <= start) {
+    // Not JSON despite the instructions; treat the whole reply as the summary.
+    return { summary: text, exercises: {} };
+  }
+  try {
+    const parsed = JSON.parse(text.slice(start, end + 1));
+    const exercises: Record<string, string> = {};
+    for (const [name, line] of Object.entries(parsed.exercises ?? {})) {
+      if (typeof line === 'string' && line.trim()) exercises[name.trim()] = line.trim();
+    }
+    const summary =
+      typeof parsed.summary === 'string' && parsed.summary.trim() ? parsed.summary.trim() : null;
+    if (!summary && Object.keys(exercises).length === 0) return null;
+    return { summary, exercises };
+  } catch {
+    return { summary: text, exercises: {} };
+  }
 };

@@ -32,7 +32,7 @@ import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { getApiKey } from '../utils/secureSettings';
 import { generateCoachNote } from '../utils/llmClient';
 import { buildCoachNoteContext } from '../utils/coachNoteContext';
-import { ensureCoachNotesTable, getCachedCoachNote, saveCoachNote } from '../utils/coachNotesUtils';
+import { ensureCoachNotesTable, getCachedCoachNote, saveCoachNote, CoachNote } from '../utils/coachNotesUtils';
 import {
   useTimerPersistence,
   createTimerState,
@@ -103,9 +103,9 @@ export default function StartedWorkoutInterface() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   // Coach note shown in the overview: 'loading' while the model is called, 'ready'
   // when there is text to show; anything else (cached NONE, failure, no key) shows nothing.
-  const [coachNote, setCoachNote] = useState<{ status: 'idle' | 'loading' | 'ready'; text: string | null }>({
+  const [coachNote, setCoachNote] = useState<{ status: 'idle' | 'loading' | 'ready'; note: CoachNote | null }>({
     status: 'idle',
-    text: null,
+    note: null,
   });
 
   // Workout flow states
@@ -575,7 +575,7 @@ export default function StartedWorkoutInterface() {
         const cached = await getCachedCoachNote(db, workout.workout_name, workout.day_name, workout.workout_date);
         if (cancelled) return;
         if (cached.found) {
-          setCoachNote(cached.note ? { status: 'ready', text: cached.note } : { status: 'idle', text: null });
+          setCoachNote(cached.note ? { status: 'ready', note: cached.note } : { status: 'idle', note: null });
           return;
         }
 
@@ -598,16 +598,16 @@ export default function StartedWorkoutInterface() {
           return;
         }
 
-        setCoachNote({ status: 'loading', text: null });
+        setCoachNote({ status: 'loading', note: null });
         const note = await generateCoachNote(context);
         // Cache even when the user has left or started: the call is already paid for.
         await saveCoachNote(db, workout.workout_name, workout.day_name, workout.workout_date, note);
         if (cancelled) return;
-        setCoachNote(note ? { status: 'ready', text: note } : { status: 'idle', text: null });
+        setCoachNote(note ? { status: 'ready', note } : { status: 'idle', note: null });
       } catch (error) {
         // A failed attempt is not cached, so the next open tries again.
         console.error('Coach note failed:', error);
-        if (!cancelled) setCoachNote({ status: 'idle', text: null });
+        if (!cancelled) setCoachNote({ status: 'idle', note: null });
       }
     };
 
@@ -1062,11 +1062,11 @@ export default function StartedWorkoutInterface() {
           </View>
         </View>
 
-        {coachNote.status !== 'idle' && (
+        {(coachNote.status === 'loading' || !!coachNote.note?.summary) && (
           <View style={[styles.coachNoteCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.coachNoteTitle, { color: theme.text }]}>{t('coachNoteTitle')}</Text>
             <Text style={[styles.coachNoteText, { color: theme.text, opacity: coachNote.status === 'loading' ? 0.5 : 1 }]}>
-              {coachNote.status === 'loading' ? t('coachNoteLoading') : coachNote.text}
+              {coachNote.status === 'loading' ? t('coachNoteLoading') : coachNote.note?.summary}
             </Text>
           </View>
         )}
@@ -1255,6 +1255,12 @@ export default function StartedWorkoutInterface() {
     const isLastSetOfExercise = currentSet.set_number === currentSet.total_sets;
     const isLastStructuralSet = isLastExercise && isLastSetOfExercise;
 
+    // Look up by the planned name, so renaming the exercise mid-workout doesn't hide its note.
+    const plannedName = exercises.find(ex => ex.logged_exercise_id === currentExerciseId)?.exercise_name ?? currentSet.exercise_name;
+    const exerciseCoachLine = Object.entries(coachNote.note?.exercises ?? {}).find(
+      ([name]) => name.trim().toLowerCase() === plannedName.trim().toLowerCase()
+    )?.[1];
+
     return (
       <View style={styles.exerciseScreenContainer}>
         <View style={[styles.timerDisplay, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -1264,6 +1270,13 @@ export default function StartedWorkoutInterface() {
           </Text>
         </View>
         
+        {exerciseCoachLine && (
+          <View style={[styles.coachNoteCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.coachNoteTitle, { color: theme.text }]}>{t('coachNoteTitle')}</Text>
+            <Text style={[styles.coachNoteText, { color: theme.text }]}>{exerciseCoachLine}</Text>
+          </View>
+        )}
+
         <View style={[styles.currentExerciseCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           {isEditingExerciseName ? (
             <TextInput

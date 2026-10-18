@@ -1,3 +1,20 @@
+export interface CoachNote {
+  summary: string | null; // shown on the workout overview
+  exercises: Record<string, string>; // one-liners shown on the matching exercise screen
+}
+
+// Stored as JSON in note_text. Older rows hold plain text, which is the summary.
+export const parseCoachNote = (raw: string | null): CoachNote | null => {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      return { summary: parsed.summary ?? null, exercises: parsed.exercises ?? {} };
+    }
+  } catch {}
+  return { summary: raw, exercises: {} };
+};
+
 // Cache for AI coach notes, one row per workout/day/date. A NULL note_text is a
 // valid cached result meaning "the model had nothing to say".
 
@@ -20,13 +37,15 @@ export const getCachedCoachNote = async (
   workoutName: string,
   dayName: string,
   workoutDate: number,
-): Promise<{ found: boolean; note: string | null }> => {
+): Promise<{ found: boolean; note: CoachNote | null }> => {
   const row = await db.getFirstAsync(
     `SELECT note_text FROM Coach_Notes
      WHERE workout_name = ? AND day_name = ? AND workout_date = ?`,
     [workoutName, dayName, workoutDate],
   );
-  return row ? { found: true, note: row.note_text ?? null } : { found: false, note: null };
+  return row
+    ? { found: true, note: parseCoachNote(row.note_text ?? null) }
+    : { found: false, note: null };
 };
 
 export const saveCoachNote = async (
@@ -34,11 +53,11 @@ export const saveCoachNote = async (
   workoutName: string,
   dayName: string,
   workoutDate: number,
-  note: string | null,
+  note: CoachNote | null,
 ) => {
   await db.runAsync(
     `INSERT OR REPLACE INTO Coach_Notes (workout_name, day_name, workout_date, note_text, created_at)
      VALUES (?, ?, ?, ?, ?)`,
-    [workoutName, dayName, workoutDate, note, Math.floor(Date.now() / 1000)],
+    [workoutName, dayName, workoutDate, note ? JSON.stringify(note) : null, Math.floor(Date.now() / 1000)],
   );
 };
