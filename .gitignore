@@ -41,3 +41,5 @@ yarn-error.*
 /keys
 
 /utils/notesaboutfeature.txt
+# IDE
+.idea/
