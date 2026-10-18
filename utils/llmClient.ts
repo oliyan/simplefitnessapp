@@ -4,6 +4,7 @@ import { buildCoachNotePrompt } from './promptTemplates';
 import { buildGeneratePlanPrompt, buildRefinePlanPrompt, PlanRequest } from './promptTemplates';
 import type { CoachNote } from './coachNotesUtils';
 import type { ExportedWorkout } from './workoutSharingUtils';
+import { normalizeWeekday } from './weekdays';
 
 const API_URL = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
@@ -232,7 +233,7 @@ const validatePlan = (raw: any): ExportedWorkout => {
         exercise_notes: typeof ex.exercise_notes === 'string' && ex.exercise_notes.trim() ? ex.exercise_notes.trim() : null,
       };
     });
-    return { day_name: day.day_name.trim(), exercises };
+    return { day_name: day.day_name.trim(), weekday: normalizeWeekday(day.weekday), exercises };
   });
   return { workout_name: raw.workout_name.trim(), days };
 };

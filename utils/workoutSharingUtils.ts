@@ -3,6 +3,7 @@ import * as Sharing from 'expo-sharing';
 import { Alert } from 'react-native';
 import i18n from './i18n'; // Import the i18n instance
 import slugify from 'slugify';
+import { normalizeWeekday } from './weekdays';
 
 
 
@@ -18,6 +19,7 @@ export interface ExportedExercise {
 
 export interface ExportedDay {
   day_name: string;
+  weekday?: number | null; // 1 (Monday) to 7 (Sunday); older files don't have it
   exercises: ExportedExercise[];
 }
 
@@ -45,7 +47,7 @@ export const exportWorkout = async (db: any, workoutId: number) => {
     };
 
     // 2. Fetch days for the workout
-    const days = await db.getAllAsync('SELECT day_id, day_name FROM Days WHERE workout_id = ?', [workoutId]);
+    const days = await db.getAllAsync('SELECT day_id, day_name, weekday FROM Days WHERE workout_id = ?', [workoutId]);
 
     // 3. Fetch exercises for each day
     for (const day of days) {
@@ -56,6 +58,7 @@ export const exportWorkout = async (db: any, workoutId: number) => {
 
       const exportedDay: ExportedDay = {
         day_name: day.day_name,
+        weekday: normalizeWeekday(day.weekday),
         exercises: exercises.map((ex: any) => ({
           exercise_name: ex.exercise_name,
           sets: ex.sets,
@@ -120,7 +123,7 @@ export const insertWorkoutData = async (db: any, workoutData: ExportedWorkout): 
 
     // Insert days and exercises
     for (const day of workoutData.days) {
-      const dayResult = await db.runAsync('INSERT INTO Days (workout_id, day_name) VALUES (?, ?)', [newWorkoutId, day.day_name]);
+      const dayResult = await db.runAsync('INSERT INTO Days (workout_id, day_name, weekday) VALUES (?, ?, ?)', [newWorkoutId, day.day_name, normalizeWeekday(day.weekday)]);
       const newDayId = dayResult.lastInsertRowId;
 
       if (!newDayId) {

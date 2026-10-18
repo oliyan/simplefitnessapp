@@ -16,9 +16,10 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
+import WeekdayPicker from '../components/WeekdayPicker';
 
 type Exercise = { exercise_id: number; exercise_name: string; sets: number; reps: number; web_link: string | null; muscle_group: string | null; exercise_notes: string | null };
-type Day = { day_id: number; day_name: string; exercises: Exercise[] };
+type Day = { day_id: number; day_name: string; weekday: number | null; exercises: Exercise[] };
 
 export default function EditWorkout() {
   const db = useSQLiteContext();
@@ -45,8 +46,8 @@ export default function EditWorkout() {
       );
       setWorkoutName(workoutResult[0]?.workout_name || '');
 
-      const daysResult = await db.getAllAsync<{ day_id: number; day_name: string }>(
-        'SELECT day_id, day_name FROM Days WHERE workout_id = ?',
+      const daysResult = await db.getAllAsync<{ day_id: number; day_name: string; weekday: number | null }>(
+        'SELECT day_id, day_name, weekday FROM Days WHERE workout_id = ?',
         [workout_id]
       );
       
@@ -232,8 +233,8 @@ export default function EditWorkout() {
       // Update days and exercises
       for (const day of days) {
         // Update day name
-        await db.runAsync('UPDATE Days SET day_name = ? WHERE day_id = ?;', 
-          [day.day_name.trim(), day.day_id]
+        await db.runAsync('UPDATE Days SET day_name = ?, weekday = ? WHERE day_id = ?;', 
+          [day.day_name.trim(), day.weekday, day.day_id]
         );
         
         // Delete all exercises for this day to maintain order
@@ -265,6 +266,12 @@ export default function EditWorkout() {
       prevDays.map((day) =>
         day.day_id === dayId ? { ...day, day_name: newName } : day
       )
+    );
+  };
+
+  const handleWeekdayChange = (dayId: number, weekday: number | null) => {
+    setDays((prevDays) =>
+      prevDays.map((day) => (day.day_id === dayId ? { ...day, weekday } : day))
     );
   };
 
@@ -387,6 +394,9 @@ export default function EditWorkout() {
                 placeholder={t('dayNamePlaceholder')}
                 placeholderTextColor={theme.text}
               />
+
+              <Text style={{ color: theme.text, opacity: 0.7, marginBottom: 8 }}>{t('weekdayPickerLabel')}</Text>
+              <WeekdayPicker value={day.weekday} onChange={(weekday) => handleWeekdayChange(day.day_id, weekday)} />
 
               {/* Exercises as DraggableFlatList */}
               <View style={styles.exercisesContainer}>

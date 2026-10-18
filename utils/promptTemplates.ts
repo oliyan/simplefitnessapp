@@ -56,6 +56,7 @@ const PLAN_FORMAT = `Reply with JSON only (no code fences, no commentary), exact
   "days": [
     {
       "day_name": string,
+      "weekday": whole number 1 (Monday) to 7 (Sunday), or null,
       "exercises": [
         {
           "exercise_name": string,
@@ -72,6 +73,7 @@ const PLAN_FORMAT = `Reply with JSON only (no code fences, no commentary), exact
 
 Rules:
 - One day object per training day, named for what it trains (e.g. "Push", "Pull", "Legs").
+- "weekday": when training days are given, give each plan day one of those weekdays (Mon=1 ... Sun=7) with no weekday used twice; otherwise null.
 - "sets" and "reps" are single whole numbers (use the target reps, not a range).
 - "exercise_notes" is an optional short form or tempo cue, otherwise null.
 - "web_link" is always null.

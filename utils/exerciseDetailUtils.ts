@@ -111,3 +111,19 @@ export const addCommentsColumn = async (db: SQLiteDatabase) => {
         console.error('Error adding comments column:', error);
     }
 };
+
+// Days.weekday: 1 (Monday) to 7 (Sunday), NULL when the day has no fixed weekday.
+export const addWeekdayColumn = async (db: SQLiteDatabase) => {
+    const table = 'Days';
+    try {
+        const columns = await db.getAllAsync<any>(`PRAGMA table_info(${table});`);
+        const columnExists = columns.some((col: any) => col.name === 'weekday');
+
+        if (!columnExists) {
+            await db.runAsync(`ALTER TABLE ${table} ADD COLUMN weekday INTEGER;`);
+            console.log(`'weekday' column added to '${table}' table.`);
+        }
+    } catch (error) {
+        console.error('Error adding weekday column:', error);
+    }
+};

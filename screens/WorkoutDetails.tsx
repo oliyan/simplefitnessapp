@@ -10,12 +10,14 @@ import { WorkoutStackParamList } from '../App';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { exportWorkout } from '../utils/workoutSharingUtils';
+import { weekdayShort } from '../utils/weekdays';
 
 type WorkoutListNavigationProp = StackNavigationProp<WorkoutStackParamList, 'WorkoutDetails'>;
 
 type Day = {
   day_id: number;
   day_name: string;
+  weekday: number | null;
   exercises: { exercise_id: number; exercise_name: string; sets: number; reps: number; web_link: string | null; muscle_group: string | null, exercise_notes: string | null }[];
 };
 
@@ -64,8 +66,8 @@ export default function WorkoutDetails() {
     );
     setWorkoutName(workoutResult[0]?.workout_name || '');
     
-    const daysResult = await db.getAllAsync<{ day_id: number; day_name: string }>(
-      'SELECT day_id, day_name FROM Days WHERE workout_id = ?',
+    const daysResult = await db.getAllAsync<{ day_id: number; day_name: string; weekday: number | null }>(
+      'SELECT day_id, day_name, weekday FROM Days WHERE workout_id = ?',
       [workout_id]
     );
 
@@ -659,6 +661,23 @@ export default function WorkoutDetails() {
         <Ionicons name="share-outline" size={28} color={theme.text} />
       </TouchableOpacity>
 
+      <TouchableOpacity
+        style={{
+          backgroundColor: theme.buttonBackground,
+          borderRadius: 12,
+          paddingVertical: 12,
+          marginHorizontal: 20,
+          marginBottom: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        onPress={() => navigation.navigate('SchedulePlan', { workout_id })}
+      >
+        <Ionicons name="calendar-outline" size={20} color={theme.buttonText} style={{ marginRight: 8 }} />
+        <Text style={{ color: theme.buttonText, fontWeight: '700', fontSize: 16 }}>{t('schedulePlanButton')}</Text>
+      </TouchableOpacity>
+
       <FlatList
         data={days}
         showsVerticalScrollIndicator={false}
@@ -696,7 +715,7 @@ export default function WorkoutDetails() {
                   mode={ResizeTextMode.max_lines}
                   style={[styles.dayTitle, { color: theme.text, flexShrink: 1, marginRight: 8, fontWeight: 'bold' }]}
                 >
-                  {day.day_name}
+                  {day.weekday ? `${day.day_name} · ${weekdayShort(day.weekday)}` : day.day_name}
                 </AutoSizeText>
                 
                 <View style={styles.dayHeaderRightControls}>

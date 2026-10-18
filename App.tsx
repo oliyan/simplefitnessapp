@@ -19,11 +19,6 @@
   import MyProgress from './screens/MyProgress';
   import LogWeights from './screens/LogWeights';
   import WeightLogDetail from './screens/WeightLogDetail';
-  import RecurringWorkoutOptions from './screens/RecurringWorkoutOptions';
-  import CreateRecurringWorkout from './screens/CreateRecurringWorkout';
-  import ManageRecurringWorkouts from './screens/ManageRecurringWorkouts';
-  import RecurringWorkoutDetails from './screens/RecurringWorkoutDetails';
-  import EditRecurringWorkout from './screens/EditRecurringWorkout';
   import StartedWorkoutInterface from './screens/StartedWorkoutInterface';
   import './utils/i18n'; // Ensure this is present to initialize i18n
   import i18n from './utils/i18n'; // Import the i18n instance
@@ -34,7 +29,7 @@
   import EditWorkout from './screens/EditWorkout';
   import AllLogs from './screens/AllLogs';
   import * as Notifications from 'expo-notifications';
-  import { useRecurringWorkouts } from './utils/recurringWorkoutUtils';
+  import SchedulePlan from './screens/SchedulePlan';
   import { checkAndSyncPermissions } from './utils/notificationUtils';
   import { AppState } from 'react-native';
   import GraphsWorkoutDetails from './screens/GraphsWorkoutDetails';
@@ -123,6 +118,7 @@
     WorkoutsList: undefined; // No parameters for this route
     CreateWorkout: undefined; // No parameters for this route
     GeneratePlan: undefined;
+    SchedulePlan: { workout_id?: number } | undefined;
     WorkoutDetails: { workout_id: number }; // Add this
     EditWorkout: { workout_id: number }; // Only `workout_id` for editing a workout
   };
@@ -130,11 +126,7 @@
   export type WorkoutLogStackParamList = {
     MyCalendar: {refresh?:boolean};  // No parameters for this route
     LogWorkout: { selectedDate?: string };
-    RecurringWorkoutOptions: undefined;
-    CreateRecurringWorkout: undefined;
-    ManageRecurringWorkouts: undefined;
-    RecurringWorkoutDetails: { recurring_workout_id: number };
-    EditRecurringWorkout: { recurring_workout_id: number };
+    SchedulePlan: { workout_id?: number } | undefined;
     StartedWorkoutInterface: { workout_log_id: number };
     LogWeights: { workout_log_id?: number };
   };
@@ -186,6 +178,11 @@
           component={EditWorkout}
           options={{title: 'EditWorkout'}}
           />
+        <WorkoutStackScreen.Screen
+          name='SchedulePlan'
+          component={SchedulePlan}
+          options={{ headerShown: false }}
+        />
       </WorkoutStackScreen.Navigator>
       </SQLiteProvider>
     );
@@ -209,29 +206,9 @@
           options={{ title: 'Log a Workout' }} // Title for the LogWorkout screen
         />
         <WorkoutLogStackScreen.Screen
-          name="RecurringWorkoutOptions"
-          component={RecurringWorkoutOptions}
-          options={{ title: 'Recurring Workout Options' }}
-        /> 
-         <WorkoutLogStackScreen.Screen
-          name="CreateRecurringWorkout"
-          component={CreateRecurringWorkout}
-          options={{ title: 'Create Recurring Workout' }}
-        /> 
-        <WorkoutLogStackScreen.Screen
-          name="ManageRecurringWorkouts"
-          component={ManageRecurringWorkouts}
-          options={{ title: 'Manage Recurring Workouts' }}
-        /> 
-         <WorkoutLogStackScreen.Screen
-          name="RecurringWorkoutDetails"
-          component={RecurringWorkoutDetails}
-          options={{ title: 'Recurring Workout Details' }}
-        /> 
-        <WorkoutLogStackScreen.Screen
-          name="EditRecurringWorkout"
-          component={EditRecurringWorkout}
-          options={{ title: 'Edit Recurring Workout' }}
+          name="SchedulePlan"
+          component={SchedulePlan}
+          options={{ headerShown: false }}
         />
         <WorkoutLogStackScreen.Screen
           name="StartedWorkoutInterface"
@@ -309,33 +286,6 @@
     );
   }*/
 
-// First, create a component that will handle the recurring workout checks
-function RecurringWorkoutManager() {
-  const { checkRecurringWorkouts } = useRecurringWorkouts();
-  const appState = useRef(AppState.currentState);
-  const initialCheckDone = useRef(false);
-
-  useEffect(() => {
-    // Function to check workouts and publish event
-    const checkAndNotify = async () => {
-      if (!initialCheckDone.current) {
-        await checkRecurringWorkouts();
-        // Publish event to notify MyCalendar to refresh
-        console.log('Initial recurring workout check triggered and event published');
-        initialCheckDone.current = true;
-      }
-    };
-    
-    checkAndNotify();
-    
-    // Set up listener for app returning to foreground
-   
-
-  }, [checkRecurringWorkouts]);
-
-  return null;
-}
-
 // Define AppContent here
 const AppContent = () => {
   const { theme } = useTheme();
@@ -359,8 +309,6 @@ const AppContent = () => {
         }
       />
       <SQLiteProvider databaseName="SimpleDB.db" useSuspense>
-        <RecurringWorkoutManager />
-        
         <Bottom.Navigator
           screenOptions={{
             headerShown: false,

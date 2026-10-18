@@ -574,7 +574,26 @@
     "success": "Success",
 
     "_comment_history": "Workout history translations",
-    "previousWorkout": "Previous Workout"
+    "previousWorkout": "Previous Workout",
+    "weekdayPickerLabel": "Training weekday (optional)",
+    "schedulePlanButton": "Schedule this plan",
+    "schedulePlanTitle": "Schedule a plan",
+    "schedulePlanPick": "Choose a plan to schedule",
+    "schedulePlanNoPlans": "Create a workout first.",
+    "schedulePlanWeekdays": "Weekday for each day",
+    "schedulePlanStart": "Start date",
+    "schedulePlanLength": "How long",
+    "schedulePlanWeeksOption": "{{count}} weeks",
+    "schedulePlanPreviewTitle": "Preview",
+    "schedulePlanSummary": "{{count}} sessions from {{from}} to {{to}}",
+    "schedulePlanMore": "...and {{count}} more",
+    "schedulePlanUnassigned": "{{count}} day(s) have no weekday and will not be scheduled.",
+    "schedulePlanNothing": "Pick a weekday for at least one day to schedule it.",
+    "schedulePlanConfirm": "Schedule {{count}} sessions",
+    "schedulePlanDoneTitle": "Plan scheduled",
+    "schedulePlanDone": "{{added}} sessions added to your calendar.",
+    "schedulePlanDoneSkipped": "{{added}} sessions added; {{skipped}} were already on your calendar.",
+    "schedulePlanFailed": "Could not schedule the plan."
 
     }
   

@@ -17,6 +17,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext'; // Import theme context
 import { useTranslation } from 'react-i18next';
+import WeekdayPicker from '../components/WeekdayPicker';
 
 
 type WorkoutListNavigationProp = StackNavigationProp<WorkoutStackParamList, 'WorkoutsList'>;
@@ -24,7 +25,7 @@ type WorkoutListNavigationProp = StackNavigationProp<WorkoutStackParamList, 'Wor
 async function createWorkout(
   db: any, // Pass the database context
   workoutName: string,
-  days: { dayName: string; exercises: { exerciseName: string; sets: number; reps: number; muscle_group: string | null }[] }[]
+  days: { dayName: string; weekday: number | null; exercises: { exerciseName: string; sets: number; reps: number; muscle_group: string | null }[] }[]
 ) {
   await db.withTransactionAsync(async () => {
     console.log('Starting transaction...');
@@ -45,9 +46,10 @@ async function createWorkout(
 
       for (const day of days) {
         console.log(`Inserting day: ${day.dayName}`);
-        await db.runAsync('INSERT INTO Days (workout_id, day_name) VALUES (?, ?);', [
+        await db.runAsync('INSERT INTO Days (workout_id, day_name, weekday) VALUES (?, ?, ?);', [
           workoutId,
           day.dayName,
+          day.weekday,
         ]);
         const dayIdResult = (await db.getAllAsync('SELECT last_insert_rowid() as day_id;')) as {
           day_id: number;
@@ -79,7 +81,7 @@ export default function CreateWorkout() {
   const { t } = useTranslation(); // Initialize translations
   const [workoutName, setWorkoutName] = useState('');
   const [days, setDays] = useState<
-    { dayName: string; exercises: { exerciseName: string; sets: string; reps: string; muscle_group: string | null }[] }[]
+    { dayName: string; weekday: number | null; exercises: { exerciseName: string; sets: string; reps: string; muscle_group: string | null }[] }[]
   >([]);
   const navigation = useNavigation<WorkoutListNavigationProp>();
 
@@ -102,7 +104,7 @@ export default function CreateWorkout() {
   const addDay = () => {
     setDays((prev) => [
       ...prev,
-      { dayName: '', exercises: [{ exerciseName: '', sets: '', reps: '', muscle_group: null }] },
+      { dayName: '', weekday: null, exercises: [{ exerciseName: '', sets: '', reps: '', muscle_group: null }] },
     ]);
   };
 
@@ -266,6 +268,16 @@ export default function CreateWorkout() {
                 onChangeText={(text) => {
                   const updatedDays = [...days];
                   updatedDays[index].dayName = text;
+                  setDays(updatedDays);
+                }}
+              />
+
+              <Text style={{ color: theme.text, opacity: 0.7, marginBottom: 8 }}>{t('weekdayPickerLabel')}</Text>
+              <WeekdayPicker
+                value={item.weekday}
+                onChange={(weekday) => {
+                  const updatedDays = [...days];
+                  updatedDays[index].weekday = weekday;
                   setDays(updatedDays);
                 }}
               />

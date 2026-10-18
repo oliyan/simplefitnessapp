@@ -31,7 +31,6 @@ import { useSettings } from '../context/SettingsContext';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../utils/useNotifications';
-import { useRecurringWorkouts } from '../utils/recurringWorkoutUtils';
 import { addMuscleGroupToWeightLog } from '../utils/exerciseDetailUtils';
 
 type MyCalendarNavigationProp = StackNavigationProp<
@@ -72,7 +71,6 @@ export default function MyCalendar() {
   const { t } = useTranslation();
   const { dateFormat, weightFormat, firstWeekday } = useSettings();
   const { cancelNotification } = useNotifications();
-  const { checkRecurringWorkouts } = useRecurringWorkouts();
 
   // State for the calendar
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -101,12 +99,10 @@ export default function MyCalendar() {
 
   // Run this check only ONCE when the component mounts
   useEffect(() => {
-    console.log('MyCalendar: Component mounted, checking recurring workouts.');
     addColumn0();
     addColumn1();
     addColumn2();
     addMuscleGroupToWeightLog(db);
-    // checkRecurringWorkouts();
     setUntrackedWorkoutDetails([]);
   }, []); // Empty dependency array ensures this runs only once
 
@@ -360,8 +356,6 @@ export default function MyCalendar() {
   useEffect(() => {
     const handleRefresh = async () => {
       console.log('DEBUG: Refresh signal received, starting async process.');
-      await checkRecurringWorkouts();
-      console.log('Recurring workouts check complete.');
       await fetchWorkoutsForGrid(currentDate);
       console.log('Calendar grid data re-fetched.');
       navigation.setParams({ refresh: false });
@@ -375,7 +369,6 @@ export default function MyCalendar() {
     navigation,
     fetchWorkoutsForGrid,
     currentDate,
-    checkRecurringWorkouts,
   ]);
 
   const closeUntrackedModal = () => {
@@ -700,16 +693,16 @@ export default function MyCalendar() {
             styles.actionButton,
             { backgroundColor: theme.buttonBackground },
           ]}
-          onPress={() => navigation.navigate('RecurringWorkoutOptions')}
+          onPress={() => navigation.navigate('SchedulePlan', {})}
         >
           <Ionicons
-            name='infinite'
+            name='calendar-outline'
             size={scale(22)}
             color={theme.buttonText}
             style={styles.icon}
           />
           <Text style={[styles.actionButtonText, { color: theme.buttonText }]}>
-            {t('recurringWorkouts')}
+            {t('schedulePlanTitle')}
           </Text>
         </TouchableOpacity>
       </View>
