@@ -32,6 +32,9 @@ import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { getApiKey } from '../utils/secureSettings';
 import { generateCoachNote } from '../utils/llmClient';
 import { buildCoachNoteContext } from '../utils/coachNoteContext';
+import { loadCoachProfile } from '../utils/coachProfile';
+import { loadInBodySnapshots } from '../utils/inbodyStorage';
+import { formatBodyComposition } from '../utils/inbodyParser';
 import { ensureCoachNotesTable, getCachedCoachNote, saveCoachNote, CoachNote } from '../utils/coachNotesUtils';
 import {
   useTimerPersistence,
@@ -583,6 +586,8 @@ export default function StartedWorkoutInterface() {
         if (workout.workout_date !== todayMidnight) return;
         if (!(await getApiKey())) return;
 
+        const profile = await loadCoachProfile();
+        const bodyComposition = formatBodyComposition(await loadInBodySnapshots());
         const context = await buildCoachNoteContext(db, {
           workoutLogId: workout_log_id,
           workoutName: workout.workout_name,
@@ -590,6 +595,8 @@ export default function StartedWorkoutInterface() {
           workoutDate: workout.workout_date,
           exercises,
           weightUnit: weightFormat,
+          standingConstraints: profile.standingConstraints,
+          bodyComposition,
         });
         if (cancelled) return;
         if (!context) {

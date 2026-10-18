@@ -49,9 +49,11 @@ export const buildCoachNoteContext = async (
     workoutDate: number;
     exercises: PlannedExercise[];
     weightUnit: string;
+    standingConstraints?: string;
+    bodyComposition?: string | null;
   },
 ): Promise<string | null> => {
-  const { workoutLogId, workoutName, dayName, workoutDate, exercises, weightUnit } = params;
+  const { workoutLogId, workoutName, dayName, workoutDate, exercises, weightUnit, standingConstraints, bodyComposition } = params;
   let hasHistory = false;
 
   const planLines = exercises.map(
@@ -102,11 +104,15 @@ export const buildCoachNoteContext = async (
   );
   if (recent.length > 0) hasHistory = true;
 
+  // Constraints alone are enough reason to coach, even with no logged history yet.
+  if (standingConstraints?.trim()) hasHistory = true;
   if (!hasHistory) return null;
 
   const parts = [
     `Today's workout: ${workoutName} - ${dayName} (${formatDate(workoutDate)})`,
     `Planned exercises:\n${planLines.join('\n')}`,
+    ...(standingConstraints?.trim() ? [`Standing constraints from the lifter: ${standingConstraints.trim()}`] : []),
+    ...(bodyComposition ? [bodyComposition] : []),
     ...groupSections,
     recent.length > 0
       ? `All sets logged in the previous 72 hours:\n` +

@@ -7,6 +7,7 @@ Reply with a coach's note ONLY if something in the log is worth acting on today,
 - a lift that was repeatedly rated Hard, suggesting the load or volume should come down
 - a lift that was repeatedly rated Easy, suggesting the load can go up
 - a stalled or regressing lift
+- a standing constraint (an injury or limitation) that affects an exercise in today's plan
 
 Output format - reply with JSON only, no code fences, exactly this shape:
 {"summary": "<one or two short sentences covering the most important points>", "exercises": {"<exercise name>": "<one short sentence for that exercise>"}}
@@ -32,6 +33,8 @@ export interface PlanRequest {
   timeWindow: string;
   equipment: string[];
   notes: string;
+  constraints: string; // standing injuries/limitations from the saved profile
+  bodyComposition: string | null; // latest InBody summary, if any was imported
 }
 
 const describeRequest = (r: PlanRequest): string =>
@@ -40,7 +43,9 @@ const describeRequest = (r: PlanRequest): string =>
     `Preferred split: ${r.split}`,
     `Training days: ${r.days.length > 0 ? r.days.join(', ') : 'not specified'}${r.timeWindow.trim() ? ` (time per session: ${r.timeWindow.trim()})` : ''}`,
     `Equipment available: ${r.equipment.length > 0 ? r.equipment.join(', ') : 'not specified'}`,
-    r.notes.trim() ? `Other requests, injuries or constraints: ${r.notes.trim()}` : null,
+    r.constraints.trim() ? `Standing constraints (always respect these): ${r.constraints.trim()}` : null,
+    r.notes.trim() ? `Other requests for this plan: ${r.notes.trim()}` : null,
+    r.bodyComposition ? r.bodyComposition : null,
   ]
     .filter(Boolean)
     .join('\n');

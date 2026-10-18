@@ -19,15 +19,15 @@ import { getApiKey } from '../utils/secureSettings';
 import { generateWorkoutPlan, refineWorkoutPlan, getUserFacingErrorMessage } from '../utils/llmClient';
 import { PlanRequest } from '../utils/promptTemplates';
 import { ExportedWorkout, insertWorkoutData, workoutNameExists } from '../utils/workoutSharingUtils';
+import { EQUIPMENT_OPTIONS, loadCoachProfile } from '../utils/coachProfile';
+import { loadInBodySnapshots } from '../utils/inbodyStorage';
+import { formatBodyComposition } from '../utils/inbodyParser';
 
 type NavProp = StackNavigationProp<WorkoutStackParamList, 'GeneratePlan'>;
 
 const SPLITS = ['Push / Pull / Legs', 'Upper / Lower', 'Full Body', 'Bro Split', 'Let the coach decide'];
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const EQUIPMENT = [
-  'Full gym', 'Barbell', 'Dumbbells', 'Bench', 'Cable machine',
-  'Pull-up bar', 'Resistance bands', 'Bodyweight only',
-];
+const EQUIPMENT = EQUIPMENT_OPTIONS;
 const SOFT_ROUND_CAP = 5;
 const HIGH_SETS = 15;
 const HIGH_REPS = 50;
@@ -87,14 +87,28 @@ export default function GeneratePlan() {
   const toggle = (list: string[], setList: (v: string[]) => void, value: string) =>
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
-  const buildRequest = (): PlanRequest => ({
-    goals,
-    split,
-    days: WEEKDAYS.filter((d) => days.includes(d)),
-    timeWindow,
-    equipment,
-    notes,
-  });
+  // Equipment starts from the saved profile; toggling it here is for this plan only.
+  useEffect(() => {
+    loadCoachProfile().then((profile) => {
+      if (mountedRef.current) setEquipment(profile.equipment);
+    });
+  }, []);
+
+  // Constraints and body data are re-read from storage on every call, so a refine
+  // round can never use stale copies of them.
+  const buildRequest = async (): Promise<PlanRequest> => {
+    const profile = await loadCoachProfile();
+    return {
+      goals,
+      split,
+      days: WEEKDAYS.filter((d) => days.includes(d)),
+      timeWindow,
+      equipment,
+      notes,
+      constraints: profile.standingConstraints,
+      bodyComposition: formatBodyComposition(await loadInBodySnapshots()),
+    };
+  };
 
   const handleGenerate = async () => {
     if (!(await getApiKey())) {
@@ -103,7 +117,7 @@ export default function GeneratePlan() {
     }
     setBusy(true);
     try {
-      const plan = await generateWorkoutPlan(buildRequest());
+      const plan = await generateWorkoutPlan(await buildRequest());
       if (!mountedRef.current) return;
       setDraft(plan);
       setSaveName(plan.workout_name);
@@ -121,7 +135,7 @@ export default function GeneratePlan() {
     if (!draft || !feedback.trim()) return;
     setBusy(true);
     try {
-      const plan = await refineWorkoutPlan(draft, feedback, buildRequest());
+      const plan = await refineWorkoutPlan(draft, feedback, await buildRequest());
       if (!mountedRef.current) return;
       setPreviousDraft(draft);
       setDraft(plan);
