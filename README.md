@@ -8,21 +8,37 @@
 
 </div>
 
-Urudhi is a fitness app for creating, scheduling and tracking your workouts. Everything is stored on your phone. An optional **AI Coach** can write you a plan and give you notes before a workout, using your own Anthropic API key.
+Urudhi is a small, quiet fitness app: build a plan, put it on your calendar, do the workout, and watch yourself get stronger. Everything is stored on your phone. An optional **AI Coach** can write a plan for you and leave notes before a workout, using your own Anthropic API key.
 
 > Urudhi is a fork of [Simple Fitness](https://github.com/basarsubasi/simplefitnessapp) by Başar Subaşı, released under the MIT License.
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-home.png" width="190" alt="Home dashboard"><br><sub><b>Home</b><br>Today, your week, streak</sub></td>
+    <td align="center"><img src="docs/screenshots/05-calendar.png" width="190" alt="Calendar"><br><sub><b>Calendar</b><br>Everything scheduled</sub></td>
+    <td align="center"><img src="docs/screenshots/06-ai-plan-form.png" width="190" alt="AI plan form"><br><sub><b>AI plan form</b><br>Tap, don't type</sub></td>
+    <td align="center"><img src="docs/screenshots/04-schedule-a-plan.png" width="190" alt="Schedule a plan"><br><sub><b>Schedule a plan</b><br>4, 8 or 12 weeks</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/03-plan-with-weekdays.png" width="190" alt="A plan with weekdays"><br><sub><b>A plan</b><br>Each day has a weekday</sub></td>
+    <td align="center"><img src="docs/screenshots/07-start-workout.png" width="190" alt="Start workout with coach note"><br><sub><b>Start workout</b><br>With the coach's note</sub></td>
+    <td align="center"><img src="docs/screenshots/02-workouts.png" width="190" alt="My workouts"><br><sub><b>My Workouts</b><br>Create, import, generate</sub></td>
+    <td align="center"><img src="docs/screenshots/08-settings.png" width="190" alt="Settings"><br><sub><b>Settings</b><br>Backup, theme, AI Coach</sub></td>
+  </tr>
+</table>
 
 **Contents:** [Features](#-features) · [Install](#-install) · [Using the app](#-using-the-app) · [AI Coach](#-ai-coach-optional) · [Privacy](#-privacy) · [Troubleshooting](#-troubleshooting) · [Build from source](#-build-from-source) · [License](#-license)
 
 ## 🚀 **Features**
 
-- 🏋️ **Create workouts** with days, exercises, sets and reps, or start from a featured workout.
-- ✏️ **Edit** workouts at any time.
-- 📅 **Schedule** workouts on a calendar, including recurring ones.
-- ⏱️ **Do a workout** with rest timers, per-set weight, reps, difficulty rating and comments.
+- 🏠 **A dashboard** for today's workout, your week at a glance, your weekly streak, how much you lifted, and your latest personal records.
+- 🏋️ **Create workouts** with days, exercises, sets and reps. Give each day a weekday (for example Push on Monday).
+- 📅 **Schedule a whole plan** in one go: pick a start date and 4, 8 or 12 weeks, and every day lands on its weekday.
+- ⏱️ **Do a workout** with rest timers that vibrate, play a sound and notify you; weights and reps are filled in from last time; rate each set and add comments.
 - 📊 **Track progress** with logs and graphs.
-- 🤖 **AI Coach (optional):** a coach's note before each workout, notes on individual exercises, and AI-generated plans you can refine and save.
-- 🌍 Date and weight formats (`dd-mm-yyyy` / `mm-dd-yyyy`, `kg` / `lbs`), light and dark themes, 21 languages.
+- 🔁 **Share** a workout as a small file and import workouts others have shared.
+- 🤖 **AI Coach (optional):** a note before each workout, and AI-generated plans you can refine, save and schedule.
+- 🎨 Light and dark themes, `kg` or `lbs`. Dates are `dd/mm/yyyy`, time is 12-hour, weeks start on Monday. English only.
 - 💾 Export and import all your data.
 
 ## ⬇️ **Install**
@@ -32,54 +48,79 @@ Urudhi is not on any app store yet. Choose one:
 - **Download:** get the latest APK from the [GitHub Releases](https://github.com/oliyan/urudhi/releases) page, copy it to your Android phone and open it. Android will ask you to allow installing from that source.
 - **Build it yourself:** see [Build from source](#-build-from-source).
 
-Android only for now. The first time you open the app it shows the Home screen with three cards: workouts, calendar and progress.
+Android only for now.
 
 ## 📖 **Using the app**
 
-The bottom bar has five tabs: **Home**, **My Workouts** (dumbbell icon), **My Calendar**, **My Progress** and **Settings**.
+The bottom bar has five tabs: **Home**, **My Workouts** (dumbbell), **My Calendar**, **My Progress** and **Settings**.
 
-### 1. Set your preferences (one time)
+### 1. The Home dashboard
 
-1. Open **Settings** (gear icon).
-2. Choose your **date format**, **time format**, **weight unit** (kg or lbs), **first day of the week** and **language**.
-3. Optionally switch the **theme** to dark.
+Home shows what matters today:
 
-### 2. Create a workout
+- **Today:** the workouts scheduled for today. Tap **Start workout** to begin one, or see **Done** once it is logged. On a rest day it shows what is next.
+- **This week:** Monday to Sunday. A filled circle with a tick means done, a ringed circle means planned, a dashed circle means missed. Tap it to open the calendar.
+- **Week streak:** how many weeks in a row you logged at least one workout. A new week with nothing logged yet does not break your streak.
+- **Lifted this week:** total weight × reps this week, compared with last week.
+- **Recent personal records:** the last times you lifted more than ever before on an exercise (the very first time you do an exercise only sets the starting point).
 
-1. Open **My Workouts**.
-2. Tap **Create a new workout**, give it a name, add one or more **days** (for example "Push", "Pull", "Legs") and add **exercises** to each day with sets and reps. You can tag each exercise with a muscle group.
-3. Save it. It now appears in your workout list.
+On a fresh install Home shows a welcome card with buttons to create a workout or generate a plan.
+
+### 2. Settings you may want to change (one time)
+
+Open **Settings** (gear icon).
+
+- **Weight format:** `kg` or `lbs`. This changes the label; it does not convert numbers you already entered.
+- **Theme:** switch between light and dark.
+- **Notifications:** turn on to be able to set reminders for a scheduled workout.
+
+Dates, the 12-hour clock and the Monday-first week are fixed; there is nothing to set.
+
+### 3. Create a workout
+
+1. Open **My Workouts** and tap **Create a new workout**.
+2. Give it a name and add one or more **days** (for example "Push", "Pull", "Legs").
+3. For each day, tap a **weekday** (M T W T F S S) if the day belongs to a particular day of the week. Tap it again to clear it. This is optional.
+4. Add **exercises** with sets and reps, and tag each with a muscle group if you like.
+5. Save it.
 
 Other ways to get a workout:
-- **Featured Workouts:** ready-made plans grouped as Beginner, Intermediate and Advanced.
-- **Import** (the download-arrow button next to Create): load a workout from a `.json` file someone shared with you.
+- **Import** (the download-arrow button next to Create): load a `.json` file someone shared with you.
 - **Generate a plan with AI:** see [AI Coach](#-ai-coach-optional).
 
-To change a workout, open it and use the pencil icon, or the plus icon on a day to add an exercise. To share one, tap the share icon on its card. To delete one, long-press it.
+To change a workout, open it and use the pencil icon (names, weekdays, exercises, order), the plus icon on a day to add an exercise, or the arrows to move a day. To share one, tap the share icon. To delete one, long-press it.
 
-### 3. Schedule it
+### 4. Put it on your calendar
 
-1. Open **My Calendar**.
-2. Tap a day, then **Schedule a Workout**, and pick the workout and the day of it.
-3. Use **Recurring Workouts** to repeat a workout on certain weekdays automatically.
-4. **Quick Workout** starts an unplanned session straight away.
+**A whole plan.** Open the workout and tap **Schedule this plan**, or tap **Schedule a plan** on the calendar and choose one.
 
-Days with a logged workout are filled in, today is underlined, and a day with a plan you haven't tracked has an outline. Long-press a scheduled workout to delete it.
+1. Check the **weekday for each day** (you can set or change them here; they are remembered).
+2. Pick the **start date** and **how long**: 4, 8 or 12 weeks.
+3. Read the **preview** (for example "Mon 19/10 · Push, Thu 22/10 · Pull ...").
+4. Tap **Schedule N sessions**.
 
-### 4. Do the workout
+Dates that already have that workout day are skipped, so scheduling the same plan twice does not create duplicates. Days without a weekday are left out.
 
-1. Tap a day on the calendar, tap the workout, then **Start Workout**. (**Log Weights Manually** lets you enter numbers afterwards instead.)
-2. On the overview, set the rest times between sets and between exercises, and choose the toggles: auto-fill weights and reps from last time, vibration, sound and notifications. Then tap **Start Workout**.
+**A single workout.** On **My Calendar**, tap a day, then **Schedule a Workout**, and pick the workout and the day. You can ask for a reminder at a time you choose (needs Notifications turned on in Settings).
+
+The calendar fills in days with a logged workout, underlines today, outlines a planned day you have not tracked, and shades upcoming ones. Long-press a scheduled workout to delete it.
+
+**Quick Workout** starts an unplanned session straight away. The same screen can also log a past day: choose an earlier date and it takes you to enter your numbers.
+
+### 5. Do the workout
+
+1. Start it from the **Home** dashboard, or tap the day on the calendar, tap the workout, then **Start Workout**.
+2. On the overview, read the coach's note (if you use the AI Coach), set the **rest time between sets** and **between exercises**, then tap **Start Workout**. Weights and reps are filled in from your last session; vibration, sound and notifications are always on. The first time, Android asks to allow notifications so rest alerts work when the screen is off.
 3. For each set, check the **weight** and **reps**, add a **comment** if you like (for example "left shoulder pinching"), and tap **Complete Set**. Rate how it felt when asked. Comments and ratings matter: the AI Coach reads them.
 4. A rest timer runs between sets. Use **+ Add Extra Set** to add a set, **Skip to Next Exercise** to move on, or the three-line menu at the top right to jump to any exercise.
 5. The "Previous Workout" box shows what you did last time for the same exercise.
 6. Tap **Finish Workout** when you are done.
 
-### 5. Check your progress
+### 6. Check your progress
 
-Open **My Progress**, pick a workout, and see your logs and graphs (weight progression by sets, reps, and workout time). Tap a point on a graph for details.
+Open **My Progress**. Choose a graph type (**Exercise Stats**, **Workout Stats** or **Overall Stats**), pick a workout, and read the graphs. Tap a point on a graph for details. **View Logs** lists every session, with a date range filter and an export button.
 
-### 6. Back up your data
+### 7. Back up your data
 
 **Settings → Data Management → Export Data** saves a copy of your whole database. **Import Data** restores one. Importing **replaces** everything currently on the phone, so export first if you are unsure.
 
@@ -101,14 +142,20 @@ The key is kept in your phone's secure storage. **Delete key** removes it.
 
 **Coach's note before a workout.** When you open today's workout, the overview shows a short note based on your recent logs: injuries or pain you commented on, lifts that felt Hard or Easy repeatedly, stalled lifts. Exercises with something specific also show their own note on that exercise's screen. If nothing stands out, no note appears. A note is written once per workout per day, only for today's workout, and then kept; reopening it costs nothing.
 
-**Generate a plan.**
-1. Open **My Workouts → Generate a plan with AI**.
-2. Fill in your goals, the split you prefer (or let the coach decide), your training days, time per session, equipment and anything else.
-3. Tap **Generate plan** and wait up to a minute. A **DRAFT** appears; nothing is saved yet.
-4. Read it. Anything unusually high (very many sets or reps) is flagged.
-5. To change it, type what you want ("swap barbell squats for leg press", "add more arms") and tap **Refine**. Tap **Undo last refinement** to go back one step.
-6. Edit the **plan name** if you like and tap **Save plan**. It becomes a normal workout you can schedule and edit.
-7. Leaving without saving asks for confirmation and the draft is lost.
+**Generate a plan.** Open **My Workouts → Generate a plan with AI** and answer by tapping:
+
+- **About you:** experience level (Beginner, Intermediate, Advanced), main goal (Build muscle, Lose fat, Get stronger, General fitness), and up to three focus areas.
+- **Your week:** the training days (Mon to Sun), time per session (30, 45, 60 or 90 minutes), and the split (or let the coach decide).
+- **Preferences:** intensity (Easy start, Steady, Push me), your equipment, your saved injuries (shown, edited in Settings) and a box for likes and dislikes.
+
+Then:
+
+1. Tap **Generate plan** (it needs at least one training day) and wait up to a minute. A **DRAFT** appears; nothing is saved yet. Each day carries a weekday that matches your training days.
+2. Anything unusually high (very many sets or reps) is flagged.
+3. To change it, type what you want ("swap barbell squats for leg press", "add more arms") and tap **Refine**. Tap **Undo last refinement** to go back one step.
+4. Edit the **plan name** if you like and tap **Save plan**. It becomes a normal workout.
+5. The app asks whether to **schedule it now**; say yes to jump to [Schedule a plan](#4-put-it-on-your-calendar).
+6. Leaving without saving asks for confirmation and the draft is lost.
 
 **Training profile** (Settings → AI Coach). Set your usual **equipment** and write your **injuries and constraints** in plain words. The coach respects these in every plan and note.
 
@@ -136,7 +183,10 @@ Your data stays on your phone. If you use the AI Coach, the relevant workout log
 | "Rate limit reached" | Wait the number of seconds shown and try again. |
 | "Couldn't reach the AI service" | Check your internet connection and try again. |
 | "The AI's reply wasn't a usable workout plan" | Rare. Tap Generate again or reword your request. |
+| The Generate plan button is greyed out | Pick at least one training day. |
 | No coach's note appears | Normal when nothing stands out, when the workout isn't today's, when no key is saved, or on a brand-new install with no logs and no saved constraints. |
+| No rest alert when the screen is off | Allow notifications for Urudhi in Android settings, and check the phone is not in a battery-saving mode that stops the app. |
+| A scheduled plan skipped some days | Days without a weekday are left out, and dates that already had that workout day are not duplicated. |
 | App crashes on an emulator right after installing | Use an APK built with x86_64 support (the default in this repo), or an arm64 emulator image. |
 
 ## 🛠️ **Build from source**
@@ -157,11 +207,7 @@ JDK 17 matters: newer JDKs such as 25 or 26 fail with this project's Gradle vers
 
 To install on a connected device or running emulator: `adb install -r app/build/outputs/apk/release/app-release.apk`.
 
-## 🌍 **Languages**
-
-🇨🇿 🇩🇪 🇩🇰 🇬🇷 🇬🇧 🇪🇸 🇫🇮 🇫🇷 🇮🇹 🇯🇵 🇰🇷 🇳🇱 🇳🇴 🇵🇱 🇵🇹 🇷🇺 🇸🇮 🇸🇪 🇹🇷 🇺🇦 🇨🇳
-
-The AI Coach screens are in English for now; other languages show the English text there. To help translate or improve a language, please open an issue at https://github.com/oliyan/urudhi/issues.
+The code is React Native (Expo) with TypeScript. App text lives in `locales/en/translation.json`.
 
 ## 📜 **License**
 
