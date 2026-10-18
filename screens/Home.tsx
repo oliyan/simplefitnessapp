@@ -116,7 +116,7 @@ export default function Home({ navigation }: any) {
   );
 
   const goToCalendar = () => navigation.navigate('My Calendar');
-  const goToWorkouts = (screen: string) => navigation.navigate('My Workouts', { screen });
+  const goToWorkouts = (screen: string) => navigation.navigate('My Workouts', { screen, initial: false });
 
   const renderToday = (d: Dashboard) => {
     const todayCell = d.week.find((c) => c.isToday);
@@ -145,6 +145,7 @@ export default function Home({ navigation }: any) {
                     navigation.navigate('My Calendar', {
                       screen: 'StartedWorkoutInterface',
                       params: { workout_log_id: s.workout_log_id },
+                      initial: false, // keep the calendar underneath so Back returns to it
                     })
                   }
                 >
@@ -169,7 +170,7 @@ export default function Home({ navigation }: any) {
         ) : (
           <>
             <Text style={muted}>{t('dashNothingPlanned')}</Text>
-            {bigButton(t('dashSchedule'), () => navigation.navigate('My Calendar', { screen: 'SchedulePlan' }))}
+            {bigButton(t('dashSchedule'), () => navigation.navigate('My Calendar', { screen: 'SchedulePlan', initial: false }))}
           </>
         )}
       </View>
