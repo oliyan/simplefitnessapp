@@ -29,6 +29,10 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useSettings } from '../context/SettingsContext';
 import { loadRestTimerPreferences, saveRestTimerPreferences } from '../utils/startedWorkoutPreferenceUtils';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
+import { getApiKey } from '../utils/secureSettings';
+import { generateCoachNote } from '../utils/llmClient';
+import { buildCoachNoteContext } from '../utils/coachNoteContext';
+import { ensureCoachNotesTable, getCachedCoachNote, saveCoachNote } from '../utils/coachNotesUtils';
 import {
   useTimerPersistence,
   createTimerState,
@@ -97,7 +101,13 @@ export default function StartedWorkoutInterface() {
     day_name: string;
   } | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  
+  // Coach note shown in the overview: 'loading' while the model is called, 'ready'
+  // when there is text to show; anything else (cached NONE, failure, no key) shows nothing.
+  const [coachNote, setCoachNote] = useState<{ status: 'idle' | 'loading' | 'ready'; text: string | null }>({
+    status: 'idle',
+    text: null,
+  });
+
   // Workout flow states
   const [restTime, setRestTime] = useState('30');
   const [exerciseRestTime, setExerciseRestTime] = useState('60');
@@ -553,6 +563,60 @@ export default function StartedWorkoutInterface() {
     };
   }, [notificationPermissionGranted]);
 
+  // Coach note: show a cached note for any date; generate a new one only for today's
+  // workout. Gated on !loading because workout and exercises are set in separate updates.
+  useEffect(() => {
+    if (loading || !workout || exercises.length === 0) return;
+    let cancelled = false;
+
+    const loadCoachNote = async () => {
+      try {
+        await ensureCoachNotesTable(db);
+        const cached = await getCachedCoachNote(db, workout.workout_name, workout.day_name, workout.workout_date);
+        if (cancelled) return;
+        if (cached.found) {
+          setCoachNote(cached.note ? { status: 'ready', text: cached.note } : { status: 'idle', text: null });
+          return;
+        }
+
+        const todayMidnight = Math.floor(new Date().setHours(0, 0, 0, 0) / 1000);
+        if (workout.workout_date !== todayMidnight) return;
+        if (!(await getApiKey())) return;
+
+        const context = await buildCoachNoteContext(db, {
+          workoutLogId: workout_log_id,
+          workoutName: workout.workout_name,
+          dayName: workout.day_name,
+          workoutDate: workout.workout_date,
+          exercises,
+          weightUnit: weightFormat,
+        });
+        if (cancelled) return;
+        if (!context) {
+          // No history to coach from; remember that so we don't re-check.
+          await saveCoachNote(db, workout.workout_name, workout.day_name, workout.workout_date, null);
+          return;
+        }
+
+        setCoachNote({ status: 'loading', text: null });
+        const note = await generateCoachNote(context);
+        // Cache even when the user has left or started: the call is already paid for.
+        await saveCoachNote(db, workout.workout_name, workout.day_name, workout.workout_date, note);
+        if (cancelled) return;
+        setCoachNote(note ? { status: 'ready', text: note } : { status: 'idle', text: null });
+      } catch (error) {
+        // A failed attempt is not cached, so the next open tries again.
+        console.error('Coach note failed:', error);
+        if (!cancelled) setCoachNote({ status: 'idle', text: null });
+      }
+    };
+
+    loadCoachNote();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, workout?.workout_name, workout?.day_name, workout?.workout_date, exercises.length]);
+
   // Setup notification handler and keep awake
   useEffect(() => {
     const configureNotifications = async () => {
@@ -997,7 +1061,16 @@ export default function StartedWorkoutInterface() {
             </View>
           </View>
         </View>
-        
+
+        {coachNote.status !== 'idle' && (
+          <View style={[styles.coachNoteCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.coachNoteTitle, { color: theme.text }]}>{t('coachNoteTitle')}</Text>
+            <Text style={[styles.coachNoteText, { color: theme.text, opacity: coachNote.status === 'loading' ? 0.5 : 1 }]}>
+              {coachNote.status === 'loading' ? t('coachNoteLoading') : coachNote.text}
+            </Text>
+          </View>
+        )}
+
         <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('exercises')}</Text>
         <FlatList
           data={exercises}
@@ -2121,6 +2194,21 @@ const styles = StyleSheet.create({
   // Overview screen styles
   overviewContainer: {
     width: '100%',
+  },
+  coachNoteCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 16,
+  },
+  coachNoteTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  coachNoteText: {
+    fontSize: 15,
+    lineHeight: 21,
   },
   workoutHeaderCard: {
     borderRadius: 15,

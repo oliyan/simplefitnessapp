@@ -1,4 +1,5 @@
 import { getApiKey } from './secureSettings';
+import { buildCoachNotePrompt } from './promptTemplates';
 
 const API_URL = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
@@ -25,12 +26,15 @@ export class LLMNetworkError extends Error {}
 interface CallOptions {
   model?: string;
   maxTokens?: number;
+  // Short answers (notes, connection test) don't need reasoning, and thinking
+  // tokens would otherwise eat into maxTokens.
+  lowEffort?: boolean;
 }
 
 // Text in, text out. Callers that need structured output validate it themselves.
 export const callClaude = async (
   prompt: string,
-  { model = MODELS.fast, maxTokens = 1024 }: CallOptions = {},
+  { model = MODELS.fast, maxTokens = 1024, lowEffort = false }: CallOptions = {},
 ): Promise<string> => {
   const apiKey = await getApiKey();
   if (!apiKey) {
@@ -53,6 +57,10 @@ export const callClaude = async (
       body: JSON.stringify({
         model,
         max_tokens: maxTokens,
+        ...(lowEffort && {
+          thinking: { type: 'disabled' },
+          output_config: { effort: 'low' },
+        }),
         messages: [{ role: 'user', content: prompt }],
       }),
     });
@@ -109,4 +117,17 @@ export const getUserFacingErrorMessage = (error: unknown): string => {
     return 'Your Anthropic account is out of credits - add some at console.anthropic.com (Billing).';
   }
   return "Couldn't reach the AI service - check your connection and try again.";
+};
+
+// Returns the note text, or null when the model decided there was nothing to say.
+export const generateCoachNote = async (context: string): Promise<string | null> => {
+  const text = (
+    await callClaude(buildCoachNotePrompt(context), {
+      model: MODELS.fast,
+      maxTokens: 300,
+      lowEffort: true,
+    })
+  ).trim();
+  if (!text || /^none\b/i.test(text)) return null;
+  return text;
 };

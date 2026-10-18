@@ -471,6 +471,8 @@
     "DeleteWorkoutMessage": "Are you sure you want to delete this workout? If it is a logged workout, this action will also delete the logs associated with it.",
 
     "aiCoach": "AI Coach",
+    "coachNoteTitle": "Coach's note",
+    "coachNoteLoading": "Reviewing your recent training...",
     "aiKeyIsSet": "API key saved on this device.",
     "aiKeyNotSet": "Paste your Anthropic API key to enable AI coaching.",
     "aiKeyPlaceholder": "Anthropic API key",

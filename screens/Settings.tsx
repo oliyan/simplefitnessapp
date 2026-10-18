@@ -83,6 +83,7 @@ export default function Settings() {
       await callClaude('Reply with the single word: ok', {
         model: MODELS.fast,
         maxTokens: 10,
+        lowEffort: true,
       });
       setAiStatus({ ok: true, text: t('aiConnectionOk') });
     } catch (error) {
