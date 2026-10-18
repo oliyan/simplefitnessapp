@@ -17,10 +17,9 @@ assignees: ''
 
 Which build of the app are you using?
 
-- [ ] F-Droid (Android)
-- [ ] Google Play (Android)
-- [ ] GitHub Releases/master (Android)
-- [ ] App Store (iOS)
+- [ ] GitHub Releases (Android)
+- [ ] Built from source
+- [ ] Other (please describe)
 
 Which version of the app are you using? (1.x.x)
 

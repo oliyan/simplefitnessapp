@@ -20,6 +20,7 @@ export default function Home({ navigation }: any) {
       <View style={styles.headerContainer}>
         {/* App Title */}
         <Text style={[styles.title, { color: theme.text }]}>Urudhi</Text>
+        <Text style={[styles.tagline, { color: theme.text }]}>{'by ஒளியன் கலைக்கூடம்'}</Text>
       </View>
 
       {/* Create a Workout Section */}
@@ -70,7 +71,7 @@ export default function Home({ navigation }: any) {
               ]}
               onPress={() =>
                 Linking.openURL(
-                  'https://github.com/oliyan/simplefitnessapp',
+                  'https://github.com/oliyan/urudhi',
                 )
               }
             >
@@ -111,6 +112,11 @@ const styles = ScaledSheet.create({
     fontSize: '36@s', // Smaller scaled font size
     fontWeight: '900',
     textAlign: 'center',
+  },
+  tagline: {
+    fontSize: '14@s',
+    textAlign: 'center',
+    opacity: 0.7,
   },
   card: {
     borderRadius: 15, // Keep fixed border radius for better uniformity

@@ -2,33 +2,31 @@
   "expo": {
     "name": "Urudhi",
     "slug": "urudhi",
-    "version": "1.7.15",
+    "description": "Urudhi — by ஒளியன் கலைக்கூடம்",
+    "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/simpleicon.png",
+    "icon": "./assets/urudhi-icon.png",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/simpleicon.png",
+      "image": "./assets/urudhi-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#F1EFE2"
     },
     "ios": {
       "bundleIdentifier": "com.oliyan.urudhi"
     },
     "android": {
-      "versionCode": 66,
-      "blockedPermissions": ["android.permission.INTERNET",
-       "android.permission.RECEIVE_BOOT_COMPLETED",
-       "android.permission.RECORD_AUDIO",
-       "android.permission.ACCESS_NETWORK_STATE",
-       "android.permission.ACCESS_WIFI_STATE" ],
+      "versionCode": 1,
+      "blockedPermissions": ["android.permission.RECEIVE_BOOT_COMPLETED",
+       "android.permission.RECORD_AUDIO"],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/simpleicon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/urudhi-icon.png",
+        "backgroundColor": "#F1EFE2"
       },
       "package": "com.oliyan.urudhi"
     },
     "web": {
-      "favicon": "./assets/simpleicon.png"
+      "favicon": "./assets/urudhi-icon.png"
     },
     "plugins": [
       "expo-sqlite",

@@ -214,7 +214,7 @@ export default function Settings() {
           ? `${day}-${month}-${year}`
           : `${month}-${day}-${year}`;
 
-      const exportDbName = `SimpleDB-${formattedDate}.db`;
+      const exportDbName = `Urudhi-${formattedDate}.db`;
 
       const tempExportPath = `${FileSystem.cacheDirectory}${exportDbName}`;
       await FileSystem.copyAsync({
@@ -656,7 +656,7 @@ export default function Settings() {
               ]}
               onPress={() =>
                 Linking.openURL(
-                  'https://github.com/oliyan/simplefitnessapp',
+                  'https://github.com/oliyan/urudhi',
                 )
               }
             >

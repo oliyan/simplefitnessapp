@@ -81,7 +81,7 @@ export const exportWorkout = async (db: any, workoutId: number) => {
       trim: true         // Trim leading/trailing whitespace
     });
 
-    const fileName = `SimpleWorkout_${sanitizedName}.json`;
+    const fileName = `UrudhiWorkout_${sanitizedName}.json`;
     const filePath = FileSystem.documentDirectory + fileName;
 
     await FileSystem.writeAsStringAsync(filePath, jsonString);
