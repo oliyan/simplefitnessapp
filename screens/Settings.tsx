@@ -25,16 +25,8 @@ import AiBudgetSection from '../components/AiBudgetSection';
 
 export default function Settings() {
   const {
-    dateFormat,
-    setDateFormat,
-    timeFormat,
-    setTimeFormat,
     weightFormat,
     setWeightFormat,
-    firstWeekday, // <-- Added
-    setFirstWeekday, // <-- Added
-    language,
-    setLanguage,
     notificationPermissionGranted,
     setNotificationPermissionGranted,
   } = useSettings();
@@ -95,65 +87,8 @@ export default function Settings() {
     }
   };
 
-  // Manages whether the language dropdown is visible
-  const [languageDropdownVisible, setLanguageDropdownVisible] = useState(false);
-
-  // Languages array with i18n-compatible codes
-  const languages = [
-    { code: 'cs', label: 'Čeština' },
-    { code: 'de', label: 'Deutsch' },
-    { code: 'dk', label: 'Dansk' },
-    { code: 'el', label: 'Ελληνική' },
-    { code: 'en', label: 'English' },
-    { code: 'es', label: 'Español' },
-    { code: 'fi', label: 'Suomi' },
-    { code: 'fr', label: 'Français' },
-    { code: 'it', label: 'Italiano' },
-    { code: 'ja', label: '日本語' },
-    { code: 'ko', label: '한국어' },
-    { code: 'nl', label: 'Nederlands' },
-    { code: 'no', label: 'Norsk' },
-    { code: 'pl', label: 'Polski' },
-    { code: 'pt', label: 'Português' },
-    { code: 'ro', label: 'Română' },
-    { code: 'ru', label: 'Русский' },
-    { code: 'sl', label: 'Slovenščina' },
-    { code: 'sv', label: 'Svenska' },
-    { code: 'tr', label: 'Türkçe' },
-    { code: 'uk', label: 'Українська' },
-    { code: 'zh', label: '中文' },
-
-
-    // add more languages here #2
-  ];
-
-  // We'll display the label corresponding to the current context language
-  const currentLanguage = language;
-
-  /**
-   * Handle user selecting a language. We just call setLanguage;
-   * the context will automatically sync i18n for us.
-   */
-  const handleLanguageChange = (languageCode: string) => {
-    setLanguage(languageCode);
-    setLanguageDropdownVisible(false); // close dropdown
-  };
-
-  const handleDateFormatChange = (format: string) => {
-    setDateFormat(format);
-  };
-
-  const handleTimeFormatChange = (format: '24h' | 'AM/PM') => {
-    setTimeFormat(format);
-  };
-
   const handleWeightFormatChange = (format: string) => {
     setWeightFormat(format);
-  };
-
-  // New handler for first day of the week
-  const handleFirstWeekdayChange = (day: 'Sunday' | 'Monday') => {
-    setFirstWeekday(day);
   };
 
   // Handle notification main toggle change
@@ -186,25 +121,6 @@ export default function Settings() {
       );
     }
   };
-
-  // Renders the button that toggles the language dropdown
-  const renderLanguageButton = () => (
-    <TouchableOpacity
-      style={[styles.dropdownButton, { minWidth: 180 }]}
-      onPress={() => setLanguageDropdownVisible((prev) => !prev)}
-    >
-      <Text style={[styles.buttonText, { color: 'white' }]}>
-        {languages.find((lang) => lang.code === currentLanguage)?.label ||
-          'Select Language'}
-      </Text>
-      <Ionicons
-        name={languageDropdownVisible ? 'chevron-up' : 'chevron-down'}
-        size={18}
-        color='white'
-        style={styles.dropdownIcon}
-      />
-    </TouchableOpacity>
-  );
 
   /**
    * Renders each format button (for Date & Weight).
@@ -264,10 +180,7 @@ export default function Settings() {
       const month = String(today.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
       const year = today.getFullYear();
 
-      const formattedDate =
-        dateFormat === 'dd-mm-yyyy'
-          ? `${day}-${month}-${year}`
-          : `${month}-${day}-${year}`;
+      const formattedDate = `${day}-${month}-${year}`;
 
       const exportDbName = `Urudhi-${formattedDate}.db`;
 
@@ -450,45 +363,6 @@ export default function Settings() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            {t('settingsLanguage')}
-          </Text>
-          {renderLanguageButton()}
-          {languageDropdownVisible && (
-            <View style={styles.dropdownList}>
-              {languages.map((item) => (
-                <TouchableOpacity
-                  key={item.code}
-                  style={[
-                    styles.dropdownItem,
-                    currentLanguage === item.code && styles.activeDropdownItem,
-                  ]}
-                  onPress={() => handleLanguageChange(item.code)}
-                >
-                  <Text
-                    style={[
-                      styles.dropdownItemText,
-                      currentLanguage === item.code &&
-                        styles.activeDropdownItemText,
-                    ]}
-                  >
-                    {item.label}{' '}
-                    {currentLanguage === item.code && (
-                      <Ionicons
-                        name='checkmark'
-                        size={18}
-                        color='white'
-                        style={styles.tickIcon}
-                      />
-                    )}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
             {t('notifications')}
           </Text>
 
@@ -507,32 +381,6 @@ export default function Settings() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            {t('settingsDateFormat')}
-          </Text>
-          <View style={styles.buttonGroup}>
-            {renderButton('dd-mm-yyyy', dateFormat, () =>
-              handleDateFormatChange('dd-mm-yyyy'),
-            )}
-            {renderButton('mm-dd-yyyy', dateFormat, () =>
-              handleDateFormatChange('mm-dd-yyyy'),
-            )}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            {t('settingsTimeFormat')}
-          </Text>
-          <View style={styles.buttonGroup}>
-            {renderButton('24h', timeFormat, () => handleTimeFormatChange('24h'))}
-            {renderButton('AM/PM', timeFormat, () =>
-              handleTimeFormatChange('AM/PM'),
-            )}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
             {t('settingsWeightFormat')}
           </Text>
           <View style={styles.buttonGroup}>
@@ -544,72 +392,6 @@ export default function Settings() {
             )}
           </View>
         </View>
-
-{/* --- NEW SECTION FOR FIRST DAY OF THE WEEK --- */}
-<View style={styles.section}>
-  <Text style={[styles.sectionTitle, { color: theme.text }]}>
-    {t('settingsFirstWeekday') || 'First Day of the Week'}
-  </Text>
-  <View style={styles.buttonGroup}>
-    {/* Monday Button */}
-    <TouchableOpacity
-      style={[
-        styles.button,
-        firstWeekday === 'Monday' && styles.activeButton,
-      ]}
-      onPress={() => handleFirstWeekdayChange('Monday')}
-    >
-      <View style={styles.buttonContent}>
-        <Text
-          style={[
-            styles.buttonText,
-            firstWeekday === 'Monday' && styles.activeButtonText,
-          ]}
-        >
-          {t('Monday')}
-        </Text>
-        {firstWeekday === 'Monday' && (
-          <Ionicons
-            name='checkmark'
-            size={18}
-            color='white'
-            style={styles.tickIcon}
-          />
-        )}
-      </View>
-    </TouchableOpacity>
-
-        {/* Sunday Button */}
-    <TouchableOpacity
-      style={[
-        styles.button,
-        firstWeekday === 'Sunday' && styles.activeButton,
-      ]}
-      onPress={() => handleFirstWeekdayChange('Sunday')}
-    >
-      <View style={styles.buttonContent}>
-        <Text
-          style={[
-            styles.buttonText,
-            firstWeekday === 'Sunday' && styles.activeButtonText,
-          ]}
-        >
-          {t('Sunday')}
-        </Text>
-        {firstWeekday === 'Sunday' && (
-          <Ionicons
-            name='checkmark'
-            size={18}
-            color='white'
-            style={styles.tickIcon}
-          />
-        )}
-      </View>
-    </TouchableOpacity>
-    
-  </View>
-</View>
-{/* --- END OF NEW SECTION --- */}
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>

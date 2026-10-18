@@ -2,12 +2,6 @@
 
 // Reference for the types, create your types in the file you are using them in and add them here for reference.
 
-export interface TemplateWorkouts {
-  workout_id: number;
-  workout_difficulty: string;
-  workout_name: string;
-}
-
 // Interface for the Workouts table
 export interface Workout {
     workout_id: number;

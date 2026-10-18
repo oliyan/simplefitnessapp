@@ -92,7 +92,7 @@ export default function StartedWorkoutInterface() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const db = useSQLiteContext();
-  const { notificationPermissionGranted, weightFormat } = useSettings();
+  const { notificationPermissionGranted, requestNotificationPermission, weightFormat } = useSettings();
   
   const { workout_log_id } = route.params;
   
@@ -115,15 +115,16 @@ export default function StartedWorkoutInterface() {
   const [restTime, setRestTime] = useState('30');
   const [exerciseRestTime, setExerciseRestTime] = useState('60');
   const [isExerciseListModalVisible, setIsExerciseListModalVisible] = useState(false);
-  const [autoFillWeight, setAutoFillWeight] = useState(true);
-  const [autoFillReps, setAutoFillReps] = useState(true);
-  const [useLogsForRepInput, setUseLogsForRepInput] = useState(false);
-  const [enableSetSwitchSound, setEnableSetSwitchSound] = useState(false);
-  
-  // User preference toggles
-  const [enableVibration, setEnableVibration] = useState(true);
-  const [enableNotifications, setEnableNotifications] = useState(false);
-  
+
+  // Workout behaviour is fixed: weights and reps are filled from the last log, and rest
+  // timers vibrate, play a sound and notify (when the notification permission is granted).
+  const autoFillWeight = true;
+  const autoFillReps = true;
+  const useLogsForRepInput = true;
+  const enableSetSwitchSound = true;
+  const enableVibration = true;
+  const enableNotifications = notificationPermissionGranted;
+
   // Sets data for tracking workout
   const [allSets, setAllSets] = useState<ExerciseSet[]>([]);
 
@@ -521,36 +522,14 @@ export default function StartedWorkoutInterface() {
     timerState.workoutStartTime
   ]);
   
-  // Update enableNotifications only if permission is granted
-  useEffect(() => {
-    if (notificationPermissionGranted && !enableNotifications) {
-      // Optional: enable notifications by default if permission is granted
-      // setEnableNotifications(true);
-    }
-  }, [notificationPermissionGranted]);
-  
   useEffect(() => {
     const loadInitialData = async () => {
         try {
             const preferences = await loadRestTimerPreferences();
             setRestTime(preferences.restTimeBetweenSets);
             setExerciseRestTime(preferences.restTimeBetweenExercises);
-            setEnableVibration(preferences.enableVibration);
-            setAutoFillWeight(preferences.autoFillWeight);
-            setAutoFillReps(preferences.autoFillReps);
-            setUseLogsForRepInput(preferences.useLogsForRepInput);
-            setEnableSetSwitchSound(preferences.enableSetSwitchSound);
-            if (notificationPermissionGranted) {
-                setEnableNotifications(preferences.enableNotifications);
-            } else {
-                setEnableNotifications(false);
-            }
 
-            await fetchWorkoutDetails(
-              preferences.autoFillWeight, 
-              preferences.autoFillReps, 
-              preferences.useLogsForRepInput
-            );
+            await fetchWorkoutDetails(autoFillWeight, autoFillReps, useLogsForRepInput);
         } catch (error) {
             console.error('Error loading initial data:', error);
             setLoading(false);
@@ -892,74 +871,6 @@ export default function StartedWorkoutInterface() {
     }
   };
   
-  const handleAutoFillToggle = (newValue: boolean) => {
-    setAutoFillWeight(newValue);
-    setAllSets(currentSets => 
-      currentSets.map(set => {
-        if (set.set_logged) {
-          return set;
-        }
-
-        const newWeight = newValue ? (weightMapRef.current.get(`${set.exercise_name}-${set.set_number}`) || '') : '';
-
-        return {
-          ...set,
-          weight: newWeight,
-        };
-      })
-    );
-  };
-
-  const handleAutoFillRepsToggle = (newValue: boolean) => {
-    setAutoFillReps(newValue);
-    setAllSets(currentSets =>
-      currentSets.map(set => {
-        if (set.set_logged) {
-          return set;
-        }
-
-        let newReps = '';
-        if (newValue) {
-          if (useLogsForRepInput) {
-            newReps = repsMapRef.current.get(`${set.exercise_name}-${set.set_number}`) || '';
-          } else {
-            newReps = set.reps_goal.toString();
-          }
-        }
-
-        return {
-          ...set,
-          reps_done: newReps,
-        };
-      })
-    );
-  };
-
-  const handleUseLogsForRepsToggle = (newValue: boolean) => {
-    setUseLogsForRepInput(newValue);
-    if (autoFillReps) {
-      setAllSets(currentSets =>
-        currentSets.map(set => {
-          if (set.set_logged) {
-            return set;
-          }
-
-          let newReps = '';
-          if (newValue) {
-            newReps = repsMapRef.current.get(`${set.exercise_name}-${set.set_number}`) || '';
-          } else {
-            newReps = set.reps_goal.toString();
-          }
-
-          return {
-            ...set,
-            reps_done: newReps,
-          };
-        })
-      );
-    }
-  };
-
   // Workout flow functions
   const startWorkout = async () => {
     const setRestSeconds = parseInt(restTime);
@@ -979,52 +890,22 @@ export default function StartedWorkoutInterface() {
       await saveRestTimerPreferences({
         restTimeBetweenSets: restTime,
         restTimeBetweenExercises: exerciseRestTime,
-        enableVibration: enableVibration,
-        enableNotifications: enableNotifications,
-        autoFillWeight: autoFillWeight,
-        enableSetSwitchSound: enableSetSwitchSound,
-        autoFillReps: autoFillReps,
-        useLogsForRepInput: useLogsForRepInput,
       });
     } catch (error) {
       console.error('Error saving rest timer preferences:', error);
     }
-    
+
+    // Rest-timer alerts need the notification permission; ask the first time.
+    if (!notificationPermissionGranted) {
+      await requestNotificationPermission();
+    }
+
     setTimerState(prev => updateTimerState(prev, {
       workoutStarted: true,
       workoutStage: 'exercise'
     }));
     
     startWorkoutTimer();
-  };
-  
-  const handleNotificationToggle = async () => {
-    if (!enableNotifications) {
-      if (!notificationPermissionGranted) {
-        Alert.alert(
-          t('Permission Required'),
-          t('Notification permission is required. Please enable notifications in the Settings page.'),
-          [
-            { text: t('Cancel'), style: 'cancel' },
-            { 
-              text: t('Go to Settings'), 
-              onPress: () => navigation.navigate('Settings' as never),
-              style: 'default' 
-            },
-          ]
-        );
-        return;
-      }
-      setEnableNotifications(true);
-    } else {
-      setEnableNotifications(false);
-      // Clear any existing notifications when disabling
-      try {
-        await Notifications.dismissAllNotificationsAsync();
-      } catch (error) {
-        console.error('Error clearing notifications:', error);
-      }
-    }
   };
   
   const isDifferentExercise = (currentIndex: number, nextIndex: number): boolean => {
@@ -1148,88 +1029,6 @@ export default function StartedWorkoutInterface() {
             maxLength={4}
             placeholderTextColor={theme.type === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'}
           />
-          
-          <Text style={[styles.setupLabel, { color: theme.text, marginTop: 15 }]}>{t('workoutSettings')}:</Text>
-          
-          <View style={[styles.toggleRow, { 
-            backgroundColor: theme.type === 'dark' ? '#121212' : '#f0f0f0',
-            borderColor: theme.type === 'dark' ? '#000000' : '#e0e0e0'
-          }]}>
-            <Text style={[styles.toggleText, { color: theme.text }]}>{t('autoFillWeights')}</Text>
-            <Switch
-              value={autoFillWeight}
-              onValueChange={handleAutoFillToggle}
-              trackColor={{ false: theme.type === 'dark' ? '#444' : '#ccc', true: theme.buttonBackground }}
-              thumbColor={autoFillWeight ? (theme.type === 'dark' ? '#fff' : '#fff') : (theme.type === 'dark' ? '#888' : '#f4f3f4')}
-            />
-          </View>
-
-          <View style={[styles.toggleRow, {
-            backgroundColor: theme.type === 'dark' ? '#121212' : '#f0f0f0',
-            borderColor: theme.type === 'dark' ? '#000000' : '#e0e0e0'
-          }]}>
-            <Text style={[styles.toggleText, { color: theme.text }]}>{t('autoFillReps')}</Text>
-            <Switch
-              value={autoFillReps}
-              onValueChange={handleAutoFillRepsToggle}
-              trackColor={{ false: theme.type === 'dark' ? '#444' : '#ccc', true: theme.buttonBackground }}
-              thumbColor={autoFillReps ? (theme.type === 'dark' ? '#fff' : '#fff') : (theme.type === 'dark' ? '#888' : '#f4f3f4')}
-            />
-          </View>
-          
-          {autoFillReps && (
-            <View style={[styles.toggleRow, {
-              backgroundColor: theme.type === 'dark' ? '#121212' : '#f0f0f0',
-              borderColor: theme.type === 'dark' ? '#000000' : '#e0e0e0'
-            }]}>
-              <Text style={[styles.toggleText, { color: theme.text }]}>{t('useLogsForRepsTitle')}</Text>
-              <Switch
-                value={useLogsForRepInput}
-                onValueChange={handleUseLogsForRepsToggle}
-                trackColor={{ false: theme.type === 'dark' ? '#444' : '#ccc', true: theme.buttonBackground }}
-                thumbColor={useLogsForRepInput ? (theme.type === 'dark' ? '#fff' : '#fff') : (theme.type === 'dark' ? '#888' : '#f4f3f4')}
-              />
-            </View>
-          )}
-
-          <View style={[styles.toggleRow, { 
-            backgroundColor: theme.type === 'dark' ? '#121212' : '#f0f0f0',
-            borderColor: theme.type === 'dark' ? '#000000' : '#e0e0e0'
-          }]}>
-            <Text style={[styles.toggleText, { color: theme.text }]}>{t('vibration')}</Text>
-            <Switch
-              value={enableVibration}
-              onValueChange={setEnableVibration}
-              trackColor={{ false: theme.type === 'dark' ? '#444' : '#ccc', true: theme.buttonBackground }}
-              thumbColor={enableVibration ? (theme.type === 'dark' ? '#fff' : '#fff') : (theme.type === 'dark' ? '#888' : '#f4f3f4')}
-            />
-          </View>
-          
-          <View style={[styles.toggleRow, { 
-            backgroundColor: theme.type === 'dark' ? '#121212' : '#f0f0f0',
-            borderColor: theme.type === 'dark' ? '#000000' : '#e0e0e0'
-          }]}>
-            <Text style={[styles.toggleText, { color: theme.text }]}>{t('enableSetSwitchSound')}</Text>
-            <Switch
-              value={enableSetSwitchSound}
-              onValueChange={setEnableSetSwitchSound}
-              trackColor={{ false: theme.type === 'dark' ? '#444' : '#ccc', true: theme.buttonBackground }}
-              thumbColor={enableSetSwitchSound ? (theme.type === 'dark' ? '#fff' : '#fff') : (theme.type === 'dark' ? '#888' : '#f4f3f4')}
-            />
-          </View>
-          
-          <View style={[styles.toggleRow, { 
-            backgroundColor: theme.type === 'dark' ? '#121212' : '#f0f0f0',
-            borderColor: theme.type === 'dark' ? '#000000' : '#e0e0e0'
-          }]}>
-            <Text style={[styles.toggleText, { color: theme.text }]}>{t('notifications')}</Text>
-            <Switch
-              value={enableNotifications}
-              onValueChange={() => handleNotificationToggle()}
-              trackColor={{ false: theme.type === 'dark' ? '#444' : '#ccc', true: theme.buttonBackground }}
-              thumbColor={enableNotifications ? (theme.type === 'dark' ? '#fff' : '#fff') : (theme.type === 'dark' ? '#888' : '#f4f3f4')}
-            />
-          </View>
           
           <TouchableOpacity
             style={[styles.startButton, { backgroundColor: theme.buttonBackground }]}

@@ -33,9 +33,6 @@
   import { ThemeProvider, useTheme } from './context/ThemeContext';
   import EditWorkout from './screens/EditWorkout';
   import AllLogs from './screens/AllLogs';
-  import Difficulty from './screens/Difficulty';
-  import Template from './screens/Template';
-  import TemplateDetails from './screens/TemplateDetails';
   import * as Notifications from 'expo-notifications';
   import { useRecurringWorkouts } from './utils/recurringWorkoutUtils';
   import { checkAndSyncPermissions } from './utils/notificationUtils';
@@ -128,11 +125,6 @@
     GeneratePlan: undefined;
     WorkoutDetails: { workout_id: number }; // Add this
     EditWorkout: { workout_id: number }; // Only `workout_id` for editing a workout
-    TemplateList: undefined;
-    DifficultyList: undefined;
-    Difficulty: undefined;
-    Template: { workout_difficulty: string };
-    TemplateDetails: { workout_id: number };
   };
 
   export type WorkoutLogStackParamList = {
@@ -193,21 +185,6 @@
           name='EditWorkout'
           component={EditWorkout}
           options={{title: 'EditWorkout'}}
-          />
-                       <WorkoutStackScreen.Screen
-          name='Difficulty'
-          component={Difficulty}
-          options={{title: 'Difficulty'}}
-          />
-                       <WorkoutStackScreen.Screen
-          name='Template'
-          component={Template}
-          options={{title: 'Template'}}
-          />
-                       <WorkoutStackScreen.Screen
-          name='TemplateDetails'
-          component={TemplateDetails}
-          options={{title: 'TemplateDetails'}}
           />
       </WorkoutStackScreen.Navigator>
       </SQLiteProvider>

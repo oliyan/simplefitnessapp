@@ -98,22 +98,6 @@ export default function WorkoutList({
           <Ionicons name="sparkles-outline" size={20} color={theme.text} />
         </TouchableOpacity>
 
-      <TouchableOpacity
-          style={[
-            styles.workoutCard,
-            {
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-
-            },
-          ]}
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('Difficulty')}
-        >
-          <Text style={[styles.workoutText, { color: theme.text }]}>{t('navigateToDifficulty')}</Text>
-          <Ionicons name="chevron-forward" size={20} color={theme.text} />
-        </TouchableOpacity>
-
       {/* Workout List */}
       {sortedWorkouts.map((workout) => (
         <TouchableOpacity
