@@ -19,6 +19,7 @@ export class LLMRateLimitError extends Error {
     this.retryAfterSeconds = retryAfterSeconds;
   }
 }
+export class LLMBillingError extends Error {}
 export class LLMNetworkError extends Error {}
 
 interface CallOptions {
@@ -77,6 +78,10 @@ export const callClaude = async (
     // 4xx other than auth/rate-limit means a bug in our request; make it visible.
     const body = await response.text().catch(() => '');
     console.error(`LLM request failed: HTTP ${response.status}`, body);
+    // Out of credits comes back as a 400, not a 402.
+    if (/credit balance/i.test(body)) {
+      throw new LLMBillingError('Credit balance too low');
+    }
     throw new LLMNetworkError(`HTTP ${response.status}`);
   }
 
@@ -99,6 +104,9 @@ export const getUserFacingErrorMessage = (error: unknown): string => {
     return error.retryAfterSeconds
       ? `Rate limit reached - try again in ${error.retryAfterSeconds} seconds.`
       : 'Rate limit reached - try again in a bit.';
+  }
+  if (error instanceof LLMBillingError) {
+    return 'Your Anthropic account is out of credits - add some at console.anthropic.com (Billing).';
   }
   return "Couldn't reach the AI service - check your connection and try again.";
 };

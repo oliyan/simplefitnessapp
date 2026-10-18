@@ -737,8 +737,14 @@ export default function Settings() {
             </TouchableOpacity>
           </View>
           {hasApiKey && (
-            <TouchableOpacity onPress={handleDeleteApiKey} style={{ marginTop: 12 }}>
-              <Text style={{ color: '#D32F2F', textAlign: 'center', fontWeight: '600' }}>
+            <TouchableOpacity
+              style={[
+                styles.dataManagementButton,
+                { backgroundColor: theme.card, borderColor: theme.border, marginTop: 10, flex: 0 },
+              ]}
+              onPress={handleDeleteApiKey}
+            >
+              <Text style={[styles.dataManagementButtonText, { color: theme.text, textAlign: 'center' }]}>
                 {t('aiDeleteKey')}
               </Text>
             </TouchableOpacity>
