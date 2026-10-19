@@ -2,7 +2,7 @@
 
 **Build under test:** branch `workout-screen` at commit `e6d7c01` (includes the AI Coach work and the `minimal` changes)
 **APK:** `Urudhi-test-e6d7c01.apk`
-**Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (62 of them) take about 70 minutes.
+**Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (63 of them) take about 70 minutes.
 **New in this build:** section 9A (the reworked workout screen) and a few changed cases in sections 3, 9 and 13. Weights are now kg only.
 
 ---
@@ -176,7 +176,7 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 | RUN-09 | 🟡 | Finish all sets of an exercise, then tap **+ Add extra set**. | One more set is added. (The full set of rules is in section 9A.) | ☐ | |
 | RUN-10 | 🟡 | Tap **Skip to Next Exercise**, then use the top-right menu to jump to a specific exercise. | Navigation works, nothing is lost. | ☐ | |
 | RUN-11 | 🔴 | Finish all sets and tap **Finish Workout**. | A completion screen with total time and sets completed. The session shows as logged on the calendar and on Home. | ☐ | |
-| RUN-12 | 🟡 | Start a workout, complete a couple of sets, then **swipe the app away** from recents and reopen the workout. | **Check, not expected to be perfect:** your logged sets are safe in the logs (calendar), but the workout screen starts again from set 1 and does not tick the sets you already did. Note exactly what you see. | ☐ | |
+| RUN-12 | 🔴 | Start a workout, complete a couple of sets (add an extra one too), then **swipe the app away** from recents and reopen the workout and tap Start Workout. | The sets you already logged are **ticked** (chips show ✓, counts like `2/4`), extra and renamed sets are back, and you continue from the first set not done. Nothing is logged twice. | ☐ | |
 | RUN-13 | 🟡 | Start a workout, press Back mid-way. | Asks before leaving or keeps your progress; no data lost. | ☐ | |
 | RUN-14 | 🟡 | Rest-time fields: enter `0`, then a large value like `600`, then leave one blank. | `0` and `600` accepted; blank/invalid shows a clear message. | ☐ | |
 | RUN-15 | ⚪ | Do the same exercise twice on different days and compare the suggested weight/badge after Easy/Hard ratings. | A weight suggestion appears after a few sessions (if shown). | ☐ | |
@@ -356,7 +356,6 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 - **Reminders for scheduled plans:** "Schedule a plan" does not set notifications. Reminders exist only when scheduling a single workout and choosing *Enable Notifications*.
 - **Recurring Workouts** no longer exist. Sessions created by them earlier stay, but no new ones appear automatically. Use *Schedule a plan* instead.
-- **Reopening a workout after closing the app:** the workout screen restarts from set 1 and does not tick the sets you already logged (they are safe in the logs). This was already the case before this build.
 - **English only.** Other languages and the date/time/week formats were removed on purpose.
 - **Featured Workouts** were removed on purpose; use *Generate a plan with AI* or create your own.
 - **AI plans are one repeating week** (the scheduler repeats it). There is no automatic progression week to week; weights come from your last session.
@@ -420,11 +419,11 @@ Happens every time?  (always / sometimes / once)
 | 6 Sharing | 2 | | | |
 | 7 Schedule a plan | 6 | | | |
 | 8 Calendar | 4 | | | |
-| 9 Doing a workout | 7 | | | |
+| 9 Doing a workout | 8 | | | |
 | 9A Workout screen | 14 | | | |
 | 10 Progress | 2 | | | |
 | 11 Backup | 2 | | | |
 | 12–17 AI Coach | 15 | | | |
 | 18 Dark theme | 1 | | | |
 
-**Total 🔴 cases: 62.**
+**Total 🔴 cases: 63.**

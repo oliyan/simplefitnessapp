@@ -122,3 +122,65 @@ export function nextUnloggedExerciseId(exerciseOrder: number[], sets: WorkoutSet
 export function unloggedCount(sets: WorkoutSet[]): number {
   return sets.filter((s) => !s.set_logged).length;
 }
+
+export interface LoggedSetRow {
+  weight_log_id: number;
+  logged_exercise_id: number;
+  exercise_name: string;
+  weight_logged: number;
+  reps_logged: number;
+  difficulty: string | null;
+  comments: string | null;
+}
+
+// Rebuilds the set list of a workout that was already partly logged (for example after the app
+// was closed): saved rows are matched to the planned sets in order, rows beyond the plan become
+// logged extra sets, and rows saved under another name become their own renamed group.
+export function restoreLoggedSets(planned: WorkoutSet[], rows: LoggedSetRow[]): WorkoutSet[] {
+  if (rows.length === 0) return planned;
+
+  const applyRow = (set: WorkoutSet, row: LoggedSetRow): WorkoutSet => ({
+    ...set,
+    set_logged: true,
+    weight: String(row.weight_logged),
+    reps_done: String(row.reps_logged),
+    difficulty: row.difficulty === 'Easy' || row.difficulty === 'Medium' || row.difficulty === 'Hard' ? row.difficulty : null,
+    comments: row.comments ?? '',
+    weight_log_id: row.weight_log_id,
+  });
+
+  const ids: number[] = [];
+  planned.forEach((s) => {
+    if (!ids.includes(s.exercise_id)) ids.push(s.exercise_id);
+  });
+
+  const result: WorkoutSet[] = [];
+  for (const id of ids) {
+    const own = planned.filter((s) => s.exercise_id === id);
+    const template = own[0];
+    const mine = rows.filter((r) => r.logged_exercise_id === id).sort((a, b) => a.weight_log_id - b.weight_log_id);
+    const underPlannedName = mine.filter((r) => normalizeName(r.exercise_name) === normalizeName(template.base_name));
+    const renamed = mine.filter((r) => normalizeName(r.exercise_name) !== normalizeName(template.base_name));
+
+    own.forEach((set, i) => {
+      result.push(underPlannedName[i] ? applyRow(set, underPlannedName[i]) : set);
+    });
+
+    const blankExtra: WorkoutSet = {
+      ...template, reps_done: '', weight: '', comments: '', set_logged: false,
+      difficulty: null, is_extra: true, weight_log_id: null,
+    };
+    underPlannedName.slice(own.length).forEach((row) => result.push(applyRow(blankExtra, row)));
+
+    const names: string[] = [];
+    renamed.forEach((r) => {
+      if (!names.includes(r.exercise_name)) names.push(r.exercise_name);
+    });
+    for (const name of names) {
+      renamed
+        .filter((r) => r.exercise_name === name)
+        .forEach((row) => result.push(applyRow(renameExtraSet(blankExtra, name), row)));
+    }
+  }
+  return result;
+}

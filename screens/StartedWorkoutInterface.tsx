@@ -66,6 +66,8 @@ import {
   previousSetHint,
   nextUnloggedExerciseId,
   unloggedCount,
+  restoreLoggedSets,
+  LoggedSetRow,
 } from '../utils/workoutSets';
 
 type StartedWorkoutRouteProps = RouteProp<
@@ -748,7 +750,15 @@ export default function StartedWorkoutInterface() {
           }
         });
         
-        setAllSets(setsData);
+        // Sets that were already logged (the workout was opened before) are marked as done.
+        const loggedRows = await db.getAllAsync<LoggedSetRow>(
+          `SELECT weight_log_id, logged_exercise_id, exercise_name, weight_logged, reps_logged, difficulty, comments
+           FROM Weight_Log WHERE workout_log_id = ? ORDER BY weight_log_id;`,
+          [workout_log_id]
+        );
+        const restoredSets = restoreLoggedSets(setsData, loggedRows);
+        setAllSets(restoredSets);
+        setExercises(prev => prev.map(ex => ({ ...ex, exercise_fully_logged: exerciseDone(restoredSets, ex.logged_exercise_id) })));
 
         // Fetch suggested weights for exercises
         const exercisesWithStatus = exercisesResult.map(e => ({ ...e, exercise_fully_logged: false }));
@@ -874,9 +884,12 @@ export default function StartedWorkoutInterface() {
       await requestNotificationPermission();
     }
 
+    // Carry on from the first set that is not logged yet (set 1 for a fresh workout).
+    const firstOpen = allSets.findIndex(set => !set.set_logged);
     setTimerState(prev => updateTimerState(prev, {
       workoutStarted: true,
-      workoutStage: 'exercise'
+      workoutStage: 'exercise',
+      currentSetIndex: firstOpen !== -1 ? firstOpen : Math.max(allSets.length - 1, 0)
     }));
     
     startWorkoutTimer();
