@@ -1,7 +1,7 @@
 # Urudhi — Phone Test Cases
 
-**Build under test:** branch `workout-screen` at commit `05d8d90` (includes the AI Coach work and the `minimal` changes)
-**APK:** `Urudhi-test-05d8d90.apk`
+**Build under test:** branch `workout-screen` at commit `2ebdee2` (includes the AI Coach work and the `minimal` changes)
+**APK:** `Urudhi-test-2ebdee2.apk`
 **Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (66 of them) take about 75 minutes.
 **New in this build:** section 9A (the reworked workout screen) and a few changed cases in sections 3, 9 and 13. Weights are now kg only.
 

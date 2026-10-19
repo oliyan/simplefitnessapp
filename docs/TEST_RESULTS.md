@@ -1,6 +1,6 @@
 # Urudhi — Emulator Test Results
 
-**Build:** `workout-screen` @ `05d8d90` (APK `Urudhi-test-05d8d90.apk`)
+**Build:** `workout-screen` @ `2ebdee2` (APK `Urudhi-test-2ebdee2.apk`)
 **Where:** Android emulator, 1080×2400, with the app's existing test data. Some workout-screen cases were first run on the earlier build `e6d7c01`; the code they touch did not change afterwards except for the resume feature, which was re-checked.
 **Not covered:** real phone, real gym, screen-off behaviour, your real InBody file and old database. Those stay on your list.
 
@@ -85,7 +85,7 @@ Legend: ✅ passed · 🔧 failed, fixed in this build and re-checked · ⏭ not
 
 ---
 
-## Findings from this run (all fixed in `05d8d90`)
+## Findings from this run (all fixed in `2ebdee2`)
 
 1. **Half-done workouts could not be resumed.** A workout with logged sets counted as Done and could not be reopened. Added **Resume workout** on Home and the calendar day (Workout_Log gets an `in_progress` column; hand-logged workouts are never marked).
 2. **Calendar listed a renamed extra set under the planned exercise.** It now groups by the name the set was logged under, and numbers sets from 1.
