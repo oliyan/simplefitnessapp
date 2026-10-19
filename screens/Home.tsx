@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { ensureInProgressColumn } from '../utils/workoutProgress';
 import { useSettings } from '../context/SettingsContext';
+import { usePersonal } from '../context/PersonalContext';
+import Onboarding from '../components/Onboarding';
 import {
   buildWeek,
   dayDiff,
@@ -43,6 +45,7 @@ export default function Home({ navigation }: any) {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { weightFormat } = useSettings();
+  const { personal, noteText } = usePersonal();
 
   const [data, setData] = useState<Dashboard | null>(null);
 
@@ -262,6 +265,27 @@ export default function Home({ navigation }: any) {
     </TouchableOpacity>
   );
 
+  // A short note from the sender, chosen by what is happening today.
+  const renderNote = (d: Dashboard) => {
+    const sessions = d.week.find((c) => c.isToday)?.workouts ?? [];
+    const allDone = sessions.length > 0 && sessions.every((s) => s.logged);
+    const recordToday = d.records.some((r) => dayDiff(r.d, new Date()) >= -1);
+    const loggedCount = d.rows.filter((r) => r.logged).length;
+    let text = '';
+    if (recordToday) text = noteText('pr');
+    else if (allDone && loggedCount === 1) text = noteText('firstWorkout');
+    else if (allDone && d.streak >= 2) text = noteText('streak', d.streak);
+    else if (allDone) text = noteText('finish');
+    else if (sessions.length > 0) text = noteText('welcomeBack');
+    else if (d.workoutCount > 0 || d.rows.length > 0) text = noteText('restDay');
+    if (!text) return null;
+    return (
+      <View style={[styles.note, { backgroundColor: theme.accentSoft, borderColor: theme.accent }]}>
+        <Text style={{ color: theme.text, fontSize: 15, lineHeight: 22 }}>{text}</Text>
+      </View>
+    );
+  };
+
   const renderWelcome = () => (
     <View style={card}>
       <Text style={heading}>{t('dashWelcome')}</Text>
@@ -277,8 +301,19 @@ export default function Home({ navigation }: any) {
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.title, { color: theme.text }]}>Urudhi</Text>
-      <Text style={[styles.tagline, { color: theme.text }]}>{'by ஒளியன் கலைக்கூடம்'}</Text>
+      {personal.greeting.trim() ? (
+        <>
+          <Text style={[styles.greeting, { color: theme.accent }]}>{personal.greeting.trim()}</Text>
+          <Text style={[styles.tagline, { color: theme.text }]}>{'Urudhi · by ஒளியன் கலைக்கூடம்'}</Text>
+        </>
+      ) : (
+        <>
+          <Text style={[styles.title, { color: theme.text }]}>Urudhi</Text>
+          <Text style={[styles.tagline, { color: theme.text }]}>{'by ஒளியன் கலைக்கூடம்'}</Text>
+        </>
+      )}
+
+      {data !== null && renderNote(data)}
 
       {data === null ? null : data.workoutCount === 0 && data.rows.length === 0 ? (
         renderWelcome()
@@ -298,6 +333,7 @@ export default function Home({ navigation }: any) {
         <Ionicons name="logo-github" size={18} color={theme.text} style={{ marginRight: 8 }} />
         <Text style={{ color: theme.text, fontWeight: '700' }}>{t('GitHub')}</Text>
       </TouchableOpacity>
+      <Onboarding />
     </ScrollView>
   );
 }
@@ -305,6 +341,8 @@ export default function Home({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, paddingTop: 50, paddingBottom: 30 },
   title: { fontSize: 36, fontWeight: '900', textAlign: 'center' },
+  greeting: { fontSize: 28, fontWeight: '800', textAlign: 'center' },
+  note: { borderWidth: 1, borderLeftWidth: 4, borderRadius: 14, padding: 14, marginBottom: 14 },
   tagline: { fontSize: 14, textAlign: 'center', opacity: 0.7, marginBottom: 18 },
   card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 14 },
   heading: { fontSize: 18, fontWeight: '800', marginBottom: 8 },

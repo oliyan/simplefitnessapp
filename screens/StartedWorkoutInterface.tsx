@@ -27,6 +27,7 @@ import { StartWorkoutStackParamList } from '../App';
 import * as Notifications from 'expo-notifications';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useSettings } from '../context/SettingsContext';
+import { usePersonal } from '../context/PersonalContext';
 import { ensureInProgressColumn, setWorkoutInProgress } from '../utils/workoutProgress';
 import { loadRestTimerPreferences, saveRestTimerPreferences } from '../utils/startedWorkoutPreferenceUtils';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
@@ -103,6 +104,7 @@ export default function StartedWorkoutInterface() {
   const { t } = useTranslation();
   const db = useSQLiteContext();
   const { notificationPermissionGranted, requestNotificationPermission, weightFormat } = useSettings();
+  const { coachName, noteText } = usePersonal();
   
   const { workout_log_id } = route.params;
   
@@ -960,7 +962,7 @@ export default function StartedWorkoutInterface() {
 
         {(coachNote.status === 'loading' || !!coachNote.note?.summary) && (
           <View style={[styles.coachNoteCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.coachNoteTitle, { color: theme.text }]}>{t('coachNoteTitle')}</Text>
+            <Text style={[styles.coachNoteTitle, { color: theme.text }]}>{coachName}</Text>
             <Text style={[styles.coachNoteText, { color: theme.text, opacity: coachNote.status === 'loading' ? 0.5 : 1 }]}>
               {coachNote.status === 'loading' ? t('coachNoteLoading') : coachNote.note?.summary}
             </Text>
@@ -1130,7 +1132,7 @@ export default function StartedWorkoutInterface() {
 
         {exerciseCoachLine && (
           <View style={[styles.coachNoteCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.coachNoteTitle, { color: theme.text }]}>{t('coachNoteTitle')}</Text>
+            <Text style={[styles.coachNoteTitle, { color: theme.text }]}>{coachName}</Text>
             <Text style={[styles.coachNoteText, { color: theme.text }]}>{exerciseCoachLine}</Text>
           </View>
         )}
@@ -1551,6 +1553,12 @@ export default function StartedWorkoutInterface() {
             </View>
           </View>
         </View>
+
+        {noteText('finish') ? (
+          <View style={[styles.finishNote, { backgroundColor: theme.accentSoft, borderColor: theme.accent }]}>
+            <Text style={{ color: theme.text, fontSize: 15, lineHeight: 22 }}>{noteText('finish')}</Text>
+          </View>
+        ) : null}
         
         <TouchableOpacity
           style={[styles.saveButton, { backgroundColor: theme.buttonBackground }]}
@@ -2236,6 +2244,14 @@ const styles = StyleSheet.create({
   
   // Overview screen styles
   overviewContainer: {
+    width: '100%',
+  },
+  finishNote: {
+    borderWidth: 1,
+    borderLeftWidth: 4,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 16,
     width: '100%',
   },
   coachNoteCard: {

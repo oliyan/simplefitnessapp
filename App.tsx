@@ -26,6 +26,7 @@
   import Settings from './screens/Settings';
   import { SettingsProvider, useSettings } from './context/SettingsContext';
   import { ThemeProvider, useTheme } from './context/ThemeContext';
+  import { PersonalProvider } from './context/PersonalContext';
   import EditWorkout from './screens/EditWorkout';
   import AllLogs from './screens/AllLogs';
   import * as Notifications from 'expo-notifications';
@@ -432,9 +433,11 @@ const AppContent = () => {
       <GestureHandlerRootView>
         <NavigationContainer ref={navigationRef}>
           <SettingsProvider>
+          <PersonalProvider>
           <I18nextProvider i18n={i18n}>
           <AppContent/>
           </I18nextProvider>
+          </PersonalProvider>
           </SettingsProvider>
          
         </NavigationContainer>

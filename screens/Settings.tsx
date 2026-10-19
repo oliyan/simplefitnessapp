@@ -22,6 +22,8 @@ import { getApiKey, saveApiKey, deleteApiKey } from '../utils/secureSettings';
 import { callClaude, getUserFacingErrorMessage, MODELS } from '../utils/llmClient';
 import CoachProfileSection from '../components/CoachProfileSection';
 import AiBudgetSection from '../components/AiBudgetSection';
+import PersonaliseSection from '../components/PersonaliseSection';
+import { usePersonal } from '../context/PersonalContext';
 
 export default function Settings() {
   const {
@@ -29,6 +31,7 @@ export default function Settings() {
     setNotificationPermissionGranted,
   } = useSettings();
   const { theme, toggleTheme } = useTheme();
+  const { coachName } = usePersonal();
   const { t } = useTranslation(); // for translations
 
   // Use the notifications hook to access all notification-related functionality
@@ -463,7 +466,7 @@ export default function Settings() {
         {/* --- AI COACH SECTION --- */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            {t('aiCoach')}
+            {coachName}
           </Text>
           <Text style={{ color: theme.text, textAlign: 'center', marginBottom: 12 }}>
             {hasApiKey ? t('aiKeyIsSet') : t('aiKeyNotSet')}
@@ -527,6 +530,7 @@ export default function Settings() {
           )}
           <AiBudgetSection refreshSignal={aiStatus} />
           <CoachProfileSection />
+          <PersonaliseSection />
         </View>
 
         {/* --- NEW COMMUNITY SECTION --- */}
