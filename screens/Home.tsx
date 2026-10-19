@@ -129,7 +129,7 @@ export default function Home({ navigation }: any) {
     </TouchableOpacity>
   );
 
-  const goToCalendar = () => navigation.navigate('My Calendar');
+  const goToCalendar = () => navigation.navigate('My Calendar', { screen: 'MyCalendar' }); // back to the calendar even if a workout screen is open
   const goToWorkouts = (screen: string) => navigation.navigate('My Workouts', { screen, initial: false });
 
   const renderToday = (d: Dashboard) => {

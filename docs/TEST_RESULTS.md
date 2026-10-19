@@ -161,14 +161,40 @@ Run on the emulator after Pass 5, with real data: a scheduled plan, sessions log
 
 ### Still not run
 
-- Phone only: vibration, notification sound and reminders firing, screen-off behaviour, real gym use.
-- Import / export round trip and old-database import: BKP-02..05.
-- Old-format sharing and a long plan name: ROB-03 (date change), ROB-04.
-- Light-theme sweep of every screen; AI draft screen in dark (read only).
-- WKT-08, 10, WDY-02, 03, 05, SCH-07, 08, 14, CAL-05, CAL-10, HOM-05, 10, 11, 12, UIX-11, 14, WRK-21.
+- Phone only: vibration, notification sound, reminders actually firing, screen-off behaviour, real gym use.
+- UIX-11 (backup reminder card: needs 30 days since the last export) was checked on an earlier build only.
+- BKP-02 (restore *your own* export): the export file cannot be read off the emulator. The same import path was run with an old-format database (BKP-04).
 
 ### Small things to know
 
 - The Edit screen shows the end of a long name, not the start.
 - Hand-logging (Track Weights) saves every shown set, so a blank weight is saved as 0 kg. That is how it was built (bodyweight moves have no weight).
 - When you pick only a start date in All Logs, nothing is filtered until you also pick an end date.
+
+---
+
+## Pass 7 — The rest of the list (build `5d0eeab` + one small Home change)
+
+| Area | Cases | Result |
+|---|---|---|
+| Home: tap *This week*, tap *Recent personal records*, GitHub opens in the browser | HOM-05, 11, 12 | ✅ (HOM-05 needed a fix, below) |
+| Rest day card (*Next: Tomorrow ·…*), and the app follows a changed phone date ("3 days ago") | HOM-10, ROB-03 | ✅ |
+| Scheduler: past dates greyed out, the preview moves, weekday changes are remembered on the plan, repeat scheduling says how many were already there | SCH-07, 08 | ✅ |
+| Calendar: Quick Workout on a future date returns to the calendar; a reminder (08:00) is registered with Android | CAL-10, 05 | ✅ (firing not waited for) |
+| No *Recurring Workouts* button | SCH-14 | ✅ |
+| Rename a plan: upcoming sessions show the new name | WKT-10 | ✅ |
+| Long-press delete of an exercise and of a day both ask first | WKT-08 | ✅ |
+| Weekdays: tap again to clear; two days on one weekday; a day with none | WDY-02, 03, 05 | ✅ |
+| Import: Cancel changes nothing; non-database files cannot be picked; an **old-format database** imports and a plan from it can be scheduled | BKP-03, 05, 04 | ✅ |
+| Empty *Workout Plans* card | UIX-14 | ✅ |
+| Light theme: Home, plans, sessions, progress, settings, workout | DRK-02 | ✅ |
+| Very long plan, day and exercise names wrap, nothing runs off the screen | ROB-04 | ✅ |
+| Numbers typed but not saved survive sending the app to the background | WRK-21 | ✅ |
+
+### Fixed in this pass
+
+- **Tapping *This week* on Home** landed on a workout screen left open in the Sessions tab, not on the calendar. It now opens the calendar.
+
+### Notes
+
+- A very long name is cut with "…" in the workout screen header (the full name is shown in the plan).
