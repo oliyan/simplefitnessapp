@@ -1,8 +1,8 @@
 # Urudhi — Phone Test Cases
 
-**Build under test:** branch `workout-screen` at commit `e6d7c01` (includes the AI Coach work and the `minimal` changes)
-**APK:** `Urudhi-test-e6d7c01.apk`
-**Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (63 of them) take about 70 minutes.
+**Build under test:** branch `workout-screen` at commit `05d8d90` (includes the AI Coach work and the `minimal` changes)
+**APK:** `Urudhi-test-05d8d90.apk`
+**Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (66 of them) take about 75 minutes.
 **New in this build:** section 9A (the reworked workout screen) and a few changed cases in sections 3, 9 and 13. Weights are now kg only.
 
 ---
@@ -212,6 +212,10 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | WRK-20 | 🔴 | After finishing, open the workout from the calendar. | All logged sets are there, including extra ones and corrected ones. A renamed extra set appears under its own name. Sets Completed on the finish screen equals the number you logged. | ☐ | |
 | WRK-21 | 🟡 | Put the app in the background in the middle of typing a set, then come back. | The numbers you typed and your position are unchanged. | ☐ | |
 | WRK-22 | ⚪ | Do WRK-02, WRK-04 and WRK-08 in **dark theme**. | Chips, hints and the greyed-out button are readable. | ☐ | |
+| RES-01 | 🔴 | Start a workout, log 2 sets, then leave (Back → Exit). Look at **Home** and the **calendar day**. | The session is **not** shown as Done. Home's Today card says **Resume workout**; the calendar day offers **Resume workout** (not just a log). The Exit message says your logged sets are saved. | ☐ | |
+| RES-02 | 🔴 | Tap **Resume workout**, then Start Workout. | The 2 logged sets are ticked (`✓1 ✓2`), you land on set 3, counts are right (`2/4`), and nothing is logged twice. | ☐ | |
+| RES-03 | 🔴 | Finish the workout (Complete Workout). | Home shows **Done ✓** for it and no Resume button remains. | ☐ | |
+| RES-04 | 🟡 | A workout logged by hand with **Log Weights Manually**. | It is shown as logged, never as Resume. | ☐ | |
 
 ---
 
@@ -420,10 +424,10 @@ Happens every time?  (always / sometimes / once)
 | 7 Schedule a plan | 6 | | | |
 | 8 Calendar | 4 | | | |
 | 9 Doing a workout | 8 | | | |
-| 9A Workout screen | 14 | | | |
+| 9A Workout screen (incl. RES) | 17 | | | |
 | 10 Progress | 2 | | | |
 | 11 Backup | 2 | | | |
 | 12–17 AI Coach | 15 | | | |
 | 18 Dark theme | 1 | | | |
 
-**Total 🔴 cases: 63.**
+**Total 🔴 cases: 66.**
