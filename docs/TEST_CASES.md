@@ -2,7 +2,7 @@
 
 **Build under test:** branch `workout-screen` at commit `21bad31` (includes the AI Coach work and the `minimal` changes)
 **APK:** `Urudhi-test-21bad31.apk`
-**Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (66 of them) take about 75 minutes.
+**Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (67 of them) take about 75 minutes.
 **New in this build:** section 9A (the reworked workout screen) and a few changed cases in sections 3, 9 and 13. Weights are now kg only.
 
 ---
@@ -223,7 +223,8 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| PRG-01 | 🔴 | Open **My Progress**. | Three graph types: **Exercise Stats**, **Workout Stats**, **Overall Stats**; a **Select Workout** menu; **View Logs**. | ☐ | |
+| PRG-01 | 🔴 | Open **My Progress**. | One **ribbon** at the very top, under the title, with three segments: **Exercise Stats**, **Workout Stats**, **Overall Stats** (the selected one is filled); a **Select Workout** menu; **View Logs**. | ☐ | |
+| PRG-07 | 🔴 | Tap each segment of the ribbon in turn, especially **Overall Stats**. | The ribbon **stays at the top** in every mode. It never moves below the graph. Only the content under it changes. | ☐ | |
 | PRG-02 | 🔴 | Select a workout you have logged and look at each graph type. | Graphs render with your data; no crash; empty states are readable if there is no data. | ☐ | |
 | PRG-03 | 🟡 | Tap a point on a graph. | Shows details for that session. | ☐ | |
 | PRG-04 | 🟡 | **View Logs**: expand a session; tap an exercise to edit a set; save. | Edits persist and the graphs update. | ☐ | |
@@ -425,9 +426,9 @@ Happens every time?  (always / sometimes / once)
 | 8 Calendar | 4 | | | |
 | 9 Doing a workout | 8 | | | |
 | 9A Workout screen (incl. RES) | 17 | | | |
-| 10 Progress | 2 | | | |
+| 10 Progress | 3 | | | |
 | 11 Backup | 2 | | | |
 | 12–17 AI Coach | 15 | | | |
 | 18 Dark theme | 1 | | | |
 
-**Total 🔴 cases: 66.**
+**Total 🔴 cases: 67.**

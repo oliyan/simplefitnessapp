@@ -122,7 +122,7 @@ All weights are in kilograms.
 
 ### 6. Check your progress
 
-Open **My Progress**. Choose a graph type (**Exercise Stats**, **Workout Stats** or **Overall Stats**), pick a workout, and read the graphs. Tap a point on a graph for details. **View Logs** lists every session, with a date range filter and an export button.
+Open **My Progress**. Choose a graph type with the ribbon at the top (**Exercise Stats**, **Workout Stats** or **Overall Stats**; it stays at the top whichever you pick), pick a workout, and read the graphs. Tap a point on a graph for details. **View Logs** lists every session, with a date range filter and an export button.
 
 ### 7. Back up your data
 

@@ -3309,86 +3309,38 @@ const calculateCES = (sets: LogData[]): number => {
 
 
 
+  // One ribbon with three segments; the selected one is filled. It sits at the top of the screen.
   const renderGraphModeToggle = () => {
+    const segments: Array<{ mode: 'Exercise' | 'Time' | 'Overall'; icon: string; label: string }> = [
+      { mode: 'Exercise', icon: 'bicycle-outline', label: t('Exercise Stats') },
+      { mode: 'Time', icon: 'barbell-outline', label: t('Workout Stats') },
+      { mode: 'Overall', icon: 'pie-chart-outline', label: t('Overall Stats') },
+    ];
     return (
-      <View style={styles.graphModeToggleContainer}>
-        <TouchableOpacity
-          style={[
-            styles.graphModeButton,
-            {
-              backgroundColor:
-                graphMode === 'Exercise'
-                  ? theme.buttonBackground
-                  : theme.card,
-            },
-          ]}
-          onPress={() => setGraphMode('Exercise')}
-        >
-          <Ionicons
-            name="bicycle-outline"
-            size={18}
-            style={{ marginRight: 6, marginTop: 1 }}
-            color={graphMode === 'Exercise' ? theme.buttonText : theme.text}
-          />
-          <AutoSizeText
-            fontSize={16}
-            numberOfLines={2}
-            mode={ResizeTextMode.max_lines}
-            style={[styles.toggleTexticon, { color: graphMode === 'Exercise' ? theme.buttonText : theme.text }]}
-          >
-            {t('Exercise Stats')}
-          </AutoSizeText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.graphModeButton,
-            {
-              backgroundColor:
-                graphMode === 'Time' ? theme.buttonBackground : theme.card,
-            },
-          ]}
-          onPress={() => setGraphMode('Time')}
-        >
-          <Ionicons
-            name="barbell-outline"
-            size={18}
-            style={{ marginRight: 6, marginTop: 1 }}
-            color={graphMode === 'Time' ? theme.buttonText : theme.text}
-          />
-          <AutoSizeText
-            fontSize={16}
-            numberOfLines={2}
-            mode={ResizeTextMode.max_lines}
-            style={[styles.toggleTexticon, { color: graphMode === 'Time' ? theme.buttonText : theme.text }]}
-          >
-            {t('Workout Stats')}
-          </AutoSizeText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.graphModeButton,
-            {
-              backgroundColor:
-                graphMode === 'Overall' ? theme.buttonBackground : theme.card,
-            },
-          ]}
-          onPress={() => setGraphMode('Overall')}
-        >
-          <Ionicons
-            name="pie-chart"
-            size={18}
-            style={{ marginRight: 6, marginTop: 1 }}
-            color={graphMode === 'Overall' ? theme.buttonText : theme.text}
-          />
-          <AutoSizeText
-            fontSize={16}
-            numberOfLines={2}
-            mode={ResizeTextMode.max_lines}
-            style={[styles.toggleTexticon, { color: graphMode === 'Overall' ? theme.buttonText : theme.text }]}
-          >
-            {t('Overall Stats')}
-          </AutoSizeText>
-        </TouchableOpacity>
+      <View style={[styles.graphModeRibbon, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        {segments.map((segment, index) => {
+          const selected = graphMode === segment.mode;
+          return (
+            <TouchableOpacity
+              key={segment.mode}
+              style={[
+                styles.graphModeSegment,
+                index > 0 && { borderLeftWidth: 1, borderLeftColor: theme.border },
+                selected && { backgroundColor: theme.buttonBackground },
+              ]}
+              onPress={() => setGraphMode(segment.mode)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name={segment.icon} size={20} color={selected ? theme.buttonText : theme.text} />
+              <Text
+                style={[styles.graphModeSegmentText, { color: selected ? theme.buttonText : theme.text }]}
+                numberOfLines={2}
+              >
+                {segment.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     );
   };
@@ -3421,6 +3373,9 @@ const calculateCES = (sets: LogData[]): number => {
         </View>
       ) : (
         <>
+          {/* Graph type ribbon: always the first thing under the title */}
+          {renderGraphModeToggle()}
+
           {/* Metric Selection - Moved up to be available for all graph modes */}
           {(selectedExercise || (graphMode === 'Time' && selectedWorkout) || graphMode === 'Overall') && (
             <>
@@ -3578,16 +3533,6 @@ const calculateCES = (sets: LogData[]): number => {
           )}
 
           {/* Selection Controls */}
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: theme.text, textAlign: 'center' },
-            ]}
-          >
-            {t('Graph Type')}
-          </Text>
-          {renderGraphModeToggle()}
-
           {/* Workout Dropdown */}
           {graphMode !== 'Overall' && !(graphMode === 'Time' && calculationType === 'MuscleDistribution') && renderWorkoutDropdown()}
 
@@ -4017,6 +3962,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
     opacity: 0.7,
+  },
+  graphModeRibbon: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 18,
+  },
+  graphModeSegment: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    gap: 4,
+  },
+  graphModeSegmentText: {
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   graphModeToggleContainer: {
     flexDirection: 'row',
