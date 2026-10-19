@@ -213,7 +213,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | WRK-21 | 🟡 | Put the app in the background in the middle of typing a set, then come back. | The numbers you typed and your position are unchanged. | ☐ | |
 | WRK-22 | ⚪ | Do WRK-02, WRK-04 and WRK-08 in **dark theme**. | Chips, hints and the greyed-out button are readable. | ☐ | |
 | RES-01 | 🔴 | Start a workout, log 2 sets, then leave (Back → Exit). Look at **Home** and the **calendar day**. | The session is **not** shown as Done. Home's Today card says **Resume workout**; the calendar day offers **Resume workout** (not just a log). The Exit message says your logged sets are saved. | ☐ | |
-| RES-02 | 🔴 | Tap **Resume workout**, then Start Workout. | The 2 logged sets are ticked (`✓1 ✓2`), you land on set 3, counts are right (`2/4`), and nothing is logged twice. | ☐ | |
+| RES-02 | 🔴 | Tap **Resume workout**, then Start Workout. | The 2 logged sets are ticked (`✓1 ✓2`), you land on set 3, counts are right (`2/4`), and nothing is logged twice. The workout timer continues from the time you had before leaving (it does not restart at 00:00:00). | ☐ | |
 | RES-03 | 🔴 | Finish the workout with **Finish Workout**. The summary appears; leave it with Done **or** the Back button. | Home shows **Done ✓** for it and no Resume button remains. | ☐ | |
 | RES-04 | 🟡 | A workout logged by hand with **Log Weights Manually**. | It is shown as logged, never as Resume. | ☐ | |
 
