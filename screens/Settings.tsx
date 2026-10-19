@@ -132,14 +132,15 @@ export default function Settings() {
     onPress: () => void,
   ) => (
     <TouchableOpacity
-      style={[styles.button, current === label && styles.activeButton]}
+      style={[styles.button, { backgroundColor: theme.card, borderColor: theme.border }, current === label && { backgroundColor: theme.buttonBackground, borderColor: theme.buttonBackground }]}
       onPress={onPress}
     >
       <View style={styles.buttonContent}>
         <Text
           style={[
             styles.buttonText,
-            current === label && styles.activeButtonText,
+            { color: theme.text },
+            current === label && { color: theme.buttonText },
           ]}
         >
           {label}
@@ -148,7 +149,7 @@ export default function Settings() {
           <Ionicons
             name='checkmark'
             size={18}
-            color='white'
+            color={theme.buttonText}
             style={styles.tickIcon}
           />
         )}
@@ -365,15 +366,15 @@ export default function Settings() {
             {t('notifications')}
           </Text>
 
-          <View style={styles.toggleRow}>
-            <Text style={[styles.toggleText, { color: '#FFFFFF' }]}>
+          <View style={[styles.toggleRow, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.toggleText, { color: theme.text }]}>
               {t('remindScheduledWorkouts')}
             </Text>
             <Switch
               value={notificationPermissionGranted}
               onValueChange={handleNotificationToggle}
-              trackColor={{ false: '#767577', true: '#FFFFFF' }}
-              thumbColor={notificationPermissionGranted ? '#ffffff' : '#f4f3f4'}
+              trackColor={{ false: '#767577', true: theme.accentSoft }}
+              thumbColor={notificationPermissionGranted ? theme.accent : '#f4f3f4'}
             />
           </View>
         </View>
@@ -386,7 +387,7 @@ export default function Settings() {
             <TouchableOpacity
               style={[
                 styles.button,
-                theme.background === '#FFFFFF' && styles.activeButton,
+                { backgroundColor: theme.card, borderColor: theme.border },
                 { minWidth: 150 },
               ]}
               onPress={toggleTheme}
@@ -394,10 +395,10 @@ export default function Settings() {
               <Text
                 style={[
                   styles.buttonText,
-                  theme.background === '#FFFFFF' && styles.activeButtonText,
+                  { color: theme.text },
                 ]}
               >
-                {theme.background === '#FFFFFF'
+                {theme.type === 'light'
                   ? t('settingsSwitchDark')
                   : t('settingsSwitchLight')}
               </Text>
@@ -414,7 +415,7 @@ export default function Settings() {
             <TouchableOpacity
               style={[
                 styles.dataManagementButton,
-                { backgroundColor: '#121212' },
+                { backgroundColor: theme.buttonBackground },
               ]}
               onPress={exportDatabase}
             >
@@ -422,13 +423,13 @@ export default function Settings() {
                 <Ionicons
                   name='share-outline'
                   size={18}
-                  color={'#FFFFFF'}
+                  color={theme.buttonText}
                   style={styles.dataButtonIcon}
                 />
                 <Text
                   style={[
                     styles.dataManagementButtonText,
-                    { color: '#FFFFFF' },
+                    { color: theme.buttonText },
                   ]}
                   numberOfLines={2}
                 >
@@ -440,7 +441,7 @@ export default function Settings() {
             <TouchableOpacity
               style={[
                 styles.dataManagementButton,
-                { backgroundColor: '#FFFFFF' },
+                { backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border },
               ]}
               onPress={importDatabase}
             >
@@ -448,13 +449,13 @@ export default function Settings() {
                 <Ionicons
                   name='download-outline'
                   size={18}
-                  color={'#000000'}
+                  color={theme.text}
                   style={styles.dataButtonIcon}
                 />
                 <Text
                   style={[
                     styles.dataManagementButtonText,
-                    { color: '#000000' },
+                    { color: theme.text },
                   ]}
                   numberOfLines={2}
                 >
@@ -544,7 +545,7 @@ export default function Settings() {
             <TouchableOpacity
               style={[
                 styles.dataManagementButton,
-                { backgroundColor: '#FFFFFF' },
+                { backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border },
               ]}
               onPress={() =>
                 Linking.openURL(
@@ -556,13 +557,13 @@ export default function Settings() {
                 <Ionicons
                   name='logo-github'
                   size={25}
-                  color={'#000000'}
+                  color={theme.text}
                   style={styles.dataButtonIcon}
                 />
                 <Text
                   style={[
                     styles.dataManagementButtonText,
-                    { color: '#000000' },
+                    { color: theme.text },
                   ]}
                   numberOfLines={3}
                 >
