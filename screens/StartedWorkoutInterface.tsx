@@ -15,6 +15,7 @@ import {
   Switch,
   Modal,
   AppState,
+  Animated,
   Linking,
   StatusBar
 } from 'react-native';
@@ -47,6 +48,8 @@ import {
 } from '../utils/timerPersistenceUtils';
 import { AutoSizeText, ResizeTextMode } from 'react-native-auto-size-text';
 import WeightSuggestionBadge from '../components/WeightSuggestionBadge';
+import RestRing from '../components/RestRing';
+import Celebration from '../components/Celebration';
 import {
     DifficultyLevel,
     analyzeDifficultyAndSuggestWeight,
@@ -148,6 +151,9 @@ export default function StartedWorkoutInterface() {
   // Timer state using the new utility
   const [timerState, setTimerState] = useState<TimerState>(createTimerState());
   const [isCompletingSet, setIsCompletingSet] = useState(false);
+  const [restTotal, setRestTotal] = useState(30);
+  const [celebration, setCelebration] = useState<string | null>(null);
+  const checkScale = useRef(new Animated.Value(0)).current;
 
   // Fixing a set that was already logged (weight and reps only).
   const [editingSetIndex, setEditingSetIndex] = useState<number | null>(null);
@@ -284,6 +290,13 @@ export default function StartedWorkoutInterface() {
         setNumber = next?.n ?? setNumber;
       }
 
+      // A personal best: heavier than anything logged before for this exercise (it needs an earlier log).
+      const bestRow = await db.getFirstAsync<{ m: number | null }>(
+        `SELECT MAX(weight_logged) AS m FROM Weight_Log WHERE exercise_name = ?;`,
+        [currentSet.exercise_name.trim()]
+      );
+      const isPersonalBest = bestRow?.m != null && weight > bestRow.m;
+
       const result = await db.runAsync(
         `INSERT INTO Weight_Log (workout_log_id, logged_exercise_id, exercise_name, set_number, weight_logged, reps_logged, muscle_group, difficulty, comments)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
@@ -320,7 +333,10 @@ export default function StartedWorkoutInterface() {
       }
 
       if (enableVibration) {
-        Vibration.vibrate(100);
+        Vibration.vibrate(isPersonalBest ? [0, 120, 80, 120, 80, 220] : 100);
+      }
+      if (isPersonalBest) {
+        setCelebration(`New personal best!  ${weight} ${weightFormat}`);
       }
 
       if (isFinishingWorkout) {
@@ -615,6 +631,8 @@ export default function StartedWorkoutInterface() {
   // The summary screen saves the workout time itself, so there is nothing left to press to save.
   useEffect(() => {
     if (timerState.workoutStage === 'completed') {
+      checkScale.setValue(0);
+      Animated.spring(checkScale, { toValue: 1, friction: 4, tension: 70, useNativeDriver: true }).start();
       setWorkoutInProgress(db, workout_log_id, false);
       db.runAsync('UPDATE Workout_Log SET completion_time = ? WHERE workout_log_id = ?;', [
         timerState.workoutDuration,
@@ -831,6 +849,7 @@ export default function StartedWorkoutInterface() {
   };
   
   const startRestTimer = (seconds: number) => {
+    setRestTotal(seconds);
     // We're explicitly setting a number here, not null
     setTimerState(prev => updateTimerState(prev, {
       restRemaining: seconds,  // This is a number
@@ -1196,6 +1215,17 @@ export default function StartedWorkoutInterface() {
             </View>
           ) : (
             <>
+              {hint && (currentSet.weight === '' || currentSet.reps_done === '') && (
+                <TouchableOpacity
+                  style={[styles.sameAsLast, { backgroundColor: theme.accentSoft, borderColor: theme.accent }]}
+                  onPress={() => updateCurrentSet({ weight: hint.weight, reps_done: hint.reps })}
+                >
+                  <Ionicons name="repeat" size={16} color={theme.accent} style={{ marginRight: 6 }} />
+                  <Text style={{ color: theme.text, fontWeight: '700' }}>
+                    {t('sameAsLast')}: {hint.weight} {weightFormat} × {hint.reps}
+                  </Text>
+                </TouchableOpacity>
+              )}
               <View style={styles.inputContainer}>
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.text }]}> {t('Weight')} ({weightFormat})</Text>
@@ -1444,20 +1474,25 @@ export default function StartedWorkoutInterface() {
         <View style={[styles.restCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.restTitle, { color: theme.text }]}>{t('restTime')}</Text>
           
-          <View style={styles.restTimerContainer}>
-            <Text style={[styles.restTimerText, { color: theme.text }]}>
-              {timerState.restRemaining}
-            </Text>
-            <Text style={[styles.restTimerUnit, { color: theme.text }]}>{t('sec')}</Text>
+          <View style={{ marginVertical: 8 }}>
+            <RestRing
+              remaining={timerState.restRemaining ?? 0}
+              total={Math.max(restTotal, timerState.restRemaining ?? 0)}
+              color={theme.accent}
+              trackColor={theme.accentSoft}
+              textColor={theme.text}
+              unitLabel={t('sec')}
+            />
           </View>
-          
+
           <TouchableOpacity
-              style={[styles.addTimeButton, { backgroundColor: theme.type === 'dark' ? 'rgba(255,255,255,0.15)' : theme.border }]}
-            onPress={() => setTimerState(prev => updateTimerState(prev, { 
-              restRemaining: (prev.restRemaining ?? 0) + 15 
-            }))}
+            style={[styles.addTimeButton, { backgroundColor: theme.accentSoft }]}
+            onPress={() => {
+              setRestTotal(total => total + 15);
+              setTimerState(prev => updateTimerState(prev, { restRemaining: (prev.restRemaining ?? 0) + 15 }));
+            }}
           >
-            <Text style={[styles.addTimeButtonText, { color: theme.type === 'dark' ? 'white' : 'rgba(255, 255, 255, 0.8)' }]}>{t('addTime')}</Text>
+            <Text style={[styles.addTimeButtonText, { color: theme.text }]}>{t('addTime')}</Text>
           </TouchableOpacity>
           
           <Text style={[styles.restMessage, { color: theme.text }]}>
@@ -1528,7 +1563,9 @@ export default function StartedWorkoutInterface() {
     
     return (
       <View style={styles.completedContainer}>
-        <Ionicons name="checkmark-circle" size={80} color={theme.buttonBackground} style={styles.completedIcon} />
+        <Animated.View style={{ transform: [{ scale: checkScale }] }}>
+          <Ionicons name="checkmark-circle" size={80} color={theme.buttonBackground} style={styles.completedIcon} />
+        </Animated.View>
         
         <Text style={[styles.completedTitle, { color: theme.text }]}>{t('workoutCompleted')}</Text>
         
@@ -2065,6 +2102,7 @@ export default function StartedWorkoutInterface() {
       {renderNotesModal()}
 
       {renderEditSetModal()}
+      <Celebration message={celebration} onDone={() => setCelebration(null)} />
     </View>
   );
 }
@@ -2253,6 +2291,16 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 16,
     width: '100%',
+  },
+  sameAsLast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginTop: 12,
   },
   coachNoteCard: {
     borderRadius: 12,

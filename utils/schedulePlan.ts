@@ -34,13 +34,28 @@ export const computeOccurrences = (days: PlanDay[], start: Date, weeks: number):
 // Writes the occurrences to the calendar the same way the "Schedule a workout" screen does
 // (a Workout_Log row plus a copy of the day's exercises). Dates that already have this
 // workout day are skipped, not duplicated.
+// `reminder` (optional) schedules a notification at that time of day on each new session and stores
+// its id on the session, so deleting the session cancels it.
+export interface ReminderOptions {
+  time: Date; // only the hours and minutes are used
+  schedule: (args: {
+    workoutName: string;
+    dayName: string;
+    scheduledDate: Date;
+    notificationTime: Date;
+  }) => Promise<string | null>;
+}
+
 export const scheduleOccurrences = async (
   db: any,
   workoutName: string,
   occurrences: Occurrence[],
-): Promise<{ added: number; skipped: number }> => {
+  reminder?: ReminderOptions,
+): Promise<{ added: number; skipped: number; reminders: number }> => {
   let added = 0;
   let skipped = 0;
+  let reminders = 0;
+  const created: { workoutLogId: number; occurrence: Occurrence }[] = [];
 
   await db.withTransactionAsync(async () => {
     for (const occurrence of occurrences) {
@@ -68,9 +83,25 @@ export const scheduleOccurrences = async (
           [workoutLogId, ex.exercise_name, ex.sets, ex.reps, ex.web_link, ex.muscle_group, ex.exercise_notes],
         );
       }
+      created.push({ workoutLogId, occurrence });
       added++;
     }
   });
 
-  return { added, skipped };
+  if (reminder) {
+    for (const { workoutLogId, occurrence } of created) {
+      const id = await reminder.schedule({
+        workoutName,
+        dayName: occurrence.day.day_name,
+        scheduledDate: occurrence.date,
+        notificationTime: reminder.time,
+      });
+      if (id) {
+        await db.runAsync('UPDATE Workout_Log SET notification_id = ? WHERE workout_log_id = ?;', [id, workoutLogId]);
+        reminders++;
+      }
+    }
+  }
+
+  return { added, skipped, reminders };
 };
