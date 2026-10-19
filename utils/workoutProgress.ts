@@ -12,16 +12,28 @@ export const ensureInProgressColumn = async (db: SQLiteDatabase): Promise<void> 
     if (!info.some((column) => column.name === 'in_progress')) {
       await db.runAsync('ALTER TABLE Workout_Log ADD COLUMN in_progress INTEGER DEFAULT 0;');
     }
+    // Seconds already spent on a workout that was left halfway, so a resumed one keeps counting.
+    if (!info.some((column) => column.name === 'elapsed_seconds')) {
+      await db.runAsync('ALTER TABLE Workout_Log ADD COLUMN elapsed_seconds INTEGER DEFAULT 0;');
+    }
     columnChecked = true;
   } catch (error) {
     console.error('Could not add in_progress column:', error);
   }
 };
 
-export const setWorkoutInProgress = async (db: SQLiteDatabase, workoutLogId: number, inProgress: boolean) => {
+export const setWorkoutInProgress = async (
+  db: SQLiteDatabase,
+  workoutLogId: number,
+  inProgress: boolean,
+  elapsedSeconds?: number,
+) => {
   try {
     await ensureInProgressColumn(db);
-    await db.runAsync('UPDATE Workout_Log SET in_progress = ? WHERE workout_log_id = ?;', [inProgress ? 1 : 0, workoutLogId]);
+    await db.runAsync(
+      'UPDATE Workout_Log SET in_progress = ?, elapsed_seconds = COALESCE(?, elapsed_seconds) WHERE workout_log_id = ?;',
+      [inProgress ? 1 : 0, elapsedSeconds ?? null, workoutLogId],
+    );
   } catch (error) {
     console.error('Could not update in_progress:', error);
   }

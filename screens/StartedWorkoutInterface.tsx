@@ -299,7 +299,7 @@ export default function StartedWorkoutInterface() {
       );
 
       // The workout counts as "in progress" (resumable) from its first logged set until it is finished.
-      await setWorkoutInProgress(db, workout_log_id, true);
+      await setWorkoutInProgress(db, workout_log_id, true, timerState.workoutDuration);
 
       const loggedSet: ExerciseSet = {
         ...currentSet,
@@ -693,6 +693,15 @@ export default function StartedWorkoutInterface() {
       
       if (workoutResult.length > 0) {
         setWorkout(workoutResult[0]);
+
+        // A workout that was left halfway keeps the time it already had.
+        const progressRow = await db.getFirstAsync<{ in_progress: number | null; elapsed_seconds: number | null }>(
+          `SELECT in_progress, elapsed_seconds FROM Workout_Log WHERE workout_log_id = ?;`,
+          [workout_log_id]
+        );
+        if (progressRow?.in_progress && progressRow.elapsed_seconds) {
+          setTimerState(prev => updateTimerState(prev, { workoutDuration: progressRow.elapsed_seconds as number }));
+        }
         
         const exercisesResult = await db.getAllAsync<Exercise>(
           `SELECT exercise_name, sets, reps, logged_exercise_id, web_link, muscle_group, exercise_notes
