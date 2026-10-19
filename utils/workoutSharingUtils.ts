@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 import i18n from './i18n'; // Import the i18n instance
 import slugify from 'slugify';
 import { normalizeWeekday } from './weekdays';
+import { ensureWorkoutColumns } from './exerciseDetailUtils';
 
 
 
@@ -111,6 +112,9 @@ export const exportWorkout = async (db: any, workoutId: number) => {
  */
 export const insertWorkoutData = async (db: any, workoutData: ExportedWorkout): Promise<number> => {
   let newWorkoutId: number | undefined;
+
+  // A fresh database lacks weekday, web_link, muscle_group and exercise_notes until they are added.
+  await ensureWorkoutColumns(db);
 
   await db.withTransactionAsync(async () => {
     // Insert workout

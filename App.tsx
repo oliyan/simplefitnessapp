@@ -3,6 +3,7 @@
   import { View, ActivityIndicator, StatusBar, StyleSheet, Pressable, Text, Platform } from 'react-native'; // Import Platform
   import * as FileSystem from 'expo-file-system';
   import { SQLiteProvider} from 'expo-sqlite';
+  import { ensureWorkoutColumns } from './utils/exerciseDetailUtils';
   import { Asset } from 'expo-asset';
   import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
   import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
@@ -148,7 +149,7 @@
   function WorkoutStack() {
     return (
 
-      <SQLiteProvider databaseName="SimpleDB.db" useSuspense>
+      <SQLiteProvider databaseName="SimpleDB.db" useSuspense onInit={ensureWorkoutColumns}>
 
       <WorkoutStackScreen.Navigator screenOptions={{
         headerShown: false, // Disable headers for all screens in this stack
@@ -309,7 +310,7 @@ const AppContent = () => {
           </View>
         }
       />
-      <SQLiteProvider databaseName="SimpleDB.db" useSuspense>
+      <SQLiteProvider databaseName="SimpleDB.db" useSuspense onInit={ensureWorkoutColumns}>
         <Bottom.Navigator
           screenOptions={{
             headerShown: false,

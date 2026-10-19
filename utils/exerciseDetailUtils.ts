@@ -127,3 +127,15 @@ export const addWeekdayColumn = async (db: SQLiteDatabase) => {
         console.error('Error adding weekday column:', error);
     }
 };
+
+// Brings an older database up to date. Safe to call any number of times. It runs when the
+// database opens, so no screen can assume another screen has already added a column.
+export const ensureWorkoutColumns = async (db: SQLiteDatabase) => {
+    await addWebLinkColumn(db);
+    await addMuscleGroupColumn(db);
+    await addExerciseNotesColumn(db);
+    await addDifficultyColumn(db);
+    await addSuggestedWeightColumn(db);
+    await addCommentsColumn(db);
+    await addWeekdayColumn(db);
+};
