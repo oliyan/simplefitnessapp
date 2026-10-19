@@ -336,7 +336,7 @@ const AppContent = () => {
             component={WorkoutStack}
             options={{
               tabBarButton: (props) => (
-                <TabButton {...props} iconName="barbell" />
+                <TabButton {...props} iconName="clipboard-outline" />
               ),
             }}
           />
@@ -346,7 +346,7 @@ const AppContent = () => {
             component={WorkoutLogStack}
             options={{
               tabBarButton: (props) => (
-                <TabButton {...props} iconName="calendar" />
+                <TabButton {...props} iconName="barbell" />
               ),
             }}
           />

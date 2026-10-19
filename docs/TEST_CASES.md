@@ -86,7 +86,7 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| WKT-01 | 🔴 | My Workouts → **Create a new workout**. Build `T-Plan` as described in section 0. Save. | It appears in the list. Opening it shows both days and their exercises with muscle-group tags. | ☐ | |
+| WKT-01 | 🔴 | Workout Plans → **Create new workout plan**. Build `T-Plan` as described in section 0. Save. | It appears in the list. Opening it shows both days and their exercises with muscle-group tags. | ☐ | |
 | WKT-02 | 🟡 | Try to save with an empty workout name. | A clear error; nothing is saved. | ☐ | |
 | WKT-03 | 🟡 | Try to save with a day that has no name, or an exercise with 0 sets or 0 reps. | A clear error; nothing is saved. | ☐ | |
 | WKT-04 | 🟡 | Try to create a second workout with the exact name `T-Plan`. | Refused with a clear message (names must be unique), no crash. | ☐ | |
@@ -116,7 +116,7 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
 | SHR-01 | 🔴 | On a workout with weekdays set, tap the **share** icon and send the file to yourself (Drive/email/WhatsApp). | A `UrudhiWorkout_<name>.json` file is shared. | ☐ | |
-| SHR-02 | 🔴 | Delete that workout, then My Workouts → **import** button and pick the file. | The workout returns with all days, exercises **and weekdays**. | ☐ | |
+| SHR-02 | 🔴 | Delete that workout, then Workout Plans → **import** button and pick the file. | The workout returns with all days, exercises **and weekdays**. | ☐ | |
 | SHR-03 | 🟡 | Import the same file again. | Refused because the name already exists, with a clear message. | ☐ | |
 | SHR-04 | 🟡 | Import the **older-format** sample from Appendix A (no weekday field). | Imports fine; days have no weekday. | ☐ | |
 | SHR-05 | ⚪ | Import a file that is not a workout (any random `.json` or `.txt`). | A clear failure message; no crash; nothing added. | ☐ | |
@@ -148,7 +148,7 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| CAL-01 | 🔴 | Open **My Calendar**. | Month view, weeks start **Monday**. Legend: Today, Logged, Untracked, Upcoming. | ☐ | |
+| CAL-01 | 🔴 | Open **Sessions**. | Month view, weeks start **Monday**. Legend: Today, Logged, Untracked, Upcoming. | ☐ | |
 | CAL-02 | 🟡 | Check the day styles. | Logged = filled dark; today = underlined; a past planned day you did not log = outlined ("untracked"); upcoming = shaded. | ☐ | |
 | CAL-03 | 🟡 | Swipe to previous/next month with the arrows. | Works; scheduled sessions show in the right months. | ☐ | |
 | CAL-04 | 🔴 | Tap a day with a workout. | A list of that day's workouts opens; tap one to see its exercises. | ☐ | |
@@ -278,7 +278,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| GEN-01 | 🔴 | My Workouts → **Generate a plan with AI**. | A form with sections **About you** (experience, main goal, focus areas), **Your week** (training days, time per session, split), **Preferences** (intensity, equipment, injuries, likes/dislikes). | ☐ | |
+| GEN-01 | 🔴 | Workout Plans → **Generate a plan with AI**. | A form with sections **About you** (experience, main goal, focus areas), **Your week** (training days, time per session, split), **Preferences** (intensity, equipment, injuries, likes/dislikes). | ☐ | |
 | GEN-02 | 🔴 | Before choosing any day, look at the **Generate plan** button. | Greyed out, with "Pick at least one training day." | ☐ | |
 | GEN-03 | 🟡 | Select four focus areas. | The fourth is ignored (maximum 3). | ☐ | |
 | GEN-04 | 🟡 | Check the **Injuries and constraints** card. | Shows what you saved under Settings → AI Coach, or a hint to add some. | ☐ | |
@@ -339,7 +339,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| DRK-01 | 🔴 | Settings → **Switch to Dark**. Visit each screen: Home, My Workouts, a workout, the editor, scheduler, calendar, start screen, workout in progress, progress graphs, logs, settings, AI plan form and draft. | Text is readable everywhere (no dark-on-dark or white-on-white). The new **Home** cards, **weekday buttons**, the **scheduler**, and the **AI form** chips are the new things, so look hardest there. | ☐ | |
+| DRK-01 | 🔴 | Settings → **Switch to Dark**. Visit each screen: Home, Workout Plans, a workout, the editor, scheduler, calendar, start screen, workout in progress, progress graphs, logs, settings, AI plan form and draft. | Text is readable everywhere (no dark-on-dark or white-on-white). The new **Home** cards, **weekday buttons**, the **scheduler**, and the **AI form** chips are the new things, so look hardest there. | ☐ | |
 | DRK-02 | 🟡 | Switch back to light. | Back to normal; setting remembered after restart. | ☐ | |
 
 ---

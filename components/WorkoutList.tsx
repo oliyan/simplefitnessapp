@@ -58,7 +58,7 @@ export default function WorkoutList({
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Title */}
       <View style={styles.titleContainer}>
-        <Ionicons name="barbell" size={30} color={theme.text} style={styles.titleIcon} />
+        <Ionicons name="clipboard-outline" size={30} color={theme.text} style={styles.titleIcon} />
         <Text style={[styles.title, { color: theme.text }]}>{t('MyWorkouts')}</Text>
       </View>
 

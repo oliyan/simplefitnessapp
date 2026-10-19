@@ -661,7 +661,7 @@ export default function MyCalendar() {
     >
       <View style={styles.titleContainer}>
         <Ionicons
-          name='calendar'
+          name='barbell'
           size={scale(30)}
           color={theme.text}
           style={styles.titleIcon}

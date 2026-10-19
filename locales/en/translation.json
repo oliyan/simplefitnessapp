@@ -86,19 +86,19 @@
     "_comment_homepage": "These are homepage-related strings.",
 
 
-    "homeCreateWorkout": "Create a\nworkout.",
-    "homeGotoWorkouts": "Go to My Workouts",
+    "homeCreateWorkout": "Create new workout plan",
+    "homeGotoWorkouts": "Go to Workout Plans",
     "homeScheduleWorkouts": "Schedule\nyour\nworkout.",
-    "homeGotoCalendar": "Go to My Calendar",
+    "homeGotoCalendar": "Go to Sessions",
     "homeTrackProgress": "Track\nyour\nprogress.",
     "homeGotoProgress": "Go to My Progress",
 
 
     "_comment_workoutlist": "These are workoutlist-related strings.",
 
-    "MyWorkouts": "My Workouts",
+    "MyWorkouts": "Workout Plans",
     "CreateAWorkout" : "New\nWorkout",
-    "CreateAWorkoutButton" : "Create a new workout",
+    "CreateAWorkoutButton" : "Create new workout plan",
     "WorkoutListTip" : "Tip: You can delete most things by long pressing on it, try it when you get the chance!",
 
 
@@ -160,7 +160,7 @@
     "noWorkoutToday": "No workout scheduled for today.",
     "todaysWorkout": "Today's Workout",
     "scheduleWorkout": "Schedule a Workout",
-    "myCalendar": "My Calendar",
+    "myCalendar": "Sessions",
     "noExerciseLogged":" No exercises logged.",
     "failedToDeleteWorkoutLog": "Failed to delete workout log.",
     "noWorkoutsScheduledForDate": "No workouts scheduled for this date.",
@@ -580,7 +580,7 @@
     "schedulePlanButton": "Schedule this plan",
     "schedulePlanTitle": "Schedule a plan",
     "schedulePlanPick": "Choose a plan to schedule",
-    "schedulePlanNoPlans": "Create a workout first.",
+    "schedulePlanNoPlans": "Create a workout plan first.",
     "schedulePlanWeekdays": "Weekday for each day",
     "schedulePlanStart": "Start date",
     "schedulePlanLength": "How long",
@@ -631,7 +631,7 @@
     "dashPRNone": "Lift more than your best on an exercise and it shows up here.",
     "dashDaysAgo": "{{count}} days ago",
     "dashWelcome": "Welcome to Urudhi",
-    "dashWelcomeBody": "Create your first workout, or let the AI coach build you a plan.",
+    "dashWelcomeBody": "Create your first workout plan, or let the AI coach build you a plan.",
     "exerciseNameRequired": "Give the exercise a name before logging the set.",
     "exerciseNameLabel": "Exercise name",
     "extraNameHint": "Change the name to log a different exercise.",

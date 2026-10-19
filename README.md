@@ -22,7 +22,7 @@ Urudhi is a small, quiet fitness app: build a plan, put it on your calendar, do 
   <tr>
     <td align="center"><img src="docs/screenshots/03-plan-with-weekdays.png" width="190" alt="A plan with weekdays"><br><sub><b>A plan</b><br>Each day has a weekday</sub></td>
     <td align="center"><img src="docs/screenshots/07-start-workout.png" width="190" alt="Start workout with coach note"><br><sub><b>Start workout</b><br>With the coach's note</sub></td>
-    <td align="center"><img src="docs/screenshots/02-workouts.png" width="190" alt="My workouts"><br><sub><b>My Workouts</b><br>Create, import, generate</sub></td>
+    <td align="center"><img src="docs/screenshots/02-workouts.png" width="190" alt="Workout Plans"><br><sub><b>Workout Plans</b><br>Create, import, generate</sub></td>
     <td align="center"><img src="docs/screenshots/08-settings.png" width="190" alt="Settings"><br><sub><b>Settings</b><br>Backup, theme, AI Coach</sub></td>
   </tr>
 </table>
@@ -52,7 +52,7 @@ Android only for now.
 
 ## 📖 **Using the app**
 
-The bottom bar has five tabs: **Home**, **My Workouts** (dumbbell), **My Calendar**, **My Progress** and **Settings**.
+The bottom bar has five tabs: **Home**, **Workout Plans** (clipboard), **Sessions** (dumbbell), **My Progress** and **Settings**.
 
 ### 1. The Home dashboard
 
@@ -77,7 +77,7 @@ Dates, the 12-hour clock and the Monday-first week are fixed; there is nothing t
 
 ### 3. Create a workout
 
-1. Open **My Workouts** and tap **Create a new workout**.
+1. Open **Workout Plans** and tap **Create new workout plan**.
 2. Give it a name and add one or more **days** (for example "Push", "Pull", "Legs").
 3. For each day, tap a **weekday** (M T W T F S S) if the day belongs to a particular day of the week. Tap it again to clear it. This is optional.
 4. Add **exercises** with sets and reps, and tag each with a muscle group if you like.
@@ -100,7 +100,7 @@ To change a workout, open it and use the pencil icon (names, weekdays, exercises
 
 Dates that already have that workout day are skipped, so scheduling the same plan twice does not create duplicates. Days without a weekday are left out.
 
-**A single workout.** On **My Calendar**, tap a day, then **Schedule a Workout**, and pick the workout and the day. You can ask for a reminder at a time you choose (needs Notifications turned on in Settings).
+**A single workout.** On **Sessions**, tap a day, then **Schedule a Workout**, and pick the workout and the day. You can ask for a reminder at a time you choose (needs Notifications turned on in Settings).
 
 The calendar fills in days with a logged workout, underlines today, outlines a planned day you have not tracked, and shades upcoming ones. Long-press a scheduled workout to delete it.
 
@@ -146,7 +146,7 @@ The key is kept in your phone's secure storage. **Delete key** removes it.
 
 **Coach's note before a workout.** When you open today's workout, the overview shows a short note based on your recent logs: injuries or pain you commented on, lifts that felt Hard or Easy repeatedly, stalled lifts, and a long break since you last trained that muscle (after a couple of weeks off it suggests easing back in, not adding weight). Advice is always in kg. Exercises with something specific also show their own note on that exercise's screen. If nothing stands out, no note appears. A note is written once per workout per day, only for today's workout, and then kept; reopening it costs nothing.
 
-**Generate a plan.** Open **My Workouts → Generate a plan with AI** and answer by tapping:
+**Generate a plan.** Open **Workout Plans → Generate a plan with AI** and answer by tapping:
 
 - **About you:** experience level (Beginner, Intermediate, Advanced), main goal (Build muscle, Lose fat, Get stronger, General fitness), and up to three focus areas.
 - **Your week:** the training days (Mon to Sun), time per session (30, 45, 60 or 90 minutes), and the split (or let the coach decide).
