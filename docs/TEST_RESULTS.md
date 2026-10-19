@@ -99,3 +99,34 @@ Legend: ✅ passed · 🔧 failed, fixed in this build and re-checked · ⏭ not
 - Sets of a half-done workout left behind **before** this build have no resume marker and stay "logged".
 - The Android date picker shows Sunday first. It is the system dialog and cannot be changed.
 - The AI sometimes names a day oddly ("Pull & Legs (Back Focus)" in an upper-body plan). Content, not a bug.
+
+---
+
+## Pass 5 — AI features with a real key (fresh install, build `7616e6b`)
+
+Run on a freshly wiped emulator, in the order a new user would meet things. The key was pasted by the owner. Cost: about $0.05 for 6 requests.
+
+| Area | Cases | Result |
+|---|---|---|
+| Save key, test connection, usage counter | AIK-01, 02, LIM-02 | ✅ |
+| Generate plan (Mon/Wed/Fri, chest + back) | GEN-01, 05, 06 | ✅ |
+| Refine changes only what was asked; Undo restores the draft exactly | GEN-07, 08 | ✅ |
+| Save the plan, then **Schedule it** with the AI's weekdays pre-filled, 12 sessions added | GEN-09, 10 | 🔧 → ✅ |
+| Same name as an existing plan: clear message, nothing lost | GEN-12 | ✅ |
+| Back with a draft: Cancel keeps it, Discard leaves | GEN-13 | ✅ |
+| Coach note with no history: none, no error | CCH-05 | ✅ |
+| Coach note with history (a Hard set, 7 days ago): written, mentions it, kg only | CCH-01, 08 | ✅ |
+| Reopen the same workout: same note, no new request | CCH-02 | ✅ |
+| Limit 0.01 blocks the next request; back to 2 works | LIM-03, 04 | ✅ |
+
+### Bugs found and fixed in this pass
+
+1. **Saving an AI plan failed on a fresh install** ("could not save"). The `weekday`, `web_link`, `muscle_group` and `exercise_notes` columns were only added when the Workout Plans tab had been opened. They are now added when the database opens, and again before a plan is written (`a2a1599`). "Create new workout plan" and importing a shared plan had the same problem.
+2. **Scheduling a plan failed on a fresh install.** `notification_id` and `completion_time` were only added when the Sessions tab opened. Same fix (`7616e6b`).
+
+### Notes
+
+- A coach note is written once per day for a workout, and "nothing to say" is remembered too. If you open today's workout before you have any history, there is no note for that workout for the rest of the day.
+- The note is made on the exercise screen after **Start Workout**, not on the first overview.
+- On the overview, a long exercise name can make the muscle chip overlap the bookmark icon (cosmetic).
+- Not run: AIK-03..06, ERR-02, ERR-03 (would remove the key), GEN-11, 14..16, CCH-03, 04, 06, 07, PRF-02, INB-*.
