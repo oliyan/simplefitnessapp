@@ -5,6 +5,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
+import { ensureInProgressColumn } from '../utils/workoutProgress';
 import { useSettings } from '../context/SettingsContext';
 import {
   buildWeek,
@@ -54,10 +55,13 @@ export default function Home({ navigation }: any) {
           const since = Math.floor(
             new Date(today.getFullYear(), today.getMonth(), today.getDate() - 730).getTime() / 1000,
           );
+          await ensureInProgressColumn(db);
           const [countRow] = await db.getAllAsync<{ c: number }>('SELECT COUNT(*) AS c FROM Workouts;');
           const rows = await db.getAllAsync<WorkoutRow>(
             `SELECT w.workout_log_id, w.workout_date, w.workout_name, w.day_name,
-                    EXISTS(SELECT 1 FROM Weight_Log x WHERE x.workout_log_id = w.workout_log_id) AS logged
+                    (EXISTS(SELECT 1 FROM Weight_Log x WHERE x.workout_log_id = w.workout_log_id)
+                      AND COALESCE(w.in_progress, 0) = 0) AS logged,
+                    COALESCE(w.in_progress, 0) AS in_progress
              FROM Workout_Log w WHERE w.workout_date >= ?;`,
             [since],
           );
@@ -149,7 +153,7 @@ export default function Home({ navigation }: any) {
                     })
                   }
                 >
-                  <Text style={{ color: theme.buttonText, fontWeight: '700' }}>{t('dashStart')}</Text>
+                  <Text style={{ color: theme.buttonText, fontWeight: '700' }}>{s.in_progress ? t('dashResume') : t('dashStart')}</Text>
                 </TouchableOpacity>
               )}
             </View>

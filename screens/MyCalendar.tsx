@@ -27,6 +27,7 @@ import {
   moderateScale,
 } from 'react-native-size-matters';
 import { WorkoutLogStackParamList } from '../App';
+import { ensureInProgressColumn } from '../utils/workoutProgress';
 import { useSettings } from '../context/SettingsContext';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +49,7 @@ interface WorkoutEntry {
     day_name: string;
     workout_log_id: number;
     notification_id?: string | null;
+    in_progress?: number | null;
   };
   isLogged: boolean;
 }
@@ -196,6 +198,7 @@ export default function MyCalendar() {
         const startTimestamp = Math.floor(gridStartDate.getTime() / 1000);
         const endTimestamp = Math.floor(gridEndDate.getTime() / 1000) + 86399;
 
+        await ensureInProgressColumn(db);
         const allWorkoutsInRange = await db.getAllAsync<
           WorkoutEntry['workout']
         >(`SELECT * FROM Workout_Log WHERE workout_date BETWEEN ? AND ?;`, [
@@ -207,7 +210,8 @@ export default function MyCalendar() {
           workout_log_id: number;
         }>(
           `SELECT DISTINCT workout_log_id FROM Weight_Log
-           WHERE workout_log_id IN (SELECT workout_log_id FROM Workout_Log WHERE workout_date BETWEEN ? AND ?);`,
+           WHERE workout_log_id IN (SELECT workout_log_id FROM Workout_Log
+                                    WHERE workout_date BETWEEN ? AND ? AND COALESCE(in_progress, 0) = 0);`,
           [startTimestamp, endTimestamp],
         );
         const loggedWorkoutIds = new Set(
@@ -1191,7 +1195,7 @@ export default function MyCalendar() {
               <Text
                 style={[styles.actionButtonText, { color: theme.buttonText }]}
               >
-                {t('startWorkout')}
+                {selectedUntrackedWorkout?.workout.in_progress ? t('resumeWorkout') : t('startWorkout')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity

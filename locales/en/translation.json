@@ -644,7 +644,9 @@
     "finishWithUnloggedTitle": "Finish workout?",
     "finishWithUnloggedMessage": "You haven't done {{count}} planned set(s). Finish the workout anyway?",
     "finishGoBack": "Go back",
-    "finishAnyway": "Finish anyway"
+    "finishAnyway": "Finish anyway",
+    "dashResume": "Resume workout",
+    "resumeWorkout": "Resume workout"
 
     }
   

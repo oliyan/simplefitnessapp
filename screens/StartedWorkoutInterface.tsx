@@ -27,6 +27,7 @@ import { StartWorkoutStackParamList } from '../App';
 import * as Notifications from 'expo-notifications';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useSettings } from '../context/SettingsContext';
+import { ensureInProgressColumn, setWorkoutInProgress } from '../utils/workoutProgress';
 import { loadRestTimerPreferences, saveRestTimerPreferences } from '../utils/startedWorkoutPreferenceUtils';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { getApiKey } from '../utils/secureSettings';
@@ -296,6 +297,9 @@ export default function StartedWorkoutInterface() {
           currentSet.comments || ''
         ]
       );
+
+      // The workout counts as "in progress" (resumable) from its first logged set until it is finished.
+      await setWorkoutInProgress(db, workout_log_id, true);
 
       const loggedSet: ExerciseSet = {
         ...currentSet,
@@ -605,6 +609,13 @@ export default function StartedWorkoutInterface() {
     };
   }, [timerState.workoutStarted, enableNotifications]);
 
+  // Finished: no longer resumable.
+  useEffect(() => {
+    if (timerState.workoutStage === 'completed') {
+      setWorkoutInProgress(db, workout_log_id, false);
+    }
+  }, [timerState.workoutStage]);
+
   // Handle back press when workout is started
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
@@ -662,6 +673,7 @@ export default function StartedWorkoutInterface() {
   ) => {
     try {
       setLoading(true);
+      await ensureInProgressColumn(db);
       
       const workoutResult = await db.getAllAsync<{
         workout_name: string;

@@ -6,7 +6,8 @@ export interface WorkoutRow {
   workout_date: number; // Unix seconds at local midnight
   workout_name: string;
   day_name: string;
-  logged: number; // 1 when at least one set has been logged for it
+  logged: number; // 1 when sets were logged and the workout was finished (or logged by hand)
+  in_progress?: number; // 1 when it was started and left halfway: it can be resumed
 }
 
 export interface SetRow {
