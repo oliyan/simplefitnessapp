@@ -22,6 +22,7 @@ import { getApiKey, saveApiKey, deleteApiKey } from '../utils/secureSettings';
 import { callClaude, getUserFacingErrorMessage, MODELS } from '../utils/llmClient';
 import CoachProfileSection from '../components/CoachProfileSection';
 import AiBudgetSection from '../components/AiBudgetSection';
+import { saveSettings } from '../utils/settingsStorage';
 import PersonaliseSection from '../components/PersonaliseSection';
 import { usePersonal } from '../context/PersonalContext';
 
@@ -198,6 +199,7 @@ export default function Settings() {
         return;
       }
 
+      saveSettings({ lastBackup: Date.now() });
       await Sharing.shareAsync(tempExportPath, {
         mimeType: 'application/x-sqlite3', // Standard MIME type
         dialogTitle: t('exportDatabaseTitle') || 'Export Workout Database',

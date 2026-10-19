@@ -20,6 +20,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { useSettings } from '../context/SettingsContext';
+import ProgressHighlights from '../components/ProgressHighlights';
 import StickyYAxis from '../components/StickyYAxis';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { WeightLogStackParamList } from '../App';
@@ -3549,6 +3550,8 @@ const calculateCES = (sets: LogData[]): number => {
               <Text style={[styles.tipText, { color: theme.text }]}>
                 {t('graphTipText')}
               </Text>
+
+          <ProgressHighlights />
 
           {/* View Logs Button */}
           <TouchableOpacity

@@ -62,6 +62,14 @@ export default function WorkoutList({
         <Text style={[styles.title, { color: theme.text }]}>{t('MyWorkouts')}</Text>
       </View>
 
+      {sortedWorkouts.length === 0 && (
+        <View style={[styles.emptyCard, { backgroundColor: theme.accentSoft, borderColor: theme.accent }]}>
+          <Ionicons name="clipboard-outline" size={36} color={theme.accent} />
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('plansEmptyTitle')}</Text>
+          <Text style={[styles.emptyBody, { color: theme.text }]}>{t('plansEmptyBody')}</Text>
+        </View>
+      )}
+
       {/* Action Buttons */}
       <View style={styles.actionButtonsContainer}>
         {/* Create New Workout Button */}
@@ -134,6 +142,9 @@ export default function WorkoutList({
 //WorkoutList.tsx
 
 const styles = StyleSheet.create({
+  emptyCard: { borderWidth: 1, borderRadius: 20, padding: 20, alignItems: 'center', marginBottom: 16 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', marginTop: 8 },
+  emptyBody: { fontSize: 15, textAlign: 'center', opacity: 0.8, marginTop: 4 },
   container: {
     flex: 1,
     paddingHorizontal: 16,

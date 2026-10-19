@@ -459,13 +459,14 @@ const AppContent = () => {
         <Ionicons
           name={props.iconName}
           size={24}
-          color={theme.text} // Always theme.text
+          color={isSelected ? theme.accent : theme.text}
+          style={{ opacity: isSelected ? 1 : 0.7 }}
         />
         <View
           style={{
             height: 2,
             width: '40%',
-            backgroundColor: isSelected ? theme.text : 'transparent',
+            backgroundColor: isSelected ? theme.accent : 'transparent',
             marginTop: 5,
             borderRadius: 100,
           }}
