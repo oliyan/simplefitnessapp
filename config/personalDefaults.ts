@@ -3,8 +3,8 @@
 export type NoteKey = 'welcomeBack' | 'finish' | 'firstWorkout' | 'streak' | 'pr' | 'restDay';
 
 export interface PersonalValues {
-  userName: string; // who the app is for, e.g. "Anu"
-  senderName: string; // who it is from, e.g. "Sankar"
+  userName: string; // who the app is for, e.g. a first name
+  senderName: string; // who it is from, e.g. a first name
   greeting: string; // the line on Home
   dedication: string; // shown once on the first launch
   notes: Record<NoteKey, string>; // short messages shown at nice moments; {n} is a number
