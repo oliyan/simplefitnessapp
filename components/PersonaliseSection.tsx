@@ -45,7 +45,7 @@ export default function PersonaliseSection() {
         style={inputStyle}
         value={personal.greeting}
         onChangeText={(v) => updatePersonal({ greeting: v })}
-        placeholder="For example: Hi, Anu!"
+        placeholder="For example: Hi, Alex!"
         placeholderTextColor={placeholderColor}
       />
 

@@ -11,7 +11,7 @@ type PersonalContextType = {
   onboardingSeen: boolean;
   markOnboardingSeen: () => void;
   replayOnboarding: () => void;
-  // Name shown for the AI coach: "Advice from Sankar" when a sender is set, otherwise "AI Coach".
+  // Name shown for the AI coach: "Advice from <name>" when a sender is set, otherwise "AI Coach".
   coachName: string;
   // A note with {n} filled in and the sender's name appended, or '' when empty.
   noteText: (key: NoteKey, n?: number) => string;
