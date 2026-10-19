@@ -1,8 +1,9 @@
 # Urudhi — Phone Test Cases
 
-**Build under test:** branch `minimal` at commit `06bf787` (includes the AI Coach work from branch `ai-coach`)
-**APK:** `Urudhi-test-06bf787.apk`
-**Time needed:** about 90 minutes if you do it all; the 🔴 cases alone (48 of them) take about 50 minutes.
+**Build under test:** branch `workout-screen` at commit `e6d7c01` (includes the AI Coach work and the `minimal` changes)
+**APK:** `Urudhi-test-e6d7c01.apk`
+**Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (62 of them) take about 70 minutes.
+**New in this build:** section 9A (the reworked workout screen) and a few changed cases in sections 3, 9 and 13. Weights are now kg only.
 
 ---
 
@@ -74,10 +75,10 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| SET-01 | 🟡 | Open Settings. | You see: **Notifications**, **Weight Format**, **Theme**, **Data Management**, **AI Coach**. There is **no** language, date format, time format or first-day-of-week setting. | ☐ | |
-| SET-02 | 🟡 | Change weight format to **lbs**, then look at the workout screens and Home. | Labels change to lbs. Numbers you already entered are **not** converted. Switch back to kg. | ☐ | |
+| SET-01 | 🟡 | Open Settings. | You see: **Notifications**, **Theme**, **Data Management**, **AI Coach**. There is **no** language, date format, time format, first-day-of-week or weight-unit setting. | ☐ | |
+| SET-02 | 🟡 | Look at weights on Home, the workout screen, the calendar log and Progress. | Everything is in **kg**. There is no way to switch to lbs. | ☐ | |
 | SET-03 | 🔴 | Check dates and times across the app (calendar, logs, scheduler). | Dates look like `18/10/2026`; the calendar starts on **Monday**; times are 12-hour with AM/PM. | ☐ | |
-| SET-04 | 🟡 | Close and reopen the app. | Weight format and theme are remembered. | ☐ | |
+| SET-04 | 🟡 | Close and reopen the app. | The theme is remembered. | ☐ | |
 
 ---
 
@@ -167,19 +168,50 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 | RUN-01 | 🔴 | Start a scheduled workout. Look at the start screen. | Shows the workout, number of exercises and sets, the exercise list, and **only two settings**: rest time between sets and between exercises (defaults 30 s and 60 s). There are **no** toggles for auto-fill, vibration, sound or notifications. | ☐ | |
 | RUN-02 | 🔴 | Tap **Start Workout** for the first time on this phone. | Android asks to allow notifications. Choose **Allow**. | ☐ | |
 | RUN-03 | 🔴 | Do the first set of an exercise you have logged before. | Weight and reps are **filled in from your last session** for the same exercise and set number. You can edit them. | ☐ | |
-| RUN-04 | 🔴 | Tap **Complete Set**. | You are asked how it felt (Easy / Medium / Hard). Then a **rest timer** counts down. | ☐ | |
+| RUN-04 | 🔴 | Fill in weight and reps, tap **Easy / Medium / Hard** on the screen, then **Complete Set**. | No pop-up. The set is saved and a **rest timer** counts down. | ☐ | |
 | RUN-05 | 🔴 | Let the rest timer finish with the screen on. | The phone **vibrates** and plays a **sound**; the next set appears. | ☐ | |
 | RUN-06 | 🔴 | Start a rest timer, then **lock the phone / switch to another app**. | A **notification** arrives when the rest ends, with the screen off. (If it doesn't, note your phone model; battery-saver settings are a likely cause.) | ☐ | |
 | RUN-07 | 🟡 | Add a comment on a set ("left shoulder pinching") and complete it. | Saved. It shows in the logs later. | ☐ | |
-| RUN-08 | 🟡 | Check the **Previous Workout** box on an exercise. | Shows what you did last time for it. | ☐ | |
-| RUN-09 | 🟡 | Tap **+ Add Extra Set**. | One more set is added for that exercise. | ☐ | |
+| RUN-08 | 🟡 | Check the **Previous Workout** card on an exercise you have done before. | Shows what you did last time for it. (Browsing older sessions is WRK-17.) | ☐ | |
+| RUN-09 | 🟡 | Finish all sets of an exercise, then tap **+ Add extra set**. | One more set is added. (The full set of rules is in section 9A.) | ☐ | |
 | RUN-10 | 🟡 | Tap **Skip to Next Exercise**, then use the top-right menu to jump to a specific exercise. | Navigation works, nothing is lost. | ☐ | |
 | RUN-11 | 🔴 | Finish all sets and tap **Finish Workout**. | A completion screen with total time and sets completed. The session shows as logged on the calendar and on Home. | ☐ | |
-| RUN-12 | 🔴 | Start a workout, complete a couple of sets, then **swipe the app away** from recents and reopen it. | The workout and your logged sets are still there; the timer state is sensible. | ☐ | |
+| RUN-12 | 🟡 | Start a workout, complete a couple of sets, then **swipe the app away** from recents and reopen the workout. | **Check, not expected to be perfect:** your logged sets are safe in the logs (calendar), but the workout screen starts again from set 1 and does not tick the sets you already did. Note exactly what you see. | ☐ | |
 | RUN-13 | 🟡 | Start a workout, press Back mid-way. | Asks before leaving or keeps your progress; no data lost. | ☐ | |
 | RUN-14 | 🟡 | Rest-time fields: enter `0`, then a large value like `600`, then leave one blank. | `0` and `600` accepted; blank/invalid shows a clear message. | ☐ | |
 | RUN-15 | ⚪ | Do the same exercise twice on different days and compare the suggested weight/badge after Easy/Hard ratings. | A weight suggestion appears after a few sessions (if shown). | ☐ | |
-| RUN-16 | 🟡 | A workout with an exercise that has a **link** and a **note**. | The link icon opens the URL; the bookmark shows the note. | ☐ | |
+| RUN-16 | 🟡 | A workout with an exercise that has a **link** and a **note**. | The note shows in the **Form** card and the YouTube icon in its corner opens the URL. | ☐ | |
+
+---
+
+## 9A. The workout screen (reworked in this build)
+
+Do these during a workout, ideally one with at least three exercises. Set the rest times to a few seconds on the start screen so you are not waiting.
+
+| ID | Pri | Steps | Expected | Result | Notes |
+|---|---|---|---|---|---|
+| WRK-01 | 🔴 | Start a workout and look at the **top bar**. | It shows the **exercise name**, the **workout time** (running) and **logged/total sets** (for example `0/4 sets`). The workout name is not shown there. After each set the count goes up. | ☐ | |
+| WRK-02 | 🔴 | Scroll the exercise screen from the top. | In this order: **Form** card (notes, small YouTube icon in the top-right corner), **Coach's note** (only if it has a line for this exercise), set chips (`1 2 3 4`), weight and reps, **How was this set?** chips, comment, buttons. There is **no bookmark icon**, no separate links row and no "sets remaining" row. | ☐ | |
+| WRK-03 | 🟡 | Open an exercise that has **no video link**, then one that has. | Without a link the YouTube icon is **greyed out and does nothing**. With a link it is red and opens the video. An exercise without notes shows "No form notes for this exercise." | ☐ | |
+| WRK-04 | 🔴 | On a fresh set, look at **Complete Set**. Fill in weight, then reps, then tap Easy/Medium/Hard. | It stays **greyed out** until weight, reps **and** a difficulty are set. No difficulty is pre-selected. Tapping the selected one again clears it. | ☐ | |
+| WRK-05 | 🔴 | Complete a set that is not the last of its exercise. | Saved with no pop-up, the rest timer starts, then the next set appears with its chip highlighted and the previous set's numbers shown as **grey hints** in the empty fields. | ☐ | |
+| WRK-06 | 🔴 | Complete the **last set** of an exercise. | You stay on the screen. It shows the logged weight × reps, **Next exercise** and **+ Add extra set**. **No timer is running.** Tapping Next exercise starts the rest between exercises, then the next exercise opens. | ☐ | |
+| WRK-07 | 🔴 | While an exercise still has unlogged sets, look at **+ Add extra set**. | It is **greyed out and cannot be tapped.** | ☐ | |
+| WRK-08 | 🔴 | After the last set, tap **+ Add extra set**. | A new blank set appears (for example `4/5 sets` in the top bar, a 5th chip). An **Exercise name** field appears above the Form card, with the hint "Change the name to log a different exercise". Weight and reps are empty with grey hints. Form notes and the coach line of the original exercise are still shown. | ☐ | |
+| WRK-09 | 🔴 | With that extra set open (don't complete it), tap **Skip to Next Exercise**, or open the top-right menu and pick another exercise. | The **top bar and the exercise name change correctly** to the other exercise. Open the menu again: the unfinished extra set is gone and the earlier exercise still shows its original count. (This was a bug in the old version.) | ☐ | |
+| WRK-10 | 🔴 | Add an extra set, complete it, add another, complete it, and so on 2–3 times. | After each one the count is always logged/total (`4/5`, then `5/5`, then `5/6` when you add another...). It never jumps around. Each extra set is saved. | ☐ | |
+| WRK-11 | 🔴 | Add an extra set and change its name to something else (for example `Dumbbell Press`). | The top bar shows the new name and `0/1 sets`. The Form card says there are no notes, the original coach line disappears, and the video icon greys out. Complete it. It is saved. | ☐ | |
+| WRK-12 | 🟡 | On an extra set, type another name, then type the **original** name back. | The original notes, video link and coach line come back. | ☐ | |
+| WRK-13 | 🔴 | Log a set with a wrong number. Tap its **✓ chip**, change weight and reps in the pop-up, then **Save changes**. | The new numbers show. Open the day on the calendar afterwards: the log shows the **corrected** values. Nothing else changed. | ☐ | |
+| WRK-14 | 🟡 | In that pop-up, set reps to `0` or clear the weight, then save. | A message says the numbers are not valid and nothing is saved. | ☐ | |
+| WRK-15 | 🔴 | Open the top-right menu mid-workout. | Every exercise is listed with `logged/total` sets. The current one is highlighted. A renamed extra set appears as its own row. Tapping a **finished** exercise opens it (with Add extra set and the ✓ chips); tapping an unfinished one opens its first undone set. | ☐ | |
+| WRK-16 | 🔴 | Tap **Finish Workout** while some planned sets are still undone. | A pop-up: "You haven't done N planned set(s). Finish the workout anyway?" with **Go back** and **Finish anyway**. Go back leaves everything as it was. Finish anyway completes the workout. If every set is done there is no pop-up. | ☐ | |
+| WRK-17 | 🟡 | On an exercise you have done on several days, look at the **Previous Workout** card. Tap `<` and `>`. | It shows the date and `1/n`. `<` goes to older sessions (up to 8), `>` comes back. Each arrow is greyed out at its end. An exercise with no history shows "No earlier sessions" and both arrows greyed. | ☐ | |
+| WRK-18 | 🟡 | On an extra set, type the name of an exercise you have done before. | After a moment the Previous Workout card shows that exercise's history. | ☐ | |
+| WRK-19 | 🟡 | Finish the **last exercise** of the workout. | The main button says **Finish workout** (not Next exercise), and **+ Add extra set** is still available. | ☐ | |
+| WRK-20 | 🔴 | After finishing, open the workout from the calendar. | All logged sets are there, including extra ones and corrected ones. A renamed extra set appears under its own name. Sets Completed on the finish screen equals the number you logged. | ☐ | |
+| WRK-21 | 🟡 | Put the app in the background in the middle of typing a set, then come back. | The numbers you typed and your position are unchanged. | ☐ | |
+| WRK-22 | ⚪ | Do WRK-02, WRK-04 and WRK-08 in **dark theme**. | Chips, hints and the greyed-out button are readable. | ☐ | |
 
 ---
 
@@ -233,6 +265,8 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 | CCH-04 | 🟡 | Open a workout scheduled for a **future or past** day. | No new note is generated (only today's workout gets one). | ☐ | |
 | CCH-05 | 🟡 | New workout with no history and no saved injuries. | No note appears (normal). | ☐ | |
 | CCH-06 | 🟡 | Remove the key and open today's workout. | No note, no error pop-up. | ☐ | |
+| CCH-07 | 🟡 | Open a workout for a muscle group you have **not trained for 2+ weeks** (a note is written once per day, so use a day that has no note yet). | The note does **not** say to keep adding weight. It suggests easing back in or starting near your last loads. | ☐ | |
+| CCH-08 | 🔴 | Read any coach note. | Weights are in **kg**. The note never says lb, lbs or pounds. | ☐ | |
 
 ---
 
@@ -322,6 +356,7 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 
 - **Reminders for scheduled plans:** "Schedule a plan" does not set notifications. Reminders exist only when scheduling a single workout and choosing *Enable Notifications*.
 - **Recurring Workouts** no longer exist. Sessions created by them earlier stay, but no new ones appear automatically. Use *Schedule a plan* instead.
+- **Reopening a workout after closing the app:** the workout screen restarts from set 1 and does not tick the sets you already logged (they are safe in the logs). This was already the case before this build.
 - **English only.** Other languages and the date/time/week formats were removed on purpose.
 - **Featured Workouts** were removed on purpose; use *Generate a plan with AI* or create your own.
 - **AI plans are one repeating week** (the scheduler repeats it). There is no automatic progression week to week; weights come from your last session.
@@ -385,10 +420,11 @@ Happens every time?  (always / sometimes / once)
 | 6 Sharing | 2 | | | |
 | 7 Schedule a plan | 6 | | | |
 | 8 Calendar | 4 | | | |
-| 9 Doing a workout | 8 | | | |
+| 9 Doing a workout | 7 | | | |
+| 9A Workout screen | 14 | | | |
 | 10 Progress | 2 | | | |
 | 11 Backup | 2 | | | |
-| 12–17 AI Coach | 14 | | | |
+| 12–17 AI Coach | 15 | | | |
 | 18 Dark theme | 1 | | | |
 
-**Total 🔴 cases: 48.**
+**Total 🔴 cases: 62.**
