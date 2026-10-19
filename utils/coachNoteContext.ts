@@ -23,6 +23,9 @@ interface LoggedSetRow {
   workout_date?: number;
 }
 
+const daysBetween = (laterUnix: number, earlierUnix: number) =>
+  Math.max(0, Math.round((laterUnix - earlierUnix) / DAY_SECONDS));
+
 const formatDate = (unixSeconds: number) => {
   const d = new Date(unixSeconds * 1000);
   const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -86,7 +89,7 @@ export const buildCoachNoteContext = async (
     if (rows.length === 0) continue;
     hasHistory = true;
     groupSections.push(
-      `Last ${group} session (${formatDate(last.workout_date)}):\n` +
+      `Last ${group} session (${formatDate(last.workout_date)}, ${daysBetween(workoutDate, last.workout_date)} days before today's workout):\n` +
         rows.map((r) => `- ${formatSet(r, weightUnit)}`).join('\n'),
     );
   }
@@ -109,7 +112,7 @@ export const buildCoachNoteContext = async (
   if (!hasHistory) return null;
 
   const parts = [
-    `Today's workout: ${workoutName} - ${dayName} (${formatDate(workoutDate)})`,
+    `Today's workout: ${workoutName} - ${dayName} (${formatDate(workoutDate)}). All weights are in ${weightUnit}.`,
     `Planned exercises:\n${planLines.join('\n')}`,
     ...(standingConstraints?.trim() ? [`Standing constraints from the lifter: ${standingConstraints.trim()}`] : []),
     ...(bodyComposition ? [bodyComposition] : []),

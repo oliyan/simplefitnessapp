@@ -279,11 +279,12 @@ export default function MyCalendar() {
           reps_logged: number;
         }>(
           `
-          SELECT le.exercise_name, wl.set_number, wl.weight_logged, wl.reps_logged
+          SELECT wl.exercise_name,
+                 ROW_NUMBER() OVER (PARTITION BY wl.exercise_name ORDER BY wl.set_number) AS set_number,
+                 wl.weight_logged, wl.reps_logged
           FROM Weight_Log wl
-          JOIN Logged_Exercises le ON wl.logged_exercise_id = le.logged_exercise_id
           WHERE wl.workout_log_id = ?
-          ORDER BY le.exercise_name, wl.set_number;
+          ORDER BY wl.exercise_name, wl.set_number;
         `,
           [workout_log_id],
         );

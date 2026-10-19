@@ -5,6 +5,7 @@ import { buildGeneratePlanPrompt, buildRefinePlanPrompt, PlanRequest } from './p
 import type { CoachNote } from './coachNotesUtils';
 import type { ExportedWorkout } from './workoutSharingUtils';
 import { normalizeWeekday } from './weekdays';
+import { mentionsPounds } from './weightUnit';
 
 const API_URL = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
@@ -158,13 +159,22 @@ export const getUserFacingErrorMessage = (error: unknown): string => {
 
 // Returns the note, or null when the model decided there was nothing to say.
 export const generateCoachNote = async (context: string): Promise<CoachNote | null> => {
-  const text = (
-    await callClaude(buildCoachNotePrompt(context), {
-      model: MODELS.fast,
-      maxTokens: 600,
-      lowEffort: true,
-    })
-  ).trim();
+  const ask = async (extra: string) =>
+    (
+      await callClaude(buildCoachNotePrompt(context) + extra, {
+        model: MODELS.fast,
+        maxTokens: 600,
+        lowEffort: true,
+      })
+    ).trim();
+
+  let text = await ask('');
+  // The lifter trains in kg only. A reply that talks about pounds is asked for again once;
+  // if it still does, it is dropped rather than shown with the wrong unit.
+  if (mentionsPounds(text)) {
+    text = await ask('\n\nYour previous reply used pounds. Rewrite it using kilograms (kg) only.');
+    if (mentionsPounds(text)) return null;
+  }
   if (!text || /^none/i.test(text)) return null;
 
   const start = text.indexOf('{');

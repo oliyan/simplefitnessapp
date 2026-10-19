@@ -44,15 +44,29 @@ import {
   TimerState
 } from '../utils/timerPersistenceUtils';
 import { AutoSizeText, ResizeTextMode } from 'react-native-auto-size-text';
-import DifficultySelector from '../components/DifficultySelector';
 import WeightSuggestionBadge from '../components/WeightSuggestionBadge';
 import {
     DifficultyLevel,
     analyzeDifficultyAndSuggestWeight,
     saveSuggestedWeight,
     getSuggestedWeight,
+    getDifficultyColor,
+    getDifficultyEmoji,
     DEFAULT_WEIGHT_INCREMENT
 } from '../utils/difficultyUtils';
+import {
+  WorkoutSet as ExerciseSet,
+  groupStats,
+  groupIndices,
+  exerciseDone,
+  firstUnloggedIndex,
+  dropUnloggedExtras,
+  addExtraSet,
+  renameExtraSet,
+  previousSetHint,
+  nextUnloggedExerciseId,
+  unloggedCount,
+} from '../utils/workoutSets';
 
 type StartedWorkoutRouteProps = RouteProp<
   StartWorkoutStackParamList,
@@ -71,20 +85,13 @@ interface Exercise {
   exercise_notes: string | null;
 }
 
-interface ExerciseSet {
-  exercise_name: string;
-  exercise_id: number;
-  set_number: number;
-  total_sets: number;
-  reps_goal: number;
-  reps_done: string;
-  weight: string;
-  set_logged: boolean;
-  web_link: string | null;
-  muscle_group: string | null;
-  exercise_notes: string | null;
-  comments: string;
+// One earlier session of an exercise, shown on the "previous workout" card.
+interface HistorySession {
+  workoutDate: number;
+  sets: Array<{ reps: number; weight: number; difficulty: string | null; comments: string | null }>;
 }
+
+const MAX_HISTORY_SESSIONS = 8;
 
 export default function StartedWorkoutInterface() {
   const navigation = useNavigation();
@@ -128,11 +135,7 @@ export default function StartedWorkoutInterface() {
   // Sets data for tracking workout
   const [allSets, setAllSets] = useState<ExerciseSet[]>([]);
 
-  // State for "Add extra set" feature
-  const [isEditingExerciseName, setIsEditingExerciseName] = useState(false);
-  const [editableExerciseName, setEditableExerciseName] = useState('');
-
-  // State for notes modal
+  // State for notes modal (the overview and rest screens still open notes in a pop-up)
   const [isNotesModalVisible, setIsNotesModalVisible] = useState(false);
   const [notesModalContent, setNotesModalContent] = useState('');
   const [notesModalTitle, setNotesModalTitle] = useState('');
@@ -141,17 +144,13 @@ export default function StartedWorkoutInterface() {
   const [timerState, setTimerState] = useState<TimerState>(createTimerState());
   const [isCompletingSet, setIsCompletingSet] = useState(false);
 
-  // Difficulty tracking states
-  const [currentDifficulty, setCurrentDifficulty] = useState<DifficultyLevel>(null);
-  const [showDifficultySelector, setShowDifficultySelector] = useState(false);
+  // Fixing a set that was already logged (weight and reps only).
+  const [editingSetIndex, setEditingSetIndex] = useState<number | null>(null);
+  const [editWeight, setEditWeight] = useState('');
+  const [editReps, setEditReps] = useState('');
+
   const [weightIncrement, setWeightIncrement] = useState(DEFAULT_WEIGHT_INCREMENT);
   const [suggestedWeights, setSuggestedWeights] = useState<Map<number, number>>(new Map());
-  const [pendingSetData, setPendingSetData] = useState<{
-    weight: number;
-    reps: number;
-    setIndex: number;
-    isFinishWorkout?: boolean;
-  } | null>(null);
 
   // Timer refs for intervals
   const workoutTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -172,15 +171,11 @@ export default function StartedWorkoutInterface() {
     );
   };
 
-  // State for previous workout history
-  const [previousWorkoutHistory, setPreviousWorkoutHistory] = useState<Map<string, Array<{
-    setNumber: number;
-    reps: number;
-    weight: number;
-    difficulty: string | null;
-    workoutDate: number;
-    comments: string | null;
-  }>>>(new Map());
+  // Earlier sessions of each exercise name (newest first, at most MAX_HISTORY_SESSIONS), and
+  // which of them the "previous workout" card is showing (0 = the most recent).
+  const [previousWorkoutHistory, setPreviousWorkoutHistory] = useState<Map<string, HistorySession[]>>(new Map());
+  const [historyOffset, setHistoryOffset] = useState(0);
+  const historyRequestedRef = useRef(new Set<string>());
 
   // Fetch suggested weights for exercises
   const fetchSuggestedWeights = async (workoutData?: { workout_name: string; day_name: string }, exercisesList?: Exercise[]) => {
@@ -211,126 +206,115 @@ export default function StartedWorkoutInterface() {
     }
   };
 
-  // Fetch previous workout history for an exercise
-  const fetchPreviousWorkoutHistory = async (exerciseName: string) => {
+  // Fetch earlier sessions of an exercise (this workout excluded), newest first
+  const fetchPreviousWorkoutHistory = async (exerciseName: string): Promise<HistorySession[]> => {
     try {
-      const previousSets = await db.getAllAsync<{
-        set_number: number;
+      const rows = await db.getAllAsync<{
+        workout_log_id: number;
         reps_logged: number;
         weight_logged: number;
         difficulty: string | null;
         workout_date: number;
         comments: string | null;
       }>(
-        `SELECT wl.set_number, wl.reps_logged, wl.weight_logged, wl.difficulty, wl.comments, w.workout_date
+        `SELECT wl.workout_log_id, wl.reps_logged, wl.weight_logged, wl.difficulty, wl.comments, w.workout_date
          FROM Weight_Log wl
          JOIN Workout_Log w ON wl.workout_log_id = w.workout_log_id
          WHERE wl.exercise_name = ?
          AND wl.workout_log_id != ?
-         ORDER BY w.workout_date DESC, wl.set_number ASC
-         LIMIT 20`,
-        [exerciseName, workout_log_id]
+         ORDER BY w.workout_date DESC, wl.workout_log_id DESC, wl.weight_log_id ASC
+         LIMIT 400`,
+        [exerciseName.trim(), workout_log_id]
       );
 
-      if (previousSets.length > 0) {
-        // Group by workout (same workout_date)
-        const mostRecentDate = previousSets[0].workout_date;
-        const mostRecentSets = previousSets.filter(s => s.workout_date === mostRecentDate);
-
-        return mostRecentSets.map(set => ({
-          setNumber: set.set_number,
-          reps: set.reps_logged,
-          weight: set.weight_logged,
-          difficulty: set.difficulty || 'Medium',
-          workoutDate: set.workout_date,
-          comments: set.comments || null,
-        }));
+      const sessions: HistorySession[] = [];
+      let lastLogId = -1;
+      for (const row of rows) {
+        if (row.workout_log_id !== lastLogId) {
+          if (sessions.length === MAX_HISTORY_SESSIONS) break;
+          sessions.push({ workoutDate: row.workout_date, sets: [] });
+          lastLogId = row.workout_log_id;
+        }
+        sessions[sessions.length - 1].sets.push({
+          reps: row.reps_logged,
+          weight: row.weight_logged,
+          difficulty: row.difficulty || 'Medium',
+          comments: row.comments || null,
+        });
       }
-
-      return [];
+      return sessions;
     } catch (error) {
       console.error('Error fetching previous workout history:', error);
       return [];
     }
   };
 
-  // Handle difficulty selection
-  const handleDifficultySelected = async (difficulty: DifficultyLevel) => {
-    setShowDifficultySelector(false);
+  // Log the current set (weight, reps and difficulty are already on the screen).
+  const completeSet = async (setIndex: number, isFinishingWorkout: boolean = false) => {
+    const currentSet = allSets[setIndex];
+    if (!currentSet || currentSet.set_logged) return;
 
-    if (!difficulty || !pendingSetData) return;
-
-    setCurrentDifficulty(difficulty);
-
-    // Check if this is a finish workout scenario
-    if (pendingSetData.isFinishWorkout) {
-      // Complete the last set with difficulty, then finish workout
-      await completeSetWithDifficulty(difficulty, pendingSetData, true);
-    } else {
-      // Normal set completion
-      await completeSetWithDifficulty(difficulty, pendingSetData);
+    const weight = parseFloat(currentSet.weight);
+    const reps = parseInt(currentSet.reps_done);
+    if (!currentSet.exercise_name.trim()) {
+      Alert.alert(t('missingInformation'), t('exerciseNameRequired'));
+      return;
+    }
+    if (isNaN(weight) || weight < 0 || isNaN(reps) || reps <= 0 || !currentSet.difficulty) {
+      Alert.alert(t('missingInformation'), t('enterRepsAndWeight'));
+      return;
     }
 
-    // Clear pending data
-    setPendingSetData(null);
-  };
-
-  // Complete set with difficulty tracking
-  const completeSetWithDifficulty = async (difficulty: DifficultyLevel, setData: { weight: number; reps: number; setIndex: number }, isFinishingWorkout: boolean = false) => {
-    const currentSet = allSets[setData.setIndex];
-
+    setIsCompletingSet(true);
     try {
-      // Insert into Weight_Log with difficulty and comments
-      await db.runAsync(
+      // Planned sets keep their position as the set number. The table allows one row per
+      // (workout, planned exercise, set number), so an extra set takes the next free number
+      // even when it was renamed to a different exercise.
+      let setNumber = groupStats(allSets, setIndex).number;
+      if (currentSet.is_extra) {
+        const next = await db.getFirstAsync<{ n: number }>(
+          `SELECT COALESCE(MAX(set_number), 0) + 1 AS n FROM Weight_Log WHERE workout_log_id = ? AND logged_exercise_id = ?;`,
+          [workout_log_id, currentSet.exercise_id]
+        );
+        setNumber = next?.n ?? setNumber;
+      }
+
+      const result = await db.runAsync(
         `INSERT INTO Weight_Log (workout_log_id, logged_exercise_id, exercise_name, set_number, weight_logged, reps_logged, muscle_group, difficulty, comments)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
         [
           workout_log_id,
           currentSet.exercise_id,
-          currentSet.exercise_name,
-          currentSet.set_number,
-          setData.weight,
-          setData.reps,
+          currentSet.exercise_name.trim(),
+          setNumber,
+          weight,
+          reps,
           currentSet.muscle_group,
-          difficulty,
+          currentSet.difficulty,
           currentSet.comments || ''
         ]
       );
 
-      // Mark set as logged in UI
-      const updatedSets = [...allSets];
-      updatedSets[setData.setIndex] = { ...currentSet, set_logged: true, reps_done: setData.reps.toString(), weight: setData.weight.toString() };
+      const loggedSet: ExerciseSet = {
+        ...currentSet,
+        exercise_name: currentSet.exercise_name.trim(),
+        set_logged: true,
+        reps_done: reps.toString(),
+        weight: weight.toString(),
+        weight_log_id: result.lastInsertRowId,
+      };
+      const updatedSets = allSets.map((s, i) => (i === setIndex ? loggedSet : s));
       setAllSets(updatedSets);
       updateExerciseLoggedStatus(currentSet.exercise_id, updatedSets);
 
-      // Reset exercise name editing mode after completing a set
-      setIsEditingExerciseName(false);
-
-      // Check if this was the last set of the exercise
-      const exerciseSets = updatedSets.filter(s => s.exercise_id === currentSet.exercise_id);
-      const allExerciseSetsLogged = exerciseSets.every(s => s.set_logged);
-
-      if (allExerciseSetsLogged) {
-        // Analyze difficulty and suggest weight for next time
-        const suggestedWeight = await analyzeDifficultyAndSuggestWeight(
-          db,
-          workout_log_id,
-          currentSet.exercise_id,
-          weightIncrement
-        );
-
-        if (suggestedWeight !== null) {
-          await saveSuggestedWeight(db, currentSet.exercise_id, suggestedWeight);
-          // Note: Alert removed as per Requirement #3
-        }
+      if (exerciseDone(updatedSets, currentSet.exercise_id)) {
+        await refreshSuggestedWeight(currentSet.exercise_id);
       }
 
-      // Vibrate for feedback
       if (enableVibration) {
         Vibration.vibrate(100);
       }
 
-      // If this is the finish workout scenario, complete the workout now
       if (isFinishingWorkout) {
         setIsCompletingSet(false);
         stopWorkoutTimer();
@@ -338,58 +322,43 @@ export default function StartedWorkoutInterface() {
         return;
       }
 
-      // Find next unlogged set
-      const findNextUnloggedSet = (startIndex: number) => {
-        for (let i = startIndex; i < updatedSets.length; i++) {
-          if (!updatedSets[i].set_logged) {
-            return i;
-          }
-        }
-        return -1;
-      };
+      // More sets left in this exercise: rest, then carry on. Otherwise stay on the screen,
+      // which then offers "Add extra set" and "Next exercise" without a timer running.
+      const nextIndex = updatedSets.findIndex(
+        (s, i) => i > setIndex && !s.set_logged && s.exercise_id === currentSet.exercise_id
+      );
+      setIsCompletingSet(false);
+      if (nextIndex === -1) return;
 
-      let nextSetIndex = findNextUnloggedSet(setData.setIndex + 1);
-
-      if (nextSetIndex !== -1) {
-        const differentExercise = isDifferentExercise(setData.setIndex, nextSetIndex);
-
+      const restSeconds = parseInt(restTime);
+      if (restSeconds > 0) {
         setTimerState(prev => updateTimerState(prev, {
           workoutStage: 'rest',
-          isExerciseRest: differentExercise,
-          currentSetIndex: nextSetIndex
+          isExerciseRest: false,
+          currentSetIndex: nextIndex,
+          isResting: true,
+          restRemaining: restSeconds,
+          restStartTime: Date.now()
         }));
-
-        const restSeconds = differentExercise
-          ? parseInt(exerciseRestTime)
-          : parseInt(restTime);
-
-        setIsCompletingSet(false);
-
-        if (restSeconds > 0) {
-          setTimerState(prev => updateTimerState(prev, {
-            isResting: true,
-            restRemaining: restSeconds,
-            restStartTime: Date.now()
-          }));
-
-          stopRestTimer();
-          startRestTimer(restSeconds);
-        } else {
-          setTimerState(prev => updateTimerState(prev, {
-            workoutStage: 'exercise',
-            currentSetIndex: nextSetIndex
-          }));
-        }
+        stopRestTimer();
+        startRestTimer(restSeconds);
       } else {
-        // No more sets - workout complete
-        setIsCompletingSet(false);
-        stopWorkoutTimer();
-        setTimerState(prev => updateTimerState(prev, { workoutStage: 'completed' }));
+        setTimerState(prev => updateTimerState(prev, { workoutStage: 'exercise', currentSetIndex: nextIndex }));
       }
     } catch (error) {
       console.error('Error completing set:', error);
       Alert.alert(t('errorTitle') || 'Error', t('errorLoggingSet') || 'Failed to log set. Please try again.');
       setIsCompletingSet(false);
+    }
+  };
+
+  // Next-time weight suggestion for an exercise: saved when every set was Easy, cleared otherwise.
+  const refreshSuggestedWeight = async (exerciseId: number) => {
+    const suggestedWeight = await analyzeDifficultyAndSuggestWeight(db, workout_log_id, exerciseId, weightIncrement);
+    if (suggestedWeight !== null) {
+      await saveSuggestedWeight(db, exerciseId, suggestedWeight);
+    } else {
+      await db.runAsync(`UPDATE Logged_Exercises SET suggested_weight = NULL WHERE logged_exercise_id = ?;`, [exerciseId]);
     }
   };
 
@@ -761,8 +730,6 @@ export default function StartedWorkoutInterface() {
             setsData.push({
               exercise_name: exercise.exercise_name,
               exercise_id: exercise.logged_exercise_id,
-              set_number: i,
-              total_sets: exercise.sets,
               reps_goal: exercise.reps,
               reps_done: reps_done,
               weight: weight,
@@ -770,7 +737,13 @@ export default function StartedWorkoutInterface() {
               web_link: exercise.web_link || null,
               muscle_group: exercise.muscle_group || null,
               exercise_notes: exercise.exercise_notes || null,
-              comments: ''
+              comments: '',
+              difficulty: null,
+              is_extra: false,
+              base_name: exercise.exercise_name,
+              base_notes: exercise.exercise_notes || null,
+              base_link: exercise.web_link || null,
+              weight_log_id: null,
             });
           }
         });
@@ -782,8 +755,9 @@ export default function StartedWorkoutInterface() {
         await fetchSuggestedWeights(workoutResult[0], exercisesWithStatus);
 
         // Fetch previous workout history for each exercise
-        const historyMap = new Map();
+        const historyMap = new Map<string, HistorySession[]>();
         for (const exercise of exercisesResult) {
+          historyRequestedRef.current.add(exercise.exercise_name);
           const history = await fetchPreviousWorkoutHistory(exercise.exercise_name);
           if (history.length > 0) {
             historyMap.set(exercise.exercise_name, history);
@@ -908,11 +882,6 @@ export default function StartedWorkoutInterface() {
     startWorkoutTimer();
   };
   
-  const isDifferentExercise = (currentIndex: number, nextIndex: number): boolean => {
-    if (nextIndex >= allSets.length) return false;
-    return allSets[currentIndex].exercise_name !== allSets[nextIndex].exercise_name;
-  };
-
   const muscleGroupData = [
     { label: t('Unspecified'), value: null },
     { label: t('Chest'), value: 'chest' },
@@ -1042,40 +1011,84 @@ export default function StartedWorkoutInterface() {
     );
   };
   
-  // ... (rest of the render functions remain the same)
-  
+  const formatHistoryDate = (unixSeconds: number) => {
+    const d = new Date(unixSeconds * 1000);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+  };
+
   const renderExerciseScreen = () => {
-    const currentSet = allSets[timerState.currentSetIndex];
+    const index = timerState.currentSetIndex;
+    const currentSet = allSets[index];
     if (!currentSet) return null;
-    
+
     const muscleGroupInfo = muscleGroupData.find(mg => mg.value === currentSet.muscle_group);
-    
-    const isLastUnloggedSet = allSets.filter(s => !s.set_logged).length === 1;
+    const placeholderColor = theme.type === 'dark' ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)';
+
+    const isDone = currentSet.set_logged;
+    const groupSetIndices = groupIndices(allSets, index);
+    const exerciseId = currentSet.exercise_id;
+    const isLastExercise = exerciseOrder.indexOf(exerciseId) === exerciseOrder.length - 1;
+    const canAddExtra = exerciseDone(allSets, exerciseId);
+    const nothingLeftToDo = isDone && nextUnloggedExerciseId(exerciseOrder, allSets, exerciseId) === null;
+    const hint = previousSetHint(allSets, index);
+    const canComplete =
+      !isCompletingSet && !isDone &&
+      currentSet.weight !== '' && !isNaN(parseFloat(currentSet.weight)) &&
+      parseInt(currentSet.reps_done) > 0 && !!currentSet.difficulty;
 
     const loggedSetsCount = allSets.filter(s => s.set_logged).length;
     const progress = allSets.length > 0 ? (loggedSetsCount / allSets.length) * 100 : 0;
-    
-    const currentExerciseId = currentSet.exercise_id;
-    const currentExerciseIndex = exercises.findIndex(ex => ex.logged_exercise_id === currentExerciseId);
-    const isLastExercise = currentExerciseIndex === exercises.length - 1;
-    const isLastSetOfExercise = currentSet.set_number === currentSet.total_sets;
-    const isLastStructuralSet = isLastExercise && isLastSetOfExercise;
 
-    // Look up by the planned name, so renaming the exercise mid-workout doesn't hide its note.
-    const plannedName = exercises.find(ex => ex.logged_exercise_id === currentExerciseId)?.exercise_name ?? currentSet.exercise_name;
-    const exerciseCoachLine = Object.entries(coachNote.note?.exercises ?? {}).find(
-      ([name]) => name.trim().toLowerCase() === plannedName.trim().toLowerCase()
-    )?.[1];
+    // Coach lines are keyed by the planned exercise name, so renaming a set doesn't hide them.
+    // It also goes away once the set is renamed to a different exercise.
+    const exerciseCoachLine = currentSet.exercise_name.trim().toLowerCase() === currentSet.base_name.trim().toLowerCase()
+      ? Object.entries(coachNote.note?.exercises ?? {}).find(
+          ([name]) => name.trim().toLowerCase() === currentSet.base_name.trim().toLowerCase()
+        )?.[1]
+      : undefined;
+
+    const sessions = previousWorkoutHistory.get(currentSet.exercise_name) ?? [];
+    const sessionIndex = Math.min(historyOffset, Math.max(sessions.length - 1, 0));
+    const session = sessions[sessionIndex];
+    const canGoOlder = sessionIndex < sessions.length - 1;
+    const canGoNewer = sessionIndex > 0;
 
     return (
       <View style={styles.exerciseScreenContainer}>
-        <View style={[styles.timerDisplay, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.timerLabel, { color: theme.text }]}>{t('workoutTime')}</Text>
-          <Text style={[styles.workoutTimerText, { color: theme.text }]}>
-            {timerCalculations.formatTime(timerState.workoutDuration)}
+        {currentSet.is_extra && !isDone && (
+          <View style={styles.extraNameBlock}>
+            <Text style={[styles.inputLabel, { color: theme.text }]}>{t('exerciseNameLabel')}</Text>
+            <TextInput
+              style={[styles.currentExerciseNameInput, {
+                color: theme.text,
+                backgroundColor: theme.card,
+                borderColor: theme.border
+              }]}
+              value={currentSet.exercise_name}
+              onChangeText={handleExtraNameChange}
+              maxLength={80}
+            />
+            <Text style={[styles.extraNameHint, { color: theme.text }]}>{t('extraNameHint')}</Text>
+          </View>
+        )}
+
+        {/* Form notes, with the video link as a small icon in the corner */}
+        <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.formTitle, { color: theme.text }]}>{t('formNotes')}</Text>
+          <Text style={[styles.exerciseNotesText, { color: theme.text, opacity: currentSet.exercise_notes ? 1 : 0.5 }]}>
+            {currentSet.exercise_notes || t('noFormNotes')}
           </Text>
+          <TouchableOpacity
+            style={[styles.formVideoButton, !currentSet.web_link && { opacity: 0.3 }]}
+            disabled={!currentSet.web_link}
+            onPress={() => handleLinkPress(currentSet.web_link)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="logo-youtube" size={24} color={currentSet.web_link ? '#E53935' : theme.text} />
+          </TouchableOpacity>
         </View>
-        
+
         {exerciseCoachLine && (
           <View style={[styles.coachNoteCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.coachNoteTitle, { color: theme.text }]}>{t('coachNoteTitle')}</Text>
@@ -1084,48 +1097,9 @@ export default function StartedWorkoutInterface() {
         )}
 
         <View style={[styles.currentExerciseCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {isEditingExerciseName ? (
-            <TextInput
-              style={[styles.currentExerciseNameInput, {
-                color: theme.text,
-                backgroundColor: theme.background,
-                borderColor: theme.border
-              }]}
-              value={editableExerciseName}
-              onChangeText={(text) => {
-                setEditableExerciseName(text);
-                // Update the exercise name in allSets
-                const updatedSets = [...allSets];
-                updatedSets[timerState.currentSetIndex] = {
-                  ...updatedSets[timerState.currentSetIndex],
-                  exercise_name: text
-                };
-                setAllSets(updatedSets);
-              }}
-              onBlur={() => {
-                // Keep editing mode active if user clicks away
-                // They can manually disable it or it resets on set completion
-              }}
-              autoFocus={true}
-            />
-          ) : (
-            <Text style={[styles.currentExerciseName, { color: theme.text }]}>
-              {currentSet.exercise_name}
-            </Text>
-          )}
-
-          {/* Exercise Notes - Always Visible */}
-          {currentSet.exercise_notes && (
-            <View style={[styles.exerciseNotesContainer, { backgroundColor: theme.background, borderColor: theme.border }]}>
-              <Text style={[styles.exerciseNotesText, { color: theme.text }]}>
-                {currentSet.exercise_notes}
-              </Text>
-            </View>
-          )}
-
           {/* Suggested Weight Badge */}
           {suggestedWeights.has(currentSet.exercise_id) && (
-            <View style={{ marginTop: 12, alignItems: 'center' }}>
+            <View style={{ marginBottom: 12, alignItems: 'center' }}>
               <WeightSuggestionBadge
                 suggestedWeight={suggestedWeights.get(currentSet.exercise_id)!}
                 onIncrementChange={setWeightIncrement}
@@ -1133,182 +1107,175 @@ export default function StartedWorkoutInterface() {
             </View>
           )}
 
-          <View style={styles.badgeAndIconsContainer}>
-            {muscleGroupInfo && muscleGroupInfo.value && (
-              <View style={[styles.muscleGroupBadgeMain, { backgroundColor: theme.card, borderColor: theme.border, marginRight: 8 }]}>
+          {muscleGroupInfo && muscleGroupInfo.value && (
+            <View style={styles.badgeAndIconsContainer}>
+              <View style={[styles.muscleGroupBadgeMain, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <Text style={[styles.muscleGroupBadgeText, { color: theme.text }]}>
                   {t(muscleGroupInfo.label)}
                 </Text>
               </View>
-            )}
-            {currentSet.exercise_notes && (
-              <TouchableOpacity onPress={() => showNotes(currentSet.exercise_notes!, currentSet.exercise_name)} style={{ marginRight: 8 }}>
-                <Ionicons name="bookmark-outline" size={22} color={theme.text} />
-              </TouchableOpacity>
-            )}
-            {currentSet.web_link && (
-              <TouchableOpacity onPress={() => handleLinkPress(currentSet.web_link)}>
-                <Ionicons name="link-outline" size={22} color={theme.text} />
-              </TouchableOpacity>
-            )}
+            </View>
+          )}
+
+          {/* One chip per set: tap a logged one to correct its weight or reps */}
+          <View style={styles.chipsRow}>
+            {groupSetIndices.map((setIndex, position) => {
+              const chipSet = allSets[setIndex];
+              const isCurrent = setIndex === index;
+              return (
+                <TouchableOpacity
+                  key={`${setIndex}-${position}`}
+                  disabled={!chipSet.set_logged}
+                  onPress={() => openEditSet(setIndex)}
+                  style={[
+                    styles.setChip,
+                    { borderColor: theme.border, backgroundColor: theme.background },
+                    chipSet.set_logged && { backgroundColor: theme.card },
+                    isCurrent && { borderColor: theme.buttonBackground, borderWidth: 2 },
+                  ]}
+                >
+                  <Text style={[styles.setChipText, { color: theme.text }]}>
+                    {chipSet.set_logged ? '✓ ' : ''}{position + 1}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-          
-          <Text style={[styles.setInfo, { color: theme.text }]}>
-           {currentSet.set_number}/{currentSet.total_sets}
-          </Text>
           <Text style={[styles.repInfo, { color: theme.text }]}>
             {t('goal')}: {currentSet.reps_goal} {t('Reps')}
+            {groupSetIndices.some(i => allSets[i].set_logged) ? `  ·  ${t('tapSetToEdit')}` : ''}
           </Text>
-          
-          <View style={styles.inputContainer}>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: theme.text }]}> {t('Weight')} ({weightFormat})</Text>
-              <TextInput
-                style={[styles.input, {
-                  backgroundColor: theme.card,
-                  color: theme.text,
-                  borderColor: theme.border
-                }]}
-                value={currentSet.weight}
-                onChangeText={(text) => {
-                  const updatedSets = [...allSets];
-                  updatedSets[timerState.currentSetIndex] = {
-                    ...updatedSets[timerState.currentSetIndex],
-                    weight: text
-                  };
-                  setAllSets(updatedSets);
-                }}
-                keyboardType="numeric"
-                placeholder="0.0"
-                placeholderTextColor={theme.type === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'}
-              />
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: theme.text }]}>{t('repsDone')}</Text>
-              <TextInput
-                  style={[styles.input, {
-                  backgroundColor: theme.card,
-              color: theme.text,
-              borderColor: theme.border
-            }]}
-            value={currentSet.reps_done}
-            onChangeText={(text) => {
-              const updatedSets = [...allSets];
-              updatedSets[timerState.currentSetIndex] = {
-                ...updatedSets[timerState.currentSetIndex],
-                reps_done: text
-              };
-              setAllSets(updatedSets);
-            }}
-            keyboardType="number-pad"
-            maxLength={4}
-            placeholder="0"
-            placeholderTextColor={theme.type === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'}
-          />
+          {isDone ? (
+            <View style={[styles.doneCard, { borderColor: theme.border, backgroundColor: theme.background }]}>
+              <Ionicons name="checkmark-circle" size={28} color={theme.buttonBackground} />
+              <Text style={[styles.doneText, { color: theme.text }]}>
+                {currentSet.weight} {weightFormat} × {currentSet.reps_done} {t('Reps')}
+              </Text>
             </View>
-          </View>
+          ) : (
+            <>
+              <View style={styles.inputContainer}>
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.inputLabel, { color: theme.text }]}> {t('Weight')} ({weightFormat})</Text>
+                  <TextInput
+                    style={[styles.input, {
+                      backgroundColor: theme.card,
+                      color: theme.text,
+                      borderColor: theme.border
+                    }]}
+                    value={currentSet.weight}
+                    onChangeText={(text) => updateCurrentSet({ weight: text })}
+                    keyboardType="numeric"
+                    placeholder={hint ? hint.weight : '0.0'}
+                    placeholderTextColor={placeholderColor}
+                  />
+                </View>
 
-          <View style={styles.commentsContainer}>
-            <Text style={[styles.inputLabel, { color: theme.text }]}>{t('Comments')} ({t('optional')})</Text>
-            <TextInput
-              style={[styles.commentsInput, {
-                backgroundColor: theme.card,
-                color: theme.text,
-                borderColor: theme.border
-              }]}
-              value={currentSet.comments}
-              onChangeText={(text) => {
-                const updatedSets = [...allSets];
-                updatedSets[timerState.currentSetIndex] = {
-                  ...updatedSets[timerState.currentSetIndex],
-                  comments: text
-                };
-                setAllSets(updatedSets);
-              }}
-              maxLength={500}
-              multiline
-              numberOfLines={2}
-            />
-          </View>
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.inputLabel, { color: theme.text }]}>{t('repsDone')}</Text>
+                  <TextInput
+                    style={[styles.input, {
+                      backgroundColor: theme.card,
+                      color: theme.text,
+                      borderColor: theme.border
+                    }]}
+                    value={currentSet.reps_done}
+                    onChangeText={(text) => updateCurrentSet({ reps_done: text })}
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    placeholder={hint ? hint.reps : '0'}
+                    placeholderTextColor={placeholderColor}
+                  />
+                </View>
+              </View>
+
+              {/* How the set felt: required, and one tap on the screen itself */}
+              <Text style={[styles.inputLabel, { color: theme.text, marginTop: 4 }]}>{t('howWasThisSet')}</Text>
+              <View style={styles.difficultyRow}>
+                {(['Easy', 'Medium', 'Hard'] as const).map(level => {
+                  const selected = currentSet.difficulty === level;
+                  return (
+                    <TouchableOpacity
+                      key={level}
+                      onPress={() => updateCurrentSet({ difficulty: selected ? null : level })}
+                      style={[
+                        styles.difficultyChip,
+                        { borderColor: theme.border, backgroundColor: theme.background },
+                        selected && { backgroundColor: getDifficultyColor(level), borderColor: getDifficultyColor(level) },
+                      ]}
+                    >
+                      <Text style={styles.difficultyEmoji}>{getDifficultyEmoji(level)}</Text>
+                      <Text style={[styles.difficultyLabel, { color: selected ? '#FFFFFF' : theme.text }]}>
+                        {t(`difficulty${level}`)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.commentsContainer}>
+                <Text style={[styles.inputLabel, { color: theme.text }]}>{t('Comments')} ({t('optional')})</Text>
+                <TextInput
+                  style={[styles.commentsInput, {
+                    backgroundColor: theme.card,
+                    color: theme.text,
+                    borderColor: theme.border
+                  }]}
+                  value={currentSet.comments}
+                  onChangeText={(text) => updateCurrentSet({ comments: text })}
+                  maxLength={500}
+                  multiline
+                  numberOfLines={2}
+                />
+              </View>
+            </>
+          )}
         </View>
-        
+
         <View style={styles.controlsContainer}>
+          {isDone ? (
             <TouchableOpacity
-                style={[styles.completeButton, {
-                backgroundColor:
-                    !allSets[timerState.currentSetIndex] || allSets[timerState.currentSetIndex].reps_done === '' || parseInt(allSets[timerState.currentSetIndex].reps_done) <= 0 || allSets[timerState.currentSetIndex].weight === ''
-                    ? theme.inactivetint
-                    : theme.buttonBackground
-                }]}
-                onPress={() => {
-                const pressCurrentSet = allSets[timerState.currentSetIndex];
-                if (!pressCurrentSet || pressCurrentSet.reps_done === '' || parseInt(pressCurrentSet.reps_done) <= 0 || pressCurrentSet.weight === '') {
-                    Alert.alert(t('missingInformation'), t('enterRepsAndWeight'));
-                    return;
-                }
-
-                const weight = parseFloat(pressCurrentSet.weight);
-                const reps = parseInt(pressCurrentSet.reps_done);
-
-                if (isNaN(weight) || isNaN(reps) || reps <= 0) {
-                    Alert.alert(t('errorTitle') || 'Error', t('invalidWeightReps') || 'Please enter valid weight and reps');
-                    return;
-                }
-
-                // Store pending set data and show difficulty selector
-                setPendingSetData({
-                    weight,
-                    reps,
-                    setIndex: timerState.currentSetIndex
-                });
-                setIsCompletingSet(true);
-                setShowDifficultySelector(true);
-                }}
-                disabled={
-                    isCompletingSet ||
-                    !allSets[timerState.currentSetIndex] || allSets[timerState.currentSetIndex].reps_done === '' || parseInt(allSets[timerState.currentSetIndex].reps_done) <= 0 || allSets[timerState.currentSetIndex].weight === ''
-                }
+              style={[styles.completeButton, { backgroundColor: theme.buttonBackground }]}
+              onPress={handleNextExercise}
             >
-                <Text style={[styles.buttonText, { color: theme.buttonText }]}>
-                {isCompletingSet ? `${t('completing')}...` : t('completeSet')}
-                </Text>
-            </TouchableOpacity>
-
-            {/* Add Extra Set Button */}
-            <TouchableOpacity
-              style={[styles.addExtraSetButton, { backgroundColor: theme.card, borderColor: theme.border }]}
-              onPress={handleAddExtraSet}
-            >
-              <Text style={[styles.addExtraSetButtonText, { color: theme.text }]}>
-                + Add Extra Set
+              <Text style={[styles.buttonText, { color: theme.buttonText }]}>
+                {nothingLeftToDo ? t('finishWorkout') : t('nextExercise')}
               </Text>
             </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.completeButton, { backgroundColor: canComplete ? theme.buttonBackground : theme.inactivetint }]}
+              onPress={() => completeSet(index)}
+              disabled={!canComplete}
+            >
+              <Text style={[styles.buttonText, { color: theme.buttonText }]}>
+                {isCompletingSet ? `${t('completing')}...` : t('completeSet')}
+              </Text>
+            </TouchableOpacity>
+          )}
 
+          {/* Add Extra Set: only once every set of this exercise is logged */}
+          <TouchableOpacity
+            style={[
+              styles.addExtraSetButton,
+              { backgroundColor: theme.card, borderColor: theme.border },
+              !canAddExtra && { opacity: 0.4 },
+            ]}
+            onPress={handleAddExtraSet}
+            disabled={!canAddExtra}
+          >
+            <Text style={[styles.addExtraSetButtonText, { color: theme.text }]}>
+              + {t('addExtraSet')}
+            </Text>
+          </TouchableOpacity>
+
+          {!(isDone && nothingLeftToDo) && (
             <View style={styles.secondaryControlsContainer}>
-                {!isLastExercise &&
-                  <TouchableOpacity
+              {!isLastExercise && !isDone && (
+                <TouchableOpacity
                   style={[styles.secondaryButton, { backgroundColor: theme.card, borderColor: theme.border }]}
                   onPress={handleSkipToNextExercise}
-                  >
-                    <AutoSizeText
-                      fontSize={16}
-                      numberOfLines={3}
-                      mode={ResizeTextMode.max_lines}
-                      style={[styles.secondaryButtonText, { color: theme.text }]}
-                    >
-                      {t('skipToNextExercise')}
-                    </AutoSizeText>
-                  </TouchableOpacity>
-                }
-                <TouchableOpacity
-                  style={[
-                    styles.secondaryButton, 
-                    { backgroundColor: theme.card, borderColor: theme.border },
-                    (isLastExercise && !isLastStructuralSet) && { width: '100%' },
-                    (isLastExercise && isLastStructuralSet) && { width: '100%' }
-                  ]}
-                  onPress={handleFinishWorkout}
                 >
                   <AutoSizeText
                     fontSize={16}
@@ -1316,49 +1283,90 @@ export default function StartedWorkoutInterface() {
                     mode={ResizeTextMode.max_lines}
                     style={[styles.secondaryButtonText, { color: theme.text }]}
                   >
-                    {t('finishWorkout')}
+                    {t('skipToNextExercise')}
                   </AutoSizeText>
                 </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[
+                  styles.secondaryButton,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                  (isLastExercise || isDone) && { width: '100%' },
+                ]}
+                onPress={handleFinishWorkout}
+              >
+                <AutoSizeText
+                  fontSize={16}
+                  numberOfLines={3}
+                  mode={ResizeTextMode.max_lines}
+                  style={[styles.secondaryButtonText, { color: theme.text }]}
+                >
+                  {t('finishWorkout')}
+                </AutoSizeText>
+              </TouchableOpacity>
             </View>
+          )}
         </View>
-        
+
         <View style={styles.progressContainer}>
           <Text style={[styles.progressText, { color: theme.text }]}>
           %{Math.round(progress)}
           </Text>
           <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
-            <View 
+            <View
               style={[
-                styles.progressFill, 
-                { 
+                styles.progressFill,
+                {
                   backgroundColor: theme.buttonBackground,
                   width: `${progress}%`
                 }
-              ]} 
+              ]}
             />
           </View>
         </View>
         <Text style={[styles.tipText, { color: theme.text }]}>{t('startedWorkoutTip')}</Text>
 
-        {/* Previous Workout History */}
-        {previousWorkoutHistory.has(currentSet.exercise_name) && (
-          <View style={[styles.historyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.historyTitle, { color: theme.text }]}>
-              📊 {t('previousWorkout') || 'Previous Workout'}
-            </Text>
-            <ScrollView
-              style={styles.historyScrollView}
-              nestedScrollEnabled={true}
+        {/* Previous workouts of this exercise, newest first; the arrows step back through them */}
+        <View style={[styles.historyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.historyHeaderRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.historyTitle, { color: theme.text, marginBottom: 0 }]}>
+                📊 {t('previousWorkout') || 'Previous Workout'}
+              </Text>
+              {session && (
+                <Text style={[styles.historyDate, { color: theme.text }]}>
+                  {formatHistoryDate(session.workoutDate)} · {sessionIndex + 1}/{sessions.length}
+                </Text>
+              )}
+            </View>
+            <TouchableOpacity
+              disabled={!canGoOlder}
+              onPress={() => setHistoryOffset(sessionIndex + 1)}
+              style={[styles.historyArrow, !canGoOlder && { opacity: 0.25 }]}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              {previousWorkoutHistory.get(currentSet.exercise_name)!.map((historySet, index) => {
+              <Ionicons name="chevron-back" size={24} color={theme.text} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              disabled={!canGoNewer}
+              onPress={() => setHistoryOffset(sessionIndex - 1)}
+              style={[styles.historyArrow, !canGoNewer && { opacity: 0.25 }]}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="chevron-forward" size={24} color={theme.text} />
+            </TouchableOpacity>
+          </View>
+          {session ? (
+            <ScrollView style={styles.historyScrollView} nestedScrollEnabled={true}>
+              {session.sets.map((historySet, setPosition) => {
                 const difficultyEmoji =
                   historySet.difficulty === 'Easy' ? '😊' :
                   historySet.difficulty === 'Hard' ? '😓' : '😐';
 
                 return (
-                  <View key={index} style={[styles.historySetRow, { borderBottomColor: theme.border }]}>
+                  <View key={setPosition} style={[styles.historySetRow, { borderBottomColor: theme.border }]}>
                     <Text style={[styles.historySetText, { color: theme.text }]}>
-                      Set {historySet.setNumber}: {historySet.weight} {weightFormat} × {historySet.reps} reps {difficultyEmoji}
+                      Set {setPosition + 1}: {historySet.weight} {weightFormat} × {historySet.reps} reps {difficultyEmoji}
                     </Text>
                     {historySet.comments && (
                       <Text style={[styles.historyCommentText, { color: theme.text }]}>
@@ -1369,12 +1377,14 @@ export default function StartedWorkoutInterface() {
                 );
               })}
             </ScrollView>
-          </View>
-        )}
+          ) : (
+            <Text style={[styles.historyDate, { color: theme.text, marginTop: 8 }]}>{t('noEarlierSessions')}</Text>
+          )}
+        </View>
       </View>
     );
   };
-  
+
   const renderRestScreen = () => {
     const nextSet = allSets[timerState.currentSetIndex];
     
@@ -1383,7 +1393,7 @@ export default function StartedWorkoutInterface() {
     let previousSetReps = null;
     let previousSetWeight = null;
     if (nextSet) {
-      const setKey = `${nextSet.exercise_name}-${nextSet.set_number}`;
+      const setKey = `${nextSet.exercise_name}-${groupStats(allSets, timerState.currentSetIndex).number}`;
       previousSetReps = repsMapRef.current.get(setKey) || null;
       previousSetWeight = weightMapRef.current.get(setKey) || null;
     }
@@ -1444,7 +1454,7 @@ export default function StartedWorkoutInterface() {
               </View>
             </View>
             <Text style={[styles.upNextSetInfo, { color: theme.text }]}>
-              {t('upcomingSet')}: {nextSet.set_number}
+              {t('upcomingSet')}: {groupStats(allSets, timerState.currentSetIndex).number}
             </Text>
             {(previousSetReps || previousSetWeight) && (
               <Text style={[styles.upNextSetInfo, { color: theme.text }]}>
@@ -1545,7 +1555,20 @@ export default function StartedWorkoutInterface() {
   };
   
   const renderExerciseListModal = () => {
-    const currentExerciseNameFromSet = allSets[timerState.currentSetIndex]?.exercise_name;
+    const current = allSets[timerState.currentSetIndex];
+
+    // One row per exercise as it is being logged (a renamed extra set is a row of its own).
+    const groups: Array<{ key: string; firstIndex: number; count: number; logged: number; set: ExerciseSet }> = [];
+    allSets.forEach((set, i) => {
+      const key = `${set.exercise_id}|${set.exercise_name}`;
+      const existing = groups.find(g => g.key === key);
+      if (existing) {
+        existing.count += 1;
+        if (set.set_logged) existing.logged += 1;
+      } else {
+        groups.push({ key, firstIndex: i, count: 1, logged: set.set_logged ? 1 : 0, set });
+      }
+    });
 
     return (
       <Modal
@@ -1556,10 +1579,6 @@ export default function StartedWorkoutInterface() {
           setIsExerciseListModalVisible(false);
         }}
       >
-
-
-
-
     {isExerciseListModalVisible && (
           <StatusBar
             backgroundColor={theme.type === 'light' ? "rgba(0, 0, 0, 0.5)" : "black"}
@@ -1571,7 +1590,7 @@ export default function StartedWorkoutInterface() {
           activeOpacity={1}
           onPressOut={() => setIsExerciseListModalVisible(false)}
         >
-          <View 
+          <View
             style={[styles.modalContainer, { backgroundColor: theme.card, borderColor: theme.border }]}
             onStartShouldSetResponder={() => true}
           >
@@ -1583,73 +1602,31 @@ export default function StartedWorkoutInterface() {
             </View>
             <FlatList
               showsVerticalScrollIndicator={false}
-              data={exercises}
-              keyExtractor={(item) => item.logged_exercise_id.toString()}
+              data={groups}
+              keyExtractor={(item) => item.key}
               renderItem={({ item }) => {
-                const isCurrent = item.exercise_name === currentExerciseNameFromSet;
-                const muscleGroupInfo = muscleGroupData.find(mg => mg.value === item.muscle_group);
-                const itemStyle = [
-                  styles.modalExerciseItem,
-                  { borderColor: theme.border },
-                  isCurrent
-                    ? { 
-                        backgroundColor: theme.buttonBackground,
-                      }
-                    : { backgroundColor: theme.card }
-                ];
-                const nameStyle = [
-                  styles.modalExerciseName,
-                  isCurrent
-                    ? { color: theme.buttonText }
-                    : { color: theme.text }
-                ];
-                const detailStyle = [
-                  styles.modalExerciseDetails,
-                  isCurrent
-                    ? { color: theme.buttonText }
-                    : { color: theme.text }
-                ];
-
-                const handlePress = () => {
-                  if (item.exercise_fully_logged) {
-                    return; // Do nothing if exercise is fully logged
-                  }
-                  
-                  const firstUnloggedSetIndex = allSets.findIndex(
-                    s => s.exercise_id === item.logged_exercise_id && !s.set_logged
-                  );
-
-                  if (firstUnloggedSetIndex !== -1) {
-                    clearRestTimerState();
-                    setTimerState(prev =>
-                      updateTimerState(prev, {
-                        currentSetIndex: firstUnloggedSetIndex,
-                        workoutStage: 'exercise',
-                      })
-                    );
-                    setIsExerciseListModalVisible(false);
-                  }
-                };
-
-                // Use TouchableWithoutFeedback for completed exercises to maintain scrollability
-                const TouchableComponent = item.exercise_fully_logged ? TouchableWithoutFeedback : TouchableOpacity;
-                const touchableProps = item.exercise_fully_logged 
-                  ? {} 
-                  : { onPress: handlePress, disabled: item.exercise_fully_logged };
+                const isCurrent = !!current && current.exercise_id === item.set.exercise_id && current.exercise_name === item.set.exercise_name;
+                const fullyLogged = item.logged === item.count;
+                const muscleGroupInfo = muscleGroupData.find(mg => mg.value === item.set.muscle_group);
+                const textColor = isCurrent ? theme.buttonText : theme.text;
 
                 return (
-                  <TouchableComponent {...touchableProps}>
-                    <View style={itemStyle}>
+                  <TouchableOpacity onPress={() => goToGroup(item.firstIndex)}>
+                    <View style={[
+                      styles.modalExerciseItem,
+                      { borderColor: theme.border },
+                      { backgroundColor: isCurrent ? theme.buttonBackground : theme.card },
+                    ]}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
-                          {item.exercise_fully_logged && (
+                          {fullyLogged && (
                             <Ionicons name="checkmark-circle" size={20} color={isCurrent ? theme.buttonText : theme.buttonBackground} style={{ marginRight: 8 }} />
                           )}
-                          <Text style={[nameStyle, { marginRight: 8 }]}>{item.exercise_name}</Text>
+                          <Text style={[styles.modalExerciseName, { color: textColor, marginRight: 8 }]}>{item.set.exercise_name}</Text>
                           {muscleGroupInfo && muscleGroupInfo.value && (
                             <View style={[
                               styles.muscleGroupBadgeModal,
-                              { 
+                              {
                                 backgroundColor: isCurrent ? theme.text : theme.card,
                                 borderColor: isCurrent ? theme.buttonText : theme.border,
                               }
@@ -1663,24 +1640,12 @@ export default function StartedWorkoutInterface() {
                             </View>
                           )}
                         </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          {item.exercise_notes && (
-                            <TouchableOpacity onPress={() => showNotes(item.exercise_notes!, item.exercise_name)} style={{ marginLeft: 10 }}>
-                              <Ionicons name="bookmark-outline" size={22} color={isCurrent ? theme.buttonText : theme.text} />
-                            </TouchableOpacity>
-                          )}
-                          {item.web_link && (
-                            <TouchableOpacity onPress={() => handleLinkPress(item.web_link)} style={{ marginLeft: 10 }}>
-                              <Ionicons name="link-outline" size={22} color={isCurrent ? theme.buttonText : theme.text} />
-                            </TouchableOpacity>
-                          )}
-                        </View>
                       </View>
-                      <Text style={[detailStyle, { marginTop: 4 }]}>
-                        {item.sets} {t('Sets')} × {item.reps} {t('Reps')}
+                      <Text style={[styles.modalExerciseDetails, { color: textColor, marginTop: 4 }]}>
+                        {item.logged}/{item.count} {t('Sets')} × {item.set.reps_goal} {t('Reps')}
                       </Text>
                     </View>
-                  </TouchableComponent>
+                  </TouchableOpacity>
                 );
               }}
             />
@@ -1689,7 +1654,62 @@ export default function StartedWorkoutInterface() {
       </Modal>
     );
   };
-  
+
+  const renderEditSetModal = () => {
+    const set = editingSetIndex !== null ? allSets[editingSetIndex] : null;
+    return (
+      <Modal
+        visible={editingSetIndex !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setEditingSetIndex(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.modalTitle, { color: theme.text }]} numberOfLines={1}>
+                {t('editSetTitle')}{editingSetIndex !== null ? ` ${groupStats(allSets, editingSetIndex).number}` : ''}
+              </Text>
+              <TouchableOpacity onPress={() => setEditingSetIndex(null)} style={styles.modalCloseButton}>
+                <Ionicons name="close-outline" size={28} color={theme.text} />
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.extraNameHint, { color: theme.text, marginBottom: 8 }]} numberOfLines={1}>
+              {set?.exercise_name}
+            </Text>
+            <View style={styles.inputContainer}>
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: theme.text }]}>{t('Weight')} ({weightFormat})</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+                  value={editWeight}
+                  onChangeText={setEditWeight}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: theme.text }]}>{t('repsDone')}</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+                  value={editReps}
+                  onChangeText={setEditReps}
+                  keyboardType="number-pad"
+                  maxLength={4}
+                />
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[styles.completeButton, { backgroundColor: theme.buttonBackground, marginTop: 16 }]}
+              onPress={saveEditedSet}
+            >
+              <Text style={[styles.buttonText, { color: theme.buttonText }]}>{t('saveChanges')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   const renderNotesModal = () => {
     return (
       <Modal
@@ -1746,6 +1766,20 @@ export default function StartedWorkoutInterface() {
     }));
   };
   
+  // Load the earlier sessions for a name the user typed into an extra set (the planned names
+  // are loaded with the workout). Debounced so each keystroke doesn't hit the database.
+  const currentSetName = allSets[timerState.currentSetIndex]?.exercise_name;
+  useEffect(() => {
+    setHistoryOffset(0);
+    if (!currentSetName || !currentSetName.trim() || historyRequestedRef.current.has(currentSetName)) return;
+    const timeout = setTimeout(async () => {
+      historyRequestedRef.current.add(currentSetName);
+      const history = await fetchPreviousWorkoutHistory(currentSetName);
+      setPreviousWorkoutHistory(prev => new Map(prev).set(currentSetName, history));
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [currentSetName]);
+
   useEffect(() => {
     const configureAudio = async () => {
       try {
@@ -1780,106 +1814,174 @@ export default function StartedWorkoutInterface() {
     }
   };
 
-  const handleSkipToNextExercise = () => {
-    const currentExerciseId = allSets[timerState.currentSetIndex].exercise_id;
-    const currentExerciseInExercisesIndex = exercises.findIndex(e => e.logged_exercise_id === currentExerciseId);
+  const exerciseOrder = exercises.map(e => e.logged_exercise_id);
 
-    let nextUnloggedExercise = null;
-    for (let i = currentExerciseInExercisesIndex + 1; i < exercises.length; i++) {
-        if (!exercises[i].exercise_fully_logged) {
-            nextUnloggedExercise = exercises[i];
-            break;
-        }
+  // "Skip to next exercise" from an unfinished set. An extra set that was never logged is dropped.
+  const handleSkipToNextExercise = () => {
+    const current = allSets[timerState.currentSetIndex];
+    if (!current) return;
+    const cleaned = dropUnloggedExtras(allSets);
+
+    const at = exerciseOrder.indexOf(current.exercise_id);
+    let targetId: number | null = null;
+    for (let i = at + 1; i < exerciseOrder.length; i++) {
+      if (cleaned.some(s => s.exercise_id === exerciseOrder[i] && !s.set_logged)) {
+        targetId = exerciseOrder[i];
+        break;
+      }
     }
 
-    if (nextUnloggedExercise) {
-        const firstUnloggedSetIndex = allSets.findIndex(
-            s => s.exercise_id === nextUnloggedExercise.logged_exercise_id && !s.set_logged
-        );
+    if (targetId === null) {
+      Alert.alert(t('noMoreExercises'), t('allFollowingExercisesLogged'));
+      return;
+    }
 
-        if (firstUnloggedSetIndex !== -1) {
-            clearRestTimerState();
-            setTimerState(prev =>
-              updateTimerState(prev, {
-                currentSetIndex: firstUnloggedSetIndex,
-                workoutStage: 'exercise',
-              })
-            );
-        }
+    const targetIndex = firstUnloggedIndex(cleaned, targetId);
+    setAllSets(cleaned);
+    clearRestTimerState();
+    setTimerState(prev => updateTimerState(prev, { currentSetIndex: targetIndex, workoutStage: 'exercise' }));
+  };
+
+  // "Next exercise" once every set of the current exercise is logged: rest, then move on.
+  const handleNextExercise = () => {
+    const current = allSets[timerState.currentSetIndex];
+    if (!current) return;
+    const targetId = nextUnloggedExerciseId(exerciseOrder, allSets, current.exercise_id);
+    if (targetId === null) {
+      handleFinishWorkout();
+      return;
+    }
+
+    const targetIndex = firstUnloggedIndex(allSets, targetId);
+    const restSeconds = parseInt(exerciseRestTime);
+    if (restSeconds > 0) {
+      setTimerState(prev => updateTimerState(prev, {
+        workoutStage: 'rest',
+        isExerciseRest: true,
+        currentSetIndex: targetIndex,
+        isResting: true,
+        restRemaining: restSeconds,
+        restStartTime: Date.now()
+      }));
+      stopRestTimer();
+      startRestTimer(restSeconds);
     } else {
-        Alert.alert(t('noMoreExercises'), t('allFollowingExercisesLogged'));
+      setTimerState(prev => updateTimerState(prev, { workoutStage: 'exercise', currentSetIndex: targetIndex }));
     }
   };
 
-  const handleAddExtraSet = () => {
-    const currentSet = allSets[timerState.currentSetIndex];
-    if (!currentSet) return;
-
-    // Find the highest set number for the current exercise
-    const setsForExercise = allSets.filter(s => s.exercise_name === currentSet.exercise_name);
-    const maxSetNumber = Math.max(...setsForExercise.map(s => s.set_number), 0);
-
-    // Create new extra set
-    const newSet: ExerciseSet = {
-      exercise_name: currentSet.exercise_name,
-      exercise_id: currentSet.exercise_id,
-      set_number: maxSetNumber + 1,
-      total_sets: maxSetNumber + 1,
-      reps_goal: currentSet.reps_goal,
-      reps_done: currentSet.reps_done, // Pre-fill with current reps
-      weight: currentSet.weight, // Pre-fill with current weight
-      set_logged: false,
-      web_link: currentSet.web_link,
-      muscle_group: currentSet.muscle_group,
-      exercise_notes: currentSet.exercise_notes,
-      comments: '',
-    };
-
-    // Insert new set after current set
-    const newAllSets = [...allSets];
-    newAllSets.splice(timerState.currentSetIndex + 1, 0, newSet);
-    setAllSets(newAllSets);
-
-    // Move to the new set
-    setTimerState(prev => ({
-      ...prev,
-      currentSetIndex: timerState.currentSetIndex + 1,
+  // Jump to an exercise group from the list: its first unlogged set, or (when it is finished)
+  // its last set, where extra sets can be added and logged sets corrected.
+  const goToGroup = (groupIndex: number) => {
+    const cleaned = dropUnloggedExtras(allSets);
+    const reference = allSets[groupIndex];
+    const indices = cleaned
+      .map((_, i) => i)
+      .filter(i => cleaned[i].exercise_id === reference.exercise_id && cleaned[i].exercise_name === reference.exercise_name);
+    if (indices.length === 0) {
+      setIsExerciseListModalVisible(false);
+      return;
+    }
+    const firstOpen = indices.find(i => !cleaned[i].set_logged);
+    setAllSets(cleaned);
+    clearRestTimerState();
+    setTimerState(prev => updateTimerState(prev, {
+      currentSetIndex: firstOpen !== undefined ? firstOpen : indices[indices.length - 1],
+      workoutStage: 'exercise',
     }));
+    setIsExerciseListModalVisible(false);
+  };
 
-    // Enable exercise name editing
-    setIsEditingExerciseName(true);
-    setEditableExerciseName(currentSet.exercise_name);
+  // "+ Add extra set": only reachable when every set of the exercise is logged.
+  const handleAddExtraSet = () => {
+    const added = addExtraSet(allSets, timerState.currentSetIndex);
+    if (!added) return;
+    setAllSets(added.sets);
+    setTimerState(prev => updateTimerState(prev, { currentSetIndex: added.index, workoutStage: 'exercise' }));
+  };
+
+  const updateCurrentSet = (changes: Partial<ExerciseSet>) => {
+    const index = timerState.currentSetIndex;
+    setAllSets(prev => prev.map((s, i) => (i === index ? { ...s, ...changes } : s)));
+  };
+
+  const handleExtraNameChange = (text: string) => {
+    const index = timerState.currentSetIndex;
+    setAllSets(prev => prev.map((s, i) => (i === index ? renameExtraSet(s, text) : s)));
+  };
+
+  // Correct the weight or reps of a set that was already logged.
+  const openEditSet = (index: number) => {
+    const set = allSets[index];
+    if (!set || !set.set_logged) return;
+    setEditingSetIndex(index);
+    setEditWeight(set.weight);
+    setEditReps(set.reps_done);
+  };
+
+  const saveEditedSet = async () => {
+    if (editingSetIndex === null) return;
+    const set = allSets[editingSetIndex];
+    const weight = parseFloat(editWeight);
+    const reps = parseInt(editReps);
+    if (!set || set.weight_log_id === null || isNaN(weight) || weight < 0 || isNaN(reps) || reps <= 0) {
+      Alert.alert(t('errorTitle') || 'Error', t('invalidWeightReps') || 'Please enter valid weight and reps');
+      return;
+    }
+    try {
+      await db.runAsync(
+        `UPDATE Weight_Log SET weight_logged = ?, reps_logged = ? WHERE weight_log_id = ?;`,
+        [weight, reps, set.weight_log_id]
+      );
+      const updated = allSets.map((s, i) =>
+        i === editingSetIndex ? { ...s, weight: weight.toString(), reps_done: reps.toString() } : s
+      );
+      setAllSets(updated);
+      setEditingSetIndex(null);
+      if (exerciseDone(updated, set.exercise_id)) {
+        await refreshSuggestedWeight(set.exercise_id);
+      }
+    } catch (error) {
+      console.error('Error updating set:', error);
+      Alert.alert(t('errorTitle') || 'Error', t('errorLoggingSet') || 'Failed to save the change. Please try again.');
+    }
   };
 
   const handleFinishWorkout = () => {
-    const currentSetIndex = timerState.currentSetIndex;
-    const currentSet = allSets[currentSetIndex];
+    const index = timerState.currentSetIndex;
+    const current = allSets[index];
 
-    // Check if the current set has valid data and hasn't been logged
-    if (currentSet && !currentSet.set_logged && currentSet.reps_done !== '' && parseInt(currentSet.reps_done) > 0 && currentSet.weight !== '') {
-      const weight = parseFloat(currentSet.weight);
-      const reps = parseInt(currentSet.reps_done);
+    // A set that is fully filled in on screen is logged together with the finish.
+    const currentIsReady =
+      !!current && !current.set_logged && current.weight !== '' && parseInt(current.reps_done) > 0 && !!current.difficulty;
+    const notDone = allSets.filter(s => !s.set_logged && !s.is_extra).length
+      - (currentIsReady && !current.is_extra ? 1 : 0);
 
-      if (isNaN(weight) || isNaN(reps) || reps <= 0) {
-        Alert.alert(t('errorTitle') || 'Error', t('invalidWeightReps') || 'Please enter valid weight and reps');
+    const finish = async () => {
+      if (currentIsReady) {
+        await completeSet(index, true);
         return;
       }
-
-      // Store pending set data and show difficulty selector
-      setPendingSetData({
-        weight,
-        reps,
-        setIndex: currentSetIndex,
-        isFinishWorkout: true,
-      });
-      setShowDifficultySelector(true);
-    } else {
-      // No valid current set to log, just finish
       stopWorkoutTimer();
+      clearRestTimerState();
+      setAllSets(dropUnloggedExtras(allSets));
       setTimerState(prev => updateTimerState(prev, { workoutStage: 'completed' }));
+    };
+
+    if (notDone > 0) {
+      Alert.alert(
+        t('finishWithUnloggedTitle'),
+        t('finishWithUnloggedMessage', { count: notDone }),
+        [
+          { text: t('finishGoBack'), style: 'cancel' },
+          { text: t('finishAnyway'), style: 'destructive', onPress: finish },
+        ]
+      );
+    } else {
+      finish();
     }
   };
-  
+
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
@@ -1900,9 +2002,22 @@ export default function StartedWorkoutInterface() {
         >
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.text }]}>
-          {timerState.workoutStarted ? (workout ? `${workout.workout_name} - ${workout.day_name}` : 'Workout') : t("startWorkout")}
-        </Text>
+        {timerState.workoutStarted && timerState.workoutStage === 'exercise' && allSets[timerState.currentSetIndex] ? (
+          <View style={styles.floatingInfo}>
+            <Text style={[styles.floatingName, { color: theme.text }]} numberOfLines={1}>
+              {allSets[timerState.currentSetIndex].exercise_name || ' '}
+            </Text>
+            <Text style={[styles.floatingMeta, { color: theme.text }]}>
+              {timerCalculations.formatTime(timerState.workoutDuration)}
+              {'  ·  '}
+              {groupStats(allSets, timerState.currentSetIndex).logged}/{groupStats(allSets, timerState.currentSetIndex).total} {t('Sets')}
+            </Text>
+          </View>
+        ) : (
+          <Text style={[styles.title, { color: theme.text }]}>
+            {timerState.workoutStarted ? (workout ? `${workout.workout_name} - ${workout.day_name}` : 'Workout') : t("startWorkout")}
+          </Text>
+        )}
         {timerState.workoutStarted ? (
           <TouchableOpacity 
             onPress={() => setIsExerciseListModalVisible(true)} 
@@ -1931,16 +2046,7 @@ export default function StartedWorkoutInterface() {
       {renderExerciseListModal()}
       {renderNotesModal()}
 
-      {/* Difficulty Selector Modal */}
-      <DifficultySelector
-        visible={showDifficultySelector}
-        onSelect={handleDifficultySelected}
-        onClose={() => {
-          setShowDifficultySelector(false);
-          setIsCompletingSet(false);
-          setPendingSetData(null);
-        }}
-      />
+      {renderEditSetModal()}
     </View>
   );
 }
@@ -1994,6 +2100,114 @@ const styles = StyleSheet.create({
     flex: 1
   },
   
+  // Floating header block while logging sets
+  floatingInfo: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  floatingName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  floatingMeta: {
+    fontSize: 14,
+    marginTop: 2,
+    opacity: 0.75,
+  },
+  extraNameBlock: {
+    marginBottom: 12,
+  },
+  extraNameHint: {
+    fontSize: 12,
+    opacity: 0.6,
+    marginTop: 4,
+  },
+  formCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+    paddingRight: 48,
+    marginBottom: 12,
+  },
+  formTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  formVideoButton: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  setChip: {
+    minWidth: 48,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  setChipText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  doneCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 16,
+    marginTop: 12,
+  },
+  doneText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  difficultyRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+    marginBottom: 8,
+  },
+  difficultyChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  difficultyEmoji: {
+    fontSize: 18,
+  },
+  difficultyLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  historyHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  historyDate: {
+    fontSize: 12,
+    opacity: 0.65,
+    marginTop: 2,
+  },
+  historyArrow: {
+    paddingHorizontal: 6,
+  },
+
   // Toggle styles
   toggleRow: { 
     flexDirection: 'row', 

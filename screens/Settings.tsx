@@ -25,8 +25,6 @@ import AiBudgetSection from '../components/AiBudgetSection';
 
 export default function Settings() {
   const {
-    weightFormat,
-    setWeightFormat,
     notificationPermissionGranted,
     setNotificationPermissionGranted,
   } = useSettings();
@@ -85,10 +83,6 @@ export default function Settings() {
     } finally {
       setTestingConnection(false);
     }
-  };
-
-  const handleWeightFormatChange = (format: string) => {
-    setWeightFormat(format);
   };
 
   // Handle notification main toggle change
@@ -376,20 +370,6 @@ export default function Settings() {
               trackColor={{ false: '#767577', true: '#FFFFFF' }}
               thumbColor={notificationPermissionGranted ? '#ffffff' : '#f4f3f4'}
             />
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            {t('settingsWeightFormat')}
-          </Text>
-          <View style={styles.buttonGroup}>
-            {renderButton('kg', weightFormat, () =>
-              handleWeightFormatChange('kg'),
-            )}
-            {renderButton('lbs', weightFormat, () =>
-              handleWeightFormatChange('lbs'),
-            )}
           </View>
         </View>
 

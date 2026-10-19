@@ -38,7 +38,7 @@ Urudhi is a small, quiet fitness app: build a plan, put it on your calendar, do 
 - 📊 **Track progress** with logs and graphs.
 - 🔁 **Share** a workout as a small file and import workouts others have shared.
 - 🤖 **AI Coach (optional):** a note before each workout, and AI-generated plans you can refine, save and schedule.
-- 🎨 Light and dark themes, `kg` or `lbs`. Dates are `dd/mm/yyyy`, time is 12-hour, weeks start on Monday. English only.
+- 🎨 Light and dark themes. Weights are in `kg`. Dates are `dd/mm/yyyy`, time is 12-hour, weeks start on Monday. English only.
 - 💾 Export and import all your data.
 
 ## ⬇️ **Install**
@@ -70,7 +70,6 @@ On a fresh install Home shows a welcome card with buttons to create a workout or
 
 Open **Settings** (gear icon).
 
-- **Weight format:** `kg` or `lbs`. This changes the label; it does not convert numbers you already entered.
 - **Theme:** switch between light and dark.
 - **Notifications:** turn on to be able to set reminders for a scheduled workout.
 
@@ -111,10 +110,15 @@ The calendar fills in days with a logged workout, underlines today, outlines a p
 
 1. Start it from the **Home** dashboard, or tap the day on the calendar, tap the workout, then **Start Workout**.
 2. On the overview, read the coach's note (if you use the AI Coach), set the **rest time between sets** and **between exercises**, then tap **Start Workout**. Weights and reps are filled in from your last session; vibration, sound and notifications are always on. The first time, Android asks to allow notifications so rest alerts work when the screen is off.
-3. For each set, check the **weight** and **reps**, add a **comment** if you like (for example "left shoulder pinching"), and tap **Complete Set**. Rate how it felt when asked. Comments and ratings matter: the AI Coach reads them.
-4. A rest timer runs between sets. Use **+ Add Extra Set** to add a set, **Skip to Next Exercise** to move on, or the three-line menu at the top right to jump to any exercise.
-5. The "Previous Workout" box shows what you did last time for the same exercise.
-6. Tap **Finish Workout** when you are done.
+3. The bar at the top always shows the exercise you are on, the workout time and your sets (for example `2/3`). Below it are the **Form** notes (with a small YouTube icon for the exercise video, greyed out if there is none), then the coach's line for that exercise.
+4. For each set, check the **weight** and **reps**, tap how it felt (**Easy / Medium / Hard**), add a **comment** if you like (for example "left shoulder pinching"), and tap **Complete Set**. Comments and ratings matter: the AI Coach reads them.
+5. A rest timer runs between sets. Made a typo? Tap a finished set (the `✓` chips) to correct its weight or reps.
+6. After the last set of an exercise you stay on the screen, with no timer running. Tap **Next exercise** to move on (the rest between exercises starts then), or **+ Add extra set** to do one more. Add extra set is greyed out until every set of the exercise is logged. An extra set starts blank, with the previous set shown as a grey hint, and you can change its **Exercise name** to log a different exercise than planned (for example dumbbell press instead of the machine). An extra set you don't complete is simply dropped.
+7. **Skip to Next Exercise** moves on without finishing; the top-right menu jumps to any exercise, finished ones included (to add a set or fix a number).
+8. The "Previous Workout" card shows what you did last time for the same exercise. Use its `<` `>` arrows to look back through up to 8 earlier sessions.
+9. Tap **Finish Workout** when you are done. If some planned sets are still undone, you are asked to confirm.
+
+All weights are in kilograms.
 
 ### 6. Check your progress
 
@@ -140,7 +144,7 @@ The key is kept in your phone's secure storage. **Delete key** removes it.
 
 ### What it does
 
-**Coach's note before a workout.** When you open today's workout, the overview shows a short note based on your recent logs: injuries or pain you commented on, lifts that felt Hard or Easy repeatedly, stalled lifts. Exercises with something specific also show their own note on that exercise's screen. If nothing stands out, no note appears. A note is written once per workout per day, only for today's workout, and then kept; reopening it costs nothing.
+**Coach's note before a workout.** When you open today's workout, the overview shows a short note based on your recent logs: injuries or pain you commented on, lifts that felt Hard or Easy repeatedly, stalled lifts, and a long break since you last trained that muscle (after a couple of weeks off it suggests easing back in, not adding weight). Advice is always in kg. Exercises with something specific also show their own note on that exercise's screen. If nothing stands out, no note appears. A note is written once per workout per day, only for today's workout, and then kept; reopening it costs nothing.
 
 **Generate a plan.** Open **My Workouts → Generate a plan with AI** and answer by tapping:
 
