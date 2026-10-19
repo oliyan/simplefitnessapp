@@ -1,4 +1,5 @@
 import { type SQLiteDatabase } from 'expo-sqlite';
+import { ensureInProgressColumn } from './workoutProgress';
 
 export const addWebLinkColumn = async (db: SQLiteDatabase) => {
     const tables = ['Exercises', 'Logged_Exercises'];
@@ -128,6 +129,17 @@ export const addWeekdayColumn = async (db: SQLiteDatabase) => {
     }
 };
 
+const addLogColumn = async (db: SQLiteDatabase, table: string, column: string, type: string) => {
+    try {
+        const columns = await db.getAllAsync<any>(`PRAGMA table_info(${table});`);
+        if (!columns.some((col: any) => col.name === column)) {
+            await db.runAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${type};`);
+        }
+    } catch (error) {
+        console.error(`Error adding ${column} to ${table}:`, error);
+    }
+};
+
 // Brings an older database up to date. Safe to call any number of times. It runs when the
 // database opens, so no screen can assume another screen has already added a column.
 export const ensureWorkoutColumns = async (db: SQLiteDatabase) => {
@@ -138,4 +150,8 @@ export const ensureWorkoutColumns = async (db: SQLiteDatabase) => {
     await addSuggestedWeightColumn(db);
     await addCommentsColumn(db);
     await addWeekdayColumn(db);
+    await addLogColumn(db, 'Workout_Log', 'completion_time', 'INTEGER');
+    await addLogColumn(db, 'Workout_Log', 'notification_id', 'TEXT');
+    await addLogColumn(db, 'Weight_Log', 'completion_time', 'INTEGER');
+    await ensureInProgressColumn(db);
 };
