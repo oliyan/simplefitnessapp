@@ -731,7 +731,7 @@ export default function AllLogs() {
             <View style={[styles.modalContainer, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
               <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
                 <Text style={[styles.modalTitle, { color: theme.text, margin: 10, marginTop: 20 }]}>
-                  {t('editExerciseLog')}: {editExerciseMetadata.exerciseName} ({new Date(editExerciseMetadata.workout_date * 1000).toLocaleDateString()})
+                  {t('editExerciseLog')}: {editExerciseMetadata.exerciseName} ({formatDate(editExerciseMetadata.workout_date)})
                 </Text>
                 <ScrollView style={{width: '100%'}} contentContainerStyle={{padding: 20}} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={true}>
                   <FlatList data={editExerciseData} keyExtractor={(item, index) => item.weight_log_id !== -1 ? item.weight_log_id.toString() : (index * 100).toString()} renderItem={({item, index}) => {

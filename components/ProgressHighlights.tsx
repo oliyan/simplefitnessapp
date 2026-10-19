@@ -36,6 +36,7 @@ export default function ProgressHighlights() {
              FROM Weight_Log w
              JOIN (SELECT exercise_name, MAX(weight_logged) AS m FROM Weight_Log GROUP BY exercise_name) b
                ON b.exercise_name = w.exercise_name AND b.m = w.weight_logged
+             WHERE w.weight_logged > 0
              GROUP BY w.exercise_name
              ORDER BY w.weight_logged DESC
              LIMIT 6;`,

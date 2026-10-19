@@ -98,7 +98,7 @@ export default function EditWorkout() {
       const logsWithDayNames = await Promise.all(
         originalDays.map(async (day) => {
           const logs = await db.getAllAsync<{ workout_log_id: number; day_name: string; workout_name: string; workout_date: number }>(
-            'SELECT workout_log_id, day_name, workout_name, workout_date FROM Workout_Log WHERE day_name = ? AND workout_name = ? AND workout_date >= ?;',
+            'SELECT workout_log_id, day_name, workout_name, workout_date FROM Workout_Log WHERE day_name = ? AND workout_name = ? AND workout_date >= ? AND NOT EXISTS (SELECT 1 FROM Weight_Log wlx WHERE wlx.workout_log_id = Workout_Log.workout_log_id);',
             [day.day_name, originalWorkoutName, currentDate] // Only fetch logs with workout_date >= today
           );
   

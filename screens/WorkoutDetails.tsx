@@ -104,7 +104,7 @@ export default function WorkoutDetails() {
               await db.withTransactionAsync(async () => {
               // Fetch logs only for workout_date >= today
               const logs = await db.getAllAsync<{ workout_log_id: number; workout_date: number }>(
-                'SELECT workout_log_id, workout_date FROM Workout_Log WHERE day_name = ? AND workout_name = (SELECT workout_name FROM Workouts WHERE workout_id = ?) AND workout_date >= ?;',
+                'SELECT workout_log_id, workout_date FROM Workout_Log WHERE day_name = ? AND workout_name = (SELECT workout_name FROM Workouts WHERE workout_id = ?) AND workout_date >= ? AND NOT EXISTS (SELECT 1 FROM Weight_Log wlx WHERE wlx.workout_log_id = Workout_Log.workout_log_id);',
                 [day_name, workout_id, currentDate]
               );
   
@@ -166,7 +166,7 @@ export default function WorkoutDetails() {
                   if (workoutName) {
               // Fetch logs only for workout_date >= today
               const logs = await db.getAllAsync<{ workout_log_id: number; workout_date: number }>(
-                      'SELECT workout_log_id, workout_date FROM Workout_Log WHERE day_name = ? AND workout_name = ? AND workout_date >= ?;',
+                      'SELECT workout_log_id, workout_date FROM Workout_Log WHERE day_name = ? AND workout_name = ? AND workout_date >= ? AND NOT EXISTS (SELECT 1 FROM Weight_Log wlx WHERE wlx.workout_log_id = Workout_Log.workout_log_id);',
                       [dayName, workoutName, currentDate]
               );
   
@@ -203,7 +203,7 @@ export default function WorkoutDetails() {
   
       // Fetch all logs for the current workout where workout_date >= today
       const logs = await db.getAllAsync<{ workout_log_id: number; day_name: string; workout_date: number }>(
-        'SELECT workout_log_id, day_name, workout_date FROM Workout_Log WHERE workout_name = (SELECT workout_name FROM Workouts WHERE workout_id = ?) AND workout_date >= ?;',
+        'SELECT workout_log_id, day_name, workout_date FROM Workout_Log WHERE workout_name = (SELECT workout_name FROM Workouts WHERE workout_id = ?) AND workout_date >= ? AND NOT EXISTS (SELECT 1 FROM Weight_Log wlx WHERE wlx.workout_log_id = Workout_Log.workout_log_id);',
         [workout_id, currentDate]
       );
   
@@ -472,7 +472,7 @@ export default function WorkoutDetails() {
       
       // Fetch all logs for the current workout where workout_date >= today
       const logs = await db.getAllAsync<{ workout_log_id: number; day_name: string; workout_date: number }>(
-        'SELECT workout_log_id, day_name, workout_date FROM Workout_Log WHERE workout_name = ? AND workout_date >= ?;',
+        'SELECT workout_log_id, day_name, workout_date FROM Workout_Log WHERE workout_name = ? AND workout_date >= ? AND NOT EXISTS (SELECT 1 FROM Weight_Log wlx WHERE wlx.workout_log_id = Workout_Log.workout_log_id);',
         [workoutName, currentDate]
       );
   

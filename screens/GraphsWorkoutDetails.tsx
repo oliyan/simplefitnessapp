@@ -3555,19 +3555,19 @@ const calculateCES = (sets: LogData[]): number => {
 
           {/* View Logs Button */}
           <TouchableOpacity
-            style={[styles.logsButton, { backgroundColor: theme.text }]}
+            style={[styles.logsButton, { backgroundColor: theme.buttonBackground }]}
             onPress={() => navigation.navigate('MyProgress')}
           >
             <Ionicons
               name="list-outline"
               size={20}
-              color={theme.background}
+              color={theme.buttonText}
               style={styles.logsButtonIcon}
             />
             <Text
               style={[
                 styles.logsButtonText,
-                { color: theme.background },
+                { color: theme.buttonText },
               ]}
             >
               {t('View Logs')}

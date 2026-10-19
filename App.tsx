@@ -215,6 +215,7 @@
         <WorkoutLogStackScreen.Screen
           name="StartedWorkoutInterface"
           component={StartedWorkoutInterface}
+          getId={({ params }) => String(params?.workout_log_id)} // one screen per workout, never a stale one
           options={{ headerShown: false }}
         />
         <WorkoutLogStackScreen.Screen
@@ -282,6 +283,7 @@
         <StartWorkoutStackScreen.Screen
           name="StartedWorkoutInterface"
           component={StartedWorkoutInterface}
+          getId={({ params }) => String(params?.workout_log_id)} // one screen per workout, never a stale one
           options={{ headerShown: false }}
         />
       </StartWorkoutStackScreen.Navigator>

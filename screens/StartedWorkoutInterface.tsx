@@ -1366,14 +1366,12 @@ export default function StartedWorkoutInterface() {
                 ]}
                 onPress={handleFinishWorkout}
               >
-                <AutoSizeText
-                  fontSize={16}
-                  numberOfLines={3}
-                  mode={ResizeTextMode.max_lines}
-                  style={[styles.secondaryButtonText, { color: theme.text }]}
+                <Text
+                  numberOfLines={2}
+                  style={[styles.secondaryButtonText, { color: theme.text, fontSize: 16, textAlign: 'center' }]}
                 >
                   {t('finishWorkout')}
-                </AutoSizeText>
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -1381,7 +1379,7 @@ export default function StartedWorkoutInterface() {
 
         <View style={styles.progressContainer}>
           <Text style={[styles.progressText, { color: theme.text }]}>
-          %{Math.round(progress)}
+          {Math.round(progress)}%
           </Text>
           <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
             <View
