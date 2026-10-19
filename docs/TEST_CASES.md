@@ -175,7 +175,7 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 | RUN-08 | 🟡 | Check the **Previous Workout** card on an exercise you have done before. | Shows what you did last time for it. (Browsing older sessions is WRK-17.) | ☐ | |
 | RUN-09 | 🟡 | Finish all sets of an exercise, then tap **+ Add extra set**. | One more set is added. (The full set of rules is in section 9A.) | ☐ | |
 | RUN-10 | 🟡 | Tap **Skip to Next Exercise**, then use the top-right menu to jump to a specific exercise. | Navigation works, nothing is lost. | ☐ | |
-| RUN-11 | 🔴 | Finish all sets and tap **Finish Workout**. | A completion screen with total time and sets completed. The session shows as logged on the calendar and on Home. | ☐ | |
+| RUN-11 | 🔴 | Finish all sets and tap **Finish Workout**. | A summary with total time and sets completed. **Nothing more to press to save:** leave with Done or Back, and the session shows as logged on the calendar and on Home, with its total time. | ☐ | |
 | RUN-12 | 🔴 | Start a workout, complete a couple of sets (add an extra one too), then **swipe the app away** from recents and reopen the workout and tap Start Workout. | The sets you already logged are **ticked** (chips show ✓, counts like `2/4`), extra and renamed sets are back, and you continue from the first set not done. Nothing is logged twice. | ☐ | |
 | RUN-13 | 🟡 | Start a workout, press Back mid-way. | Asks before leaving or keeps your progress; no data lost. | ☐ | |
 | RUN-14 | 🟡 | Rest-time fields: enter `0`, then a large value like `600`, then leave one blank. | `0` and `600` accepted; blank/invalid shows a clear message. | ☐ | |
@@ -214,7 +214,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | WRK-22 | ⚪ | Do WRK-02, WRK-04 and WRK-08 in **dark theme**. | Chips, hints and the greyed-out button are readable. | ☐ | |
 | RES-01 | 🔴 | Start a workout, log 2 sets, then leave (Back → Exit). Look at **Home** and the **calendar day**. | The session is **not** shown as Done. Home's Today card says **Resume workout**; the calendar day offers **Resume workout** (not just a log). The Exit message says your logged sets are saved. | ☐ | |
 | RES-02 | 🔴 | Tap **Resume workout**, then Start Workout. | The 2 logged sets are ticked (`✓1 ✓2`), you land on set 3, counts are right (`2/4`), and nothing is logged twice. | ☐ | |
-| RES-03 | 🔴 | Finish the workout (Complete Workout). | Home shows **Done ✓** for it and no Resume button remains. | ☐ | |
+| RES-03 | 🔴 | Finish the workout with **Finish Workout**. The summary appears; leave it with Done **or** the Back button. | Home shows **Done ✓** for it and no Resume button remains. | ☐ | |
 | RES-04 | 🟡 | A workout logged by hand with **Log Weights Manually**. | It is shown as logged, never as Resume. | ☐ | |
 
 ---

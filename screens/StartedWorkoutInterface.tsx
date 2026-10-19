@@ -610,9 +610,14 @@ export default function StartedWorkoutInterface() {
   }, [timerState.workoutStarted, enableNotifications]);
 
   // Finished: no longer resumable.
+  // The summary screen saves the workout time itself, so there is nothing left to press to save.
   useEffect(() => {
     if (timerState.workoutStage === 'completed') {
       setWorkoutInProgress(db, workout_log_id, false);
+      db.runAsync('UPDATE Workout_Log SET completion_time = ? WHERE workout_log_id = ?;', [
+        timerState.workoutDuration,
+        workout_log_id,
+      ]).catch(error => console.error('Error saving workout time:', error));
     }
   }, [timerState.workoutStage]);
 
@@ -1510,35 +1515,6 @@ export default function StartedWorkoutInterface() {
   const renderCompletedScreen = () => {
     const loggedSets = allSets.filter(set => set.set_logged);
     
-    const saveWorkout = async () => {
-      try {
-        console.log('Starting workout save process...');
-
-        console.log('Saving completion time to Workout_Log:', timerState.workoutDuration);
-        await db.runAsync(
-          `UPDATE Workout_Log
-           SET completion_time = ?
-           WHERE workout_log_id = ?;`,
-          [timerState.workoutDuration, workout_log_id]
-        );
-
-        console.log('Workout save completed successfully!');
-        console.log('Note: Sets were already saved with difficulty tracking during workout');
-
-        Alert.alert(
-          t('workoutSaved'),
-          t('workoutSavedMessage'),
-          [{ text: t('OK'), onPress: () => navigation.goBack() }]
-        );
-      } catch (error) {
-        console.error('Error saving workout:', error);
-        Alert.alert(
-          'Error',
-          'There was an error saving your workout. Please try again.'
-        );
-      }
-    };
-    
     return (
       <View style={styles.completedContainer}>
         <Ionicons name="checkmark-circle" size={80} color={theme.buttonBackground} style={styles.completedIcon} />
@@ -1569,10 +1545,10 @@ export default function StartedWorkoutInterface() {
         
         <TouchableOpacity
           style={[styles.saveButton, { backgroundColor: theme.buttonBackground }]}
-          onPress={saveWorkout}
+          onPress={() => navigation.goBack()}
         >
           <Text style={[styles.buttonText, { color: theme.buttonText }]}>
-            {t('completeWorkout')}
+            {t('workoutDoneButton')}
           </Text>
         </TouchableOpacity>
       </View>

@@ -294,6 +294,7 @@
     "enterRepsAndWeight": "Please enter both reps and weight before continuing.",
     "exitWorkout": "Exit Workout?",
     "exitWorkoutMessage": "Your logged sets are saved. You can resume this workout later from Home or the calendar.",
+    "workoutDoneButton": "Done",
     "exit": "Exit",
     "workoutCompleted": "Workout Completed!",
     "totalTime": "Total Time",

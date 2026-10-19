@@ -116,7 +116,7 @@ The calendar fills in days with a logged workout, underlines today, outlines a p
 6. After the last set of an exercise you stay on the screen, with no timer running. Tap **Next exercise** to move on (the rest between exercises starts then), or **+ Add extra set** to do one more. Add extra set is greyed out until every set of the exercise is logged. An extra set starts blank, with the previous set shown as a grey hint, and you can change its **Exercise name** to log a different exercise than planned (for example dumbbell press instead of the machine). An extra set you don't complete is simply dropped.
 7. **Skip to Next Exercise** moves on without finishing; the top-right menu jumps to any exercise, finished ones included (to add a set or fix a number).
 8. The "Previous Workout" card shows what you did last time for the same exercise. Use its `<` `>` arrows to look back through up to 8 earlier sessions.
-9. Tap **Finish Workout** when you are done. If some planned sets are still undone, you are asked to confirm.
+9. Tap **Finish Workout** when you are done. If some planned sets are still undone, you are asked to confirm. The summary screen appears and the workout (sets and total time) is already saved; **Done** just takes you back.
 
 All weights are in kilograms.
 
