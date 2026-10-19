@@ -482,7 +482,7 @@ export default function Settings() {
             value={apiKeyInput}
             onChangeText={setApiKeyInput}
             placeholder={t('aiKeyPlaceholder')}
-            placeholderTextColor={theme.border}
+            placeholderTextColor={theme.text + '55'}
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}

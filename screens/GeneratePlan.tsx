@@ -337,7 +337,7 @@ export default function GeneratePlan() {
           value={notes}
           onChangeText={setNotes}
           placeholder={t('planLikesPlaceholder')}
-          placeholderTextColor={theme.border}
+          placeholderTextColor={theme.text + '55'}
           multiline
           editable={!busy}
         />
@@ -394,7 +394,7 @@ export default function GeneratePlan() {
         value={feedback}
         onChangeText={setFeedback}
         placeholder={t('planRefinePlaceholder')}
-        placeholderTextColor={theme.border}
+        placeholderTextColor={theme.text + '55'}
         multiline
         editable={!busy}
       />

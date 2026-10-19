@@ -107,7 +107,7 @@ export default function CoachProfileSection() {
         onChangeText={setConstraints}
         onBlur={() => saveStandingConstraints(constraints)}
         placeholder={t('profileConstraintsPlaceholder')}
-        placeholderTextColor={theme.border}
+        placeholderTextColor={theme.text + '55'}
         multiline
       />
 

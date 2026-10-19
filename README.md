@@ -38,6 +38,9 @@ Urudhi is a small, quiet fitness app: build a plan, put it on your calendar, do 
 - 📊 **Track progress** with logs and graphs.
 - 🔁 **Share** a workout as a small file and import workouts others have shared.
 - 🤖 **AI Coach (optional):** a note before each workout, and AI-generated plans you can refine, save and schedule.
+- ✨ **Made to feel good:** a deep-teal look in light and dark (dark by default), a circular rest countdown, a celebration on every personal best, a short welcome on first launch, and a weekly summary you can share.
+- 💌 **Personalise it** (optional): a name, a greeting on Home, a dedication, and short notes at nice moments, signed by whoever you like. The coach can carry that name too.
+- ⏰ **Reminders** for a whole scheduled plan, at the time you choose.
 - 🎨 Light and dark themes. Weights are in `kg`. Dates are `dd/mm/yyyy`, time is 12-hour, weeks start on Monday. English only.
 - 💾 Export and import all your data.
 
@@ -124,7 +127,11 @@ All weights are in kilograms.
 
 Open **My Progress**. Choose a graph type with the ribbon at the top (**Exercise Stats**, **Workout Stats** or **Overall Stats**; it stays at the top whichever you pick), pick a workout, and read the graphs. Tap a point on a graph for details. **View Logs** lists every session, with a date range filter and an export button.
 
-### 7. Back up your data
+### 7. Personalise it (optional)
+
+**Settings → Personalise** lets you set a **name**, who the notes are **signed by**, a **greeting** for Home, a **dedication** shown once on first launch, and six short **notes** that appear at nice moments (a workout planned, a workout finished, the first workout, a streak, a personal best, a rest day). If you set a signer, the coach is called *Advice from <name>*. **Replay welcome** shows the first-launch screens again.
+
+### 8. Back up your data
 
 **Settings → Data Management → Export Data** saves a copy of your whole database. **Import Data** restores one. Importing **replaces** everything currently on the phone, so export first if you are unsure.
 

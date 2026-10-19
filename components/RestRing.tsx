@@ -13,7 +13,7 @@ interface RestRingProps {
 }
 
 // A circular countdown: the arc shrinks as the rest runs out, with the seconds in the middle.
-export default function RestRing({ remaining, total, color, trackColor, textColor, unitLabel, size = 210 }: RestRingProps) {
+export default function RestRing({ remaining, total, color, trackColor, textColor, unitLabel, size = 176 }: RestRingProps) {
   const stroke = 14;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -37,7 +37,7 @@ export default function RestRing({ remaining, total, color, trackColor, textColo
           origin={`${size / 2}, ${size / 2}`}
         />
       </Svg>
-      <Text style={{ color: textColor, fontSize: 64, fontWeight: '800', lineHeight: 70 }}>{remaining}</Text>
+      <Text style={{ color: textColor, fontSize: 56, fontWeight: '800', lineHeight: 62 }}>{remaining}</Text>
       <Text style={{ color: textColor, fontSize: 18, opacity: 0.7 }}>{unitLabel}</Text>
     </View>
   );

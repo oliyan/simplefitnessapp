@@ -2,7 +2,7 @@
 
 **Build under test:** branch `workout-screen` at commit `452febc` (includes the AI Coach work and the `minimal` changes)
 **APK:** `Urudhi-test-452febc.apk`
-**Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (67 of them) take about 75 minutes.
+**Time needed:** about 110 minutes if you do it all; the 🔴 cases alone (74 of them) take about 85 minutes.
 **New in this build:** section 9A (the reworked workout screen) and a few changed cases in sections 3, 9 and 13. Weights are now kg only.
 
 ---
@@ -219,6 +219,28 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 ---
 
+## 9B. Look, feel and personal touches
+
+| ID | Pri | Steps | Expected | Result | Notes |
+|---|---|---|---|---|---|
+| UIX-01 | 🔴 | Open the app on a **fresh install** (or Settings → Personalise → **Replay welcome**). | A short welcome: (a dedication page if you set one), *Plan your week*, *Train, one set at a time*, and a page about the coach. **Next**, **Skip** and **Get started** work. It does not reappear after that. | ☐ | |
+| UIX-02 | 🔴 | Look at every main screen in **dark** and in **light**: Home, Workout Plans, Sessions, Progress, Settings, a workout in progress. | One deep-teal accent on buttons, selected chips, the ribbon, the tab bar and progress bars. Text is readable everywhere; nothing is white-on-white or black-on-black. A fresh install starts in **dark**. | ☐ | |
+| UIX-03 | 🔴 | Settings → **Personalise**: enter a name, a signer, a greeting. Go to Home. | The greeting is the large line at the top of Home (Tamil text shows correctly). Urudhi and the Odiyan line move below it. | ☐ | |
+| UIX-04 | 🔴 | With a signer set, open Settings and a workout start screen. | The section and the coach's card are called **Advice from <signer>**. With the signer empty it says **AI Coach**. | ☐ | |
+| UIX-05 | 🔴 | Finish a workout. | The summary check animates in, and (if notes are set) a note appears under the summary, signed by the signer. | ☐ | |
+| UIX-06 | 🟡 | On Home: with a workout planned today, with all done, on a rest day, and on a streak of 2+ weeks. | A note card appears in each case with the matching note from Personalise. A personal best in the last day shows the *personal record* note first. | ☐ | |
+| UIX-07 | 🔴 | Log a set **heavier than anything you have logged before** for an exercise (it needs an earlier log of that exercise). | A "New personal best!" banner pops in at the top for a couple of seconds and the phone gives a stronger vibration. | ☐ | |
+| UIX-08 | 🔴 | Complete a set that is not the last. Watch the rest screen. | A **circular countdown** with the seconds in the middle; the arc shrinks. **+15s** adds time and the ring grows. | ☐ | |
+| UIX-09 | 🟡 | On a blank set (an extra set, or a first set you have never done) after a previous set. | A **Same as last: 70 kg × 8** button appears; tapping it fills weight and reps. It is not shown when the fields are already filled. | ☐ | |
+| UIX-10 | 🔴 | Schedule a plan with **Remind me at…**, choose a time, schedule. Then look at a scheduled day in the calendar. | Sessions are added. At the chosen time on a session day a notification arrives (needs Notifications on in Settings). Deleting that session cancels its reminder. | ☐ | |
+| UIX-11 | 🟡 | Home with at least 5 logged workouts and no backup in the last 30 days. | A **Back up your data** card: **Back up now** opens Settings, **Later** hides it for a week. After you export, it stays away for 30 days. | ☐ | |
+| UIX-12 | 🟡 | Home, after you have logged a workout: tap **Share my week**. | The share sheet opens with a short text summary (workouts done, weight lifted, streak). | ☐ | |
+| UIX-13 | 🟡 | My Progress, scroll down. | A **Best lifts** card (up to 6 heaviest lifts). If you imported InBody scans (two or more), a **Body weight** line chart too. | ☐ | |
+| UIX-14 | 🟡 | Open **Workout Plans** with no plans (delete them all or use a fresh install). | A friendly "No plans yet" card instead of an empty list. | ☐ | |
+| UIX-15 | 🟡 | Home: look at the week circles and today card. | Today card is tinted teal with a large Start/Resume button; missed days are soft, not harsh dashes. | ☐ | |
+
+---
+
 ## 10. My Progress and logs
 
 | ID | Pri | Steps | Expected | Result | Notes |
@@ -426,9 +448,10 @@ Happens every time?  (always / sometimes / once)
 | 8 Calendar | 4 | | | |
 | 9 Doing a workout | 8 | | | |
 | 9A Workout screen (incl. RES) | 17 | | | |
+| 9B Look, feel, personal | 7 | | | |
 | 10 Progress | 3 | | | |
 | 11 Backup | 2 | | | |
 | 12–17 AI Coach | 15 | | | |
 | 18 Dark theme | 1 | | | |
 
-**Total 🔴 cases: 67.**
+**Total 🔴 cases: 74.**
