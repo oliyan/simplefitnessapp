@@ -130,3 +130,45 @@ Run on a freshly wiped emulator, in the order a new user would meet things. The 
 - The note is made on the exercise screen after **Start Workout**, not on the first overview.
 - On the overview, a long exercise name can make the muscle chip overlap the bookmark icon (cosmetic).
 - Not run: AIK-03..06, ERR-02, ERR-03 (would remove the key), GEN-11, 14..16, CCH-03, 04, 06, 07, PRF-02, INB-*.
+
+---
+
+## Pass 6 — Remaining cases on the emulator (build `7fb6161`)
+
+Run on the emulator after Pass 5, with real data: a scheduled plan, sessions logged on 12, 14, 16 and 19 Oct, and a second session left half-done.
+
+| Area | Cases | Result |
+|---|---|---|
+| Home: week, today with two sessions, streak, lifted this week (+ % vs last week, maths checked by hand), records, share my week | HOM-04, 06, 07, 08, 13, UIX-12 | ✅ |
+| Personal best banner, circular rest ring, "Same as last" chip, PB note on Home | UIX-07, 08, 09, 06 | ✅ (vibration needs a phone) |
+| Calendar: day styles, month arrows, day list, long-press delete asks first, "Schedule a plan" asks for the plan first | CAL-02, 03, 04, 07, SCH-11 | ✅ |
+| Scheduler: a day with no weekday is left out with a note; Back schedules nothing; the preview skips days that already have a session | SCH-10, 12 | ✅ |
+| Scheduler reminder: Android registered an alarm for every session at the chosen time | UIX-10 | ◐ registered; firing not waited for |
+| Edit plan: add exercise, move a day (weekday travels with it, order is kept) | WKT-06, 07, WDY-04 | ✅ |
+| Progress: Best lifts card, View Logs, date range (needs both dates), edit a set, CSV export + share sheet | UIX-13, PRG-04, 05, 06 | ✅ |
+| Workout screen: Previous Workout `<` `>` over 3 sessions, correcting a set with 0 reps is refused, menu shows counts, extra-set name restores notes and shows history | WRK-17, 14, 15, 12, 18 | ✅ |
+| Finish button: only becomes "Finish workout" when nothing is left unlogged | WRK-19 | ✅ (by design) |
+| Rotation (app stays portrait), large system font (usable) | ROB-01, 02 | ✅ / ◐ (one word breaks mid-way in the Today card) |
+| Dark theme: Home, plans, editor, scheduler, calendar, start screen, workout, progress, logs, settings, AI form | DRK-01 | ✅ |
+
+### Bugs found and fixed in this pass
+
+1. **Editing a plan wiped the sets of a session already in progress.** Adding or editing an exercise rewrote the exercise list of every session from today onwards. That included today's half-done session, so its logged sets lost their link and Resume showed 0 sets. Sessions that already have logged sets are now left alone.
+2. **Home opened the wrong workout** when a workout screen was already open on the Sessions tab (Resume on Push showed Legs). Each workout now has its own screen.
+3. **"Finish Workout" label was tiny** on the workout screen, and the progress read `%5` instead of `5%`.
+4. **Best lifts listed "0 kg × 12"** for exercises logged without a weight. Zero-weight sets are no longer listed. The View Logs button now uses the teal button colour.
+5. **The edit-set pop-up in All Logs showed the date as `10/19/2026`.** It now reads like the rest of the app.
+
+### Still not run
+
+- Phone only: vibration, notification sound and reminders firing, screen-off behaviour, real gym use.
+- Import / export round trip and old-database import: BKP-02..05.
+- Old-format sharing and a long plan name: ROB-03 (date change), ROB-04.
+- Light-theme sweep of every screen; AI draft screen in dark (read only).
+- WKT-08, 10, WDY-02, 03, 05, SCH-07, 08, 14, CAL-05, CAL-10, HOM-05, 10, 11, 12, UIX-11, 14, WRK-21.
+
+### Small things to know
+
+- The Edit screen shows the end of a long name, not the start.
+- Hand-logging (Track Weights) saves every shown set, so a blank weight is saved as 0 kg. That is how it was built (bodyweight moves have no weight).
+- When you pick only a start date in All Logs, nothing is filtered until you also pick an end date.
