@@ -200,7 +200,11 @@ export default function CreateWorkout() {
       setWorkoutName('');
       setDays([]);
     } catch (error) {
-      Alert.alert(t('errorTitle'), t('failedToCreateWorkoutErrorMessage'));
+      const duplicateName = String(error).includes('UNIQUE');
+      Alert.alert(
+        t('errorTitle'),
+        duplicateName ? t('workoutAlreadyExistsError') : t('failedToCreateWorkoutErrorMessage'),
+      );
       console.error(error);
     }
   };

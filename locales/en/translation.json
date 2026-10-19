@@ -293,7 +293,7 @@
     "missingInformation": "Missing Information",
     "enterRepsAndWeight": "Please enter both reps and weight before continuing.",
     "exitWorkout": "Exit Workout?",
-    "exitWorkoutMessage": "Are you sure you want to exit? Your progress will be lost.",
+    "exitWorkoutMessage": "Your logged sets are saved. You can resume this workout later from Home or the calendar.",
     "exit": "Exit",
     "workoutCompleted": "Workout Completed!",
     "totalTime": "Total Time",
@@ -646,7 +646,22 @@
     "finishGoBack": "Go back",
     "finishAnyway": "Finish anyway",
     "dashResume": "Resume workout",
-    "resumeWorkout": "Resume workout"
+    "resumeWorkout": "Resume workout",
+    "allFollowingExercisesLogged": "Every exercise after this one is already done.",
+    "cancel": "Cancel",
+    "cannotOpenURL": "Can't open this link",
+    "errorDeletingWorkout": "Couldn't delete the workout. Please try again.",
+    "errorOpeningURL": "Couldn't open the link.",
+    "exportFailedMessage": "Couldn't export the workout. Please try again.",
+    "filePickerError": "An error occurred while selecting the file. Please try again.",
+    "importErrorMessageDefault": "Database import failed. An unexpected error occurred.",
+    "importFailedNewFileError": "Import failed while copying the new database. No prior data existed.",
+    "importFailedOriginalIntact": "Import failed (error during backup step). Your original data should be intact.",
+    "importFailedRestoreErrorBase": "Import failed. CRITICAL: Could not restore original data. Backup may be available at: ",
+    "importFailedRestoreSuccess": "Import failed, but your original data has been successfully restored.",
+    "invalidExerciseRestTime": "Invalid rest time between exercises",
+    "noLinkAvailable": "This exercise has no link.",
+    "noMoreExercises": "No more exercises"
 
     }
   
