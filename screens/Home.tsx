@@ -8,6 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 import { ensureInProgressColumn } from '../utils/workoutProgress';
 import { useSettings } from '../context/SettingsContext';
 import { usePersonal } from '../context/PersonalContext';
+import { BUILD } from '../config/buildFlags';
 import Onboarding from '../components/Onboarding';
 import { loadSettings, saveSettings } from '../utils/settingsStorage';
 import {
@@ -322,9 +323,9 @@ export default function Home({ navigation }: any) {
   const renderWelcome = () => (
     <View style={card}>
       <Text style={heading}>{t('dashWelcome')}</Text>
-      <Text style={[muted, { marginBottom: 4 }]}>{t('dashWelcomeBody')}</Text>
+      <Text style={[muted, { marginBottom: 4 }]}>{t(BUILD.mentionAi ? 'dashWelcomeBody' : 'dashWelcomeBodyPlain')}</Text>
       {bigButton(t('homeCreateWorkout'), () => goToWorkouts('CreateWorkout'))}
-      {bigButton(t('planGenerateEntry'), () => goToWorkouts('GeneratePlan'), false)}
+      {BUILD.showAiPlanGenerator && bigButton(t('planGenerateEntry'), () => goToWorkouts('GeneratePlan'), false)}
     </View>
   );
 

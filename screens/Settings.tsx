@@ -24,6 +24,7 @@ import CoachProfileSection from '../components/CoachProfileSection';
 import AiBudgetSection from '../components/AiBudgetSection';
 import { saveSettings } from '../utils/settingsStorage';
 import PersonaliseSection from '../components/PersonaliseSection';
+import { BUILD } from '../config/buildFlags';
 import { usePersonal } from '../context/PersonalContext';
 
 export default function Settings() {
@@ -468,6 +469,8 @@ export default function Settings() {
 
         {/* --- AI COACH SECTION --- */}
         <View style={styles.section}>
+          {BUILD.showAiSettings && (
+          <>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
             {coachName}
           </Text>
@@ -533,7 +536,9 @@ export default function Settings() {
           )}
           <AiBudgetSection refreshSignal={aiStatus} />
           <CoachProfileSection />
-          <PersonaliseSection />
+          </>
+          )}
+          {BUILD.showPersonaliseSettings && <PersonaliseSection />}
         </View>
 
         {/* --- NEW COMMUNITY SECTION --- */}

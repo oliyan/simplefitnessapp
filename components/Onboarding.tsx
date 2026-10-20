@@ -3,6 +3,7 @@ import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'reac
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import { usePersonal } from '../context/PersonalContext';
+import { ONBOARDING_TEXT } from '../config/personalDefaults';
 
 interface Page {
   icon: string;
@@ -25,7 +26,7 @@ export default function Onboarding() {
   if (personal.dedication.trim()) {
     pages.push({
       icon: 'heart',
-      title: personal.userName.trim() ? `For ${personal.userName.trim()}` : 'Welcome',
+      title: ONBOARDING_TEXT.dedicationTitle || (personal.userName.trim() ? `For ${personal.userName.trim()}` : 'Welcome'),
       body: personal.dedication.trim(),
       footer: personal.senderName.trim() ? `- ${personal.senderName.trim()}` : undefined,
     });
@@ -41,7 +42,7 @@ export default function Onboarding() {
     {
       icon: 'clipboard-outline',
       title: 'Plan your week',
-      body: 'Build a workout plan, or let the coach write one for you. Put it on your calendar and it shows up on Home each day.',
+      body: ONBOARDING_TEXT.planBody,
     },
     {
       icon: 'barbell',
@@ -51,7 +52,7 @@ export default function Onboarding() {
     {
       icon: 'sparkles',
       title: coachName,
-      body: 'Optional: add your Anthropic key in Settings and get a short note before each workout, and plans made for you. Everything stays on your phone.',
+      body: ONBOARDING_TEXT.coachBody,
     },
   );
 

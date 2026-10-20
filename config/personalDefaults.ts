@@ -28,6 +28,13 @@ export const GENERIC_NOTES: Record<NoteKey, string> = {
   restDay: 'Rest is part of the plan, {name}. Recover well.',
 };
 
+// The welcome pages. A private build can word these its own way.
+export const ONBOARDING_TEXT = {
+  dedicationTitle: '', // empty: "For <name>" or "Welcome"
+  planBody: 'Build a workout plan, or let the coach write one for you. Put it on your calendar and it shows up on Home each day.',
+  coachBody: 'Optional: add your Anthropic key in Settings and get a short note before each workout, and plans made for you. Everything stays on your phone.',
+};
+
 export const PERSONAL_DEFAULTS: PersonalValues = {
   userName: '',
   senderName: '',

@@ -11,6 +11,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { exportWorkout, importWorkout } from '../utils/workoutSharingUtils';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
+import { BUILD } from '../config/buildFlags';
 
 
 type WorkoutListNavigationProp = StackNavigationProp<WorkoutStackParamList, 'WorkoutsList'>;
@@ -66,7 +67,7 @@ export default function WorkoutList({
         <View style={[styles.emptyCard, { backgroundColor: theme.accentSoft, borderColor: theme.accent }]}>
           <Ionicons name="clipboard-outline" size={36} color={theme.accent} />
           <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('plansEmptyTitle')}</Text>
-          <Text style={[styles.emptyBody, { color: theme.text }]}>{t('plansEmptyBody')}</Text>
+          <Text style={[styles.emptyBody, { color: theme.text }]}>{t(BUILD.mentionAi ? 'plansEmptyBody' : 'plansEmptyBodyPlain')}</Text>
         </View>
       )}
 
@@ -91,6 +92,7 @@ export default function WorkoutList({
         </TouchableOpacity>
       </View>
 
+      {BUILD.showAiPlanGenerator && (
       <TouchableOpacity
           style={[
             styles.workoutCard,
@@ -105,6 +107,7 @@ export default function WorkoutList({
           <Text style={[styles.workoutText, { color: theme.text }]}>{t('planGenerateEntry')}</Text>
           <Ionicons name="sparkles-outline" size={20} color={theme.text} />
         </TouchableOpacity>
+      )}
 
       {/* Workout List */}
       {sortedWorkouts.map((workout) => (
