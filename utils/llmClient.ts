@@ -1,6 +1,6 @@
 import { getApiKey } from './secureSettings';
 import { checkBudget, recordUsage } from './aiUsage';
-import { buildCoachNotePrompt } from './promptTemplates';
+import { buildCoachNotePrompt, buildFirstSessionPrompt } from './promptTemplates';
 import { buildGeneratePlanPrompt, buildRefinePlanPrompt, PlanRequest } from './promptTemplates';
 import type { CoachNote } from './coachNotesUtils';
 import type { ExportedWorkout } from './workoutSharingUtils';
@@ -159,10 +159,15 @@ export const getUserFacingErrorMessage = (error: unknown): string => {
 };
 
 // Returns the note, or null when the model decided there was nothing to say.
-export const generateCoachNote = async (context: string, userName?: string): Promise<CoachNote | null> => {
+// `firstSession` is for a workout with no history: `context` is then just the plan.
+export const generateCoachNote = async (
+  context: string,
+  userName?: string,
+  firstSession = false,
+): Promise<CoachNote | null> => {
   const ask = async (extra: string) =>
     (
-      await callClaude(buildCoachNotePrompt(context, userName) + extra, {
+      await callClaude((firstSession ? buildFirstSessionPrompt(context, userName) : buildCoachNotePrompt(context, userName)) + extra, {
         model: MODELS.fast,
         maxTokens: 600,
         lowEffort: true,

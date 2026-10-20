@@ -5,4 +5,6 @@ export const BUILD = {
   showPersonaliseSettings: true, // Settings: name, greeting, dedication and notes
   showAiPlanGenerator: true, // "Generate a plan with AI" buttons
   mentionAi: true, // wording that names the AI coach (welcome text, empty states)
+  firstSessionAdvice: false, // also write a short note for a workout with no history yet
+  coachVoice: '', // extra instructions on how the advice should sound (empty: the plain coach voice)
 };

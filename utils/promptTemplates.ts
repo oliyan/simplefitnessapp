@@ -1,4 +1,14 @@
 import type { ExportedWorkout } from './workoutSharingUtils';
+import { BUILD } from '../config/buildFlags';
+
+// A private build can ask for a particular voice (for example a loved one writing the advice).
+const voiceBlock = (): string =>
+  BUILD.coachVoice.trim()
+    ? `
+
+Voice: ${BUILD.coachVoice.trim()}
+The advice itself must stay specific and practical; the voice only changes how it sounds.`
+    : '';
 
 export const buildCoachNotePrompt = (context: string, userName?: string): string => `You are a concise strength coach glancing at a lifter's recent training log just before today's session.
 
@@ -25,9 +35,24 @@ Rules:
 - All weights are in kilograms. Write kg, never lb, lbs or pounds, and do not convert.
 - Respect the time gap. After a long break (roughly two weeks or more) do not tell the lifter to keep increasing the weight; suggest restarting near or a little below the last loads. Only suggest adding weight when the sessions were recent.
 
-${userName?.trim() ? `The lifter's name is ${userName.trim()}. You may use it once if it feels natural.
+${voiceBlock()}
 
-` : ''}${context}`;
+${userName?.trim() ? `The lifter's name is ${userName.trim()}. You may use it once if it feels natural.\n\n` : ''}${context}`;
+
+// For a workout with no logged history: a short first-time note written from the plan alone.
+export const buildFirstSessionPrompt = (plan: string, userName?: string): string => `You are a strength coach writing a short note for a lifter who is about to do this workout for the very first time. There is no training history yet, so do not mention past sessions.
+
+Output format - reply with JSON only, no code fences, exactly this shape:
+{"summary": "<two or three short sentences>", "exercises": {"<exercise name>": "<one short sentence>"}}
+
+Rules:
+- "summary": how to approach a first session: start lighter than feels necessary, pick a weight where the last two reps are hard but the form stays clean, rest as long as needed, and a mild ache the next day is normal.
+- "exercises": at most three of the most technical lifts in the plan, each with one key cue. Each key must be copied exactly from the Planned exercises list. Skip warm-ups, cardio and stretches.
+- Plain text in every string, no markdown, no greeting.
+- Never write an em dash or en dash. Use a comma, a colon or a plain hyphen.
+- All weights are in kilograms. Write kg, never lb, lbs or pounds.${voiceBlock()}
+
+${userName?.trim() ? `The lifter's name is ${userName.trim()}. You may use it once if it feels natural.\n\n` : ''}${plan}`;
 
 
 // What the Generate Plan form collects. Kept separate from the draft so every

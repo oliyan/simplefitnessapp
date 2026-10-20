@@ -29,6 +29,7 @@ import * as Notifications from 'expo-notifications';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useSettings } from '../context/SettingsContext';
 import { usePersonal } from '../context/PersonalContext';
+import { BUILD } from '../config/buildFlags';
 import { ensureInProgressColumn, setWorkoutInProgress } from '../utils/workoutProgress';
 import { loadRestTimerPreferences, saveRestTimerPreferences } from '../utils/startedWorkoutPreferenceUtils';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
@@ -571,14 +572,19 @@ export default function StartedWorkoutInterface() {
           bodyComposition,
         });
         if (cancelled) return;
-        if (!context) {
+        if (!context && !BUILD.firstSessionAdvice) {
           // No history to coach from; remember that so we don't re-check.
           await saveCoachNote(db, workout.workout_name, workout.day_name, workout.workout_date, null);
           return;
         }
 
         setCoachNote({ status: 'loading', note: null });
-        const note = await generateCoachNote(context, personal.userName);
+        // With no history, a build that wants it still gets a first-time note written from the plan.
+        const planLines = exercises.map((e) => `- ${e.exercise_name} [${e.muscle_group ?? 'untagged'}] ${e.sets} x ${e.reps}`);
+        const firstSessionPlan = ["Today's workout: " + workout.workout_name + ' - ' + workout.day_name + '.', 'Planned exercises:', ...planLines].join('\n');
+        const note = context
+          ? await generateCoachNote(context, personal.userName)
+          : await generateCoachNote(firstSessionPlan, personal.userName, true);
         // Cache even when the user has left or started: the call is already paid for.
         await saveCoachNote(db, workout.workout_name, workout.day_name, workout.workout_date, note);
         if (cancelled) return;
