@@ -198,3 +198,17 @@ Run on the emulator after Pass 5, with real data: a scheduled plan, sessions log
 ### Notes
 
 - A very long name is cut with "…" in the workout screen header (the full name is shown in the plan).
+
+---
+
+## Pass 8 - Form notes, focus areas, name, light default (build `c2105ef`)
+
+Run on the emulator with a real key (about $0.10).
+
+| Area | Cases | Result |
+|---|---|---|
+| **All** focus areas and no cap on the others | GEN-03 | ✅ |
+| A 5-day plan with all focus areas: every form note is 172 to 559 characters (median 421), in the order why, setup, how to do it, what to avoid, with load advice; warm-up entries are numbered steps; no em or en dashes | GEN-17 | ✅ |
+| Fresh install: starts in **light**; the first welcome page asks for a name; Home then says *Hi, <name>!* | GEN-18, UIX-02 | ✅ |
+
+How the form-note rule is enforced: the prompt requires it for every exercise (plans and refinements), and a plan with a thin note (under 150 characters, or under 40 for a one-set warm-up or cardio entry) is rejected and asked for again with the exercise names. Em and en dashes in anything the AI writes are replaced before it is shown or saved.
