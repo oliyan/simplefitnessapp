@@ -62,8 +62,13 @@ export function PersonalProvider({ children }: { children: React.ReactNode }) {
   const noteText = (key: NoteKey, n?: number) => {
     const raw = (personal.notes[key] ?? '').trim();
     if (!raw) return '';
-    const text = raw.replace('{n}', String(n ?? ''));
-    return personal.senderName.trim() ? `${text}\n— ${personal.senderName.trim()}` : text;
+    const name = personal.userName.trim();
+    const text = raw
+      .replace('{n}', String(n ?? ''))
+      // With no name set, ", {name}" simply disappears.
+      .replace(/,\s*\{name\}/g, name ? `, ${name}` : '')
+      .replace(/\{name\}/g, name);
+    return personal.senderName.trim() ? `${text}\n- ${personal.senderName.trim()}` : text;
   };
 
   return (

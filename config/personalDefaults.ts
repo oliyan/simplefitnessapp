@@ -14,18 +14,18 @@ export const NOTE_LABELS: Record<NoteKey, string> = {
   welcomeBack: 'On Home, when a workout is planned for today',
   finish: 'After finishing a workout',
   firstWorkout: 'After the very first workout',
-  streak: 'On a streak (use {n} for the number of weeks)',
+  streak: 'On a streak (use {n} for the number of weeks, {name} for your name)',
   pr: 'After a new personal record',
   restDay: 'On a rest day',
 };
 
 export const GENERIC_NOTES: Record<NoteKey, string> = {
-  welcomeBack: 'Today is a good day to train. One set at a time.',
-  finish: 'Another one in the bank. Well done.',
-  firstWorkout: 'First workout done. The hardest part is starting, and you did.',
-  streak: '{n} weeks in a row. This is who you are now.',
-  pr: 'A new personal best. Look at you!',
-  restDay: 'Rest is part of the plan. Recover well.',
+  welcomeBack: 'Today is a good day to train, {name}. One set at a time.',
+  finish: 'Another one in the bank. Well done, {name}.',
+  firstWorkout: 'First workout done. The hardest part is starting, and you did it, {name}.',
+  streak: '{n} weeks in a row, {name}. This is who you are now.',
+  pr: 'A new personal best, {name}. Look at you!',
+  restDay: 'Rest is part of the plan, {name}. Recover well.',
 };
 
 export const PERSONAL_DEFAULTS: PersonalValues = {

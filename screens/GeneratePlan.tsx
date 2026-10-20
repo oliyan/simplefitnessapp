@@ -14,6 +14,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
+import { usePersonal } from '../context/PersonalContext';
 import { WorkoutStackParamList } from '../App';
 import { getApiKey } from '../utils/secureSettings';
 import { generateWorkoutPlan, refineWorkoutPlan, getUserFacingErrorMessage } from '../utils/llmClient';
@@ -29,7 +30,6 @@ type NavProp = StackNavigationProp<WorkoutStackParamList, 'GeneratePlan'>;
 const EXPERIENCE = ['Beginner', 'Intermediate', 'Advanced'];
 const GOALS = ['Build muscle', 'Lose fat', 'Get stronger', 'General fitness'];
 const FOCUS_AREAS = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Glutes', 'Core'];
-const MAX_FOCUS = 3;
 const SESSION_MINUTES = [30, 45, 60, 90];
 const INTENSITIES = Object.keys(INTENSITY_HINTS);
 const SPLITS = ['Push / Pull / Legs', 'Upper / Lower', 'Full Body', 'Bro Split', 'Let the coach decide'];
@@ -44,6 +44,7 @@ export default function GeneratePlan() {
   const db = useSQLiteContext();
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { personal } = usePersonal();
 
   const [experience, setExperience] = useState(EXPERIENCE[1]);
   const [mainGoal, setMainGoal] = useState(GOALS[0]);
@@ -123,6 +124,7 @@ export default function GeneratePlan() {
       notes,
       constraints: profile.standingConstraints,
       bodyComposition: formatBodyComposition(await loadInBodySnapshots()),
+      userName: personal.userName,
     };
   };
 
@@ -282,12 +284,12 @@ export default function GeneratePlan() {
 
         <Text style={[styles.label, { color: theme.text }]}>{t('planFocus')}</Text>
         <View style={styles.chipRow}>
-          {FOCUS_AREAS.map((f) =>
-            chip(f, focusAreas.includes(f), () => {
-              if (!focusAreas.includes(f) && focusAreas.length >= MAX_FOCUS) return;
-              toggle(focusAreas, setFocusAreas, f);
-            }),
+          {chip(
+            t('planFocusAll'),
+            focusAreas.length === FOCUS_AREAS.length,
+            () => setFocusAreas(focusAreas.length === FOCUS_AREAS.length ? [] : [...FOCUS_AREAS]),
           )}
+          {FOCUS_AREAS.map((f) => chip(f, focusAreas.includes(f), () => toggle(focusAreas, setFocusAreas, f)))}
         </View>
 
         <Text style={[styles.section, { color: theme.text }]}>{t('planYourWeek')}</Text>

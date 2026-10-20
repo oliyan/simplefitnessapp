@@ -38,7 +38,7 @@ Urudhi is a small, quiet fitness app: build a plan, put it on your calendar, do 
 - 📊 **Track progress** with logs and graphs.
 - 🔁 **Share** a workout as a small file and import workouts others have shared.
 - 🤖 **AI Coach (optional):** a note before each workout, and AI-generated plans you can refine, save and schedule.
-- ✨ **Made to feel good:** a deep-teal look in light and dark (dark by default), a circular rest countdown, a celebration on every personal best, a short welcome on first launch, and a weekly summary you can share.
+- ✨ **Made to feel good:** a deep-teal look in light and dark (light by default), a circular rest countdown, a celebration on every personal best, a short welcome on first launch, and a weekly summary you can share.
 - 💌 **Personalise it** (optional): a name, a greeting on Home, a dedication, and short notes at nice moments, signed by whoever you like. The coach can carry that name too.
 - ⏰ **Reminders** for a whole scheduled plan, at the time you choose.
 - 🎨 Light and dark themes. Weights are in `kg`. Dates are `dd/mm/yyyy`, time is 12-hour, weeks start on Monday. English only.
@@ -155,7 +155,7 @@ The key is kept in your phone's secure storage. **Delete key** removes it.
 
 **Generate a plan.** Open **Workout Plans → Generate a plan with AI** and answer by tapping:
 
-- **About you:** experience level (Beginner, Intermediate, Advanced), main goal (Build muscle, Lose fat, Get stronger, General fitness), and up to three focus areas.
+- **About you:** experience level (Beginner, Intermediate, Advanced), main goal (Build muscle, Lose fat, Get stronger, General fitness), and any number of focus areas (or **All**).
 - **Your week:** the training days (Mon to Sun), time per session (30, 45, 60 or 90 minutes), and the split (or let the coach decide).
 - **Preferences:** intensity (Easy start, Steady, Push me), your equipment, your saved injuries (shown, edited in Settings) and a box for likes and dislikes.
 
@@ -222,4 +222,4 @@ The code is React Native (Expo) with TypeScript. App text lives in `locales/en/t
 
 ## 📜 **License**
 
-MIT — see [LICENSE](LICENSE). Original work © 2024 Başar Subaşı; modifications © 2026 Ravisankar Pandian.
+MIT - see [LICENSE](LICENSE). Original work © 2024 Başar Subaşı; modifications © 2026 Ravisankar Pandian.

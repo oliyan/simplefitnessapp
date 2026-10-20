@@ -64,7 +64,7 @@ type ThemeProviderProps = {
 };
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const [theme, setTheme] = useState(DarkTheme);
+  const [theme, setTheme] = useState(LightTheme);
 
   const themeFilePath = `${FileSystem.documentDirectory}theme.json`;
 
@@ -74,8 +74,8 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
         const storedTheme = await FileSystem.readAsStringAsync(themeFilePath);
         setTheme(storedTheme === 'dark' ? DarkTheme : LightTheme);
       } catch {
-        // No saved choice yet: Urudhi starts in dark mode.
-        setTheme(DarkTheme);
+        // No saved choice yet: Urudhi starts in light mode.
+        setTheme(LightTheme);
       }
     };
     loadTheme();

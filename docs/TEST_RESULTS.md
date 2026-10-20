@@ -1,4 +1,4 @@
-# Urudhi — Emulator Test Results
+# Urudhi - Emulator Test Results
 
 **Build:** `workout-screen` @ `fed968f` (APK `Urudhi-test-fed968f.apk`)
 **Where:** Android emulator, 1080×2400, with the app's existing test data. Some workout-screen cases were first run on the earlier build `e6d7c01`; the code they touch did not change afterwards except for the resume feature, which was re-checked.
@@ -8,7 +8,7 @@ Legend: ✅ passed · 🔧 failed, fixed in this build and re-checked · ⏭ not
 
 ---
 
-## Pass 1 — Core (must work or the app is broken)
+## Pass 1 - Core (must work or the app is broken)
 
 | Area | Cases | Result |
 |---|---|---|
@@ -37,7 +37,7 @@ Legend: ✅ passed · 🔧 failed, fixed in this build and re-checked · ⏭ not
 
 **Core result: all passed.** One bug found inside it (calendar grouped a renamed set under the wrong exercise) and fixed.
 
-## Pass 2 — Primary
+## Pass 2 - Primary
 
 | Area | Cases | Result |
 |---|---|---|
@@ -59,7 +59,7 @@ Legend: ✅ passed · 🔧 failed, fixed in this build and re-checked · ⏭ not
 | InBody: import, wrong file refused, delete | INB-01, 04, 05 | ✅ |
 | Training profile remembered | PRF-01 | ✅ |
 
-## Pass 3 — Secondary
+## Pass 3 - Secondary
 
 | Area | Cases | Result |
 |---|---|---|
@@ -68,7 +68,7 @@ Legend: ✅ passed · 🔧 failed, fixed in this build and re-checked · ⏭ not
 | Form card without notes, video icon greyed | WRK-03 (no-link case) | ◐ |
 | Sharing a non-workout file | SHR-05 | ✅ (the file picker will not offer it) |
 
-## Pass 4 — Tertiary and not run
+## Pass 4 - Tertiary and not run
 
 ⏭ **Not run, and why**
 
@@ -102,7 +102,7 @@ Legend: ✅ passed · 🔧 failed, fixed in this build and re-checked · ⏭ not
 
 ---
 
-## Pass 5 — AI features with a real key (fresh install, build `7616e6b`)
+## Pass 5 - AI features with a real key (fresh install, build `7616e6b`)
 
 Run on a freshly wiped emulator, in the order a new user would meet things. The key was pasted by the owner. Cost: about $0.05 for 6 requests.
 
@@ -133,7 +133,7 @@ Run on a freshly wiped emulator, in the order a new user would meet things. The 
 
 ---
 
-## Pass 6 — Remaining cases on the emulator (build `7fb6161`)
+## Pass 6 - Remaining cases on the emulator (build `7fb6161`)
 
 Run on the emulator after Pass 5, with real data: a scheduled plan, sessions logged on 12, 14, 16 and 19 Oct, and a second session left half-done.
 
@@ -173,7 +173,7 @@ Run on the emulator after Pass 5, with real data: a scheduled plan, sessions log
 
 ---
 
-## Pass 7 — The rest of the list (build `5d0eeab` + one small Home change)
+## Pass 7 - The rest of the list (build `5d0eeab` + one small Home change)
 
 | Area | Cases | Result |
 |---|---|---|

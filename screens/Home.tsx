@@ -47,6 +47,8 @@ export default function Home({ navigation }: any) {
   const { t } = useTranslation();
   const { weightFormat } = useSettings();
   const { personal, noteText } = usePersonal();
+  // The greeting you wrote, or a plain "Hi, <name>!" once a name is known.
+  const greetingText = personal.greeting.trim() || (personal.userName.trim() ? `Hi, ${personal.userName.trim()}!` : '');
 
   const [data, setData] = useState<Dashboard | null>(null);
   const [needsBackup, setNeedsBackup] = useState(false);
@@ -332,9 +334,9 @@ export default function Home({ navigation }: any) {
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      {personal.greeting.trim() ? (
+      {greetingText ? (
         <>
-          <Text style={[styles.greeting, { color: theme.accent }]}>{personal.greeting.trim()}</Text>
+          <Text style={[styles.greeting, { color: theme.accent }]}>{greetingText}</Text>
           <Text style={[styles.tagline, { color: theme.text }]}>{'Urudhi · by ஒளியன் கலைக்கூடம்'}</Text>
         </>
       ) : (

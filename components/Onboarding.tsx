@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import { usePersonal } from '../context/PersonalContext';
@@ -14,8 +14,10 @@ interface Page {
 // A short welcome the first time the app opens: an optional dedication, then what the app does.
 export default function Onboarding() {
   const { theme } = useTheme();
-  const { loaded, personal, onboardingSeen, markOnboardingSeen, coachName } = usePersonal();
+  const { loaded, personal, updatePersonal, onboardingSeen, markOnboardingSeen, coachName } = usePersonal();
   const [index, setIndex] = useState(0);
+  const [typedName, setTypedName] = useState('');
+  const asksForName = !personal.userName.trim();
 
   if (!loaded || onboardingSeen) return null;
 
@@ -25,7 +27,14 @@ export default function Onboarding() {
       icon: 'heart',
       title: personal.userName.trim() ? `For ${personal.userName.trim()}` : 'Welcome',
       body: personal.dedication.trim(),
-      footer: personal.senderName.trim() ? `— ${personal.senderName.trim()}` : undefined,
+      footer: personal.senderName.trim() ? `- ${personal.senderName.trim()}` : undefined,
+    });
+  }
+  if (asksForName) {
+    pages.push({
+      icon: 'person-circle-outline',
+      title: 'What should I call you?',
+      body: 'Optional. Your name is used in greetings and by the coach.',
     });
   }
   pages.push(
@@ -49,7 +58,12 @@ export default function Onboarding() {
   const page = pages[Math.min(index, pages.length - 1)];
   const last = index >= pages.length - 1;
 
+  const saveName = () => {
+    if (asksForName && typedName.trim()) updatePersonal({ userName: typedName.trim() });
+  };
+
   const finish = () => {
+    saveName();
     markOnboardingSeen();
     setIndex(0);
   };
@@ -62,6 +76,18 @@ export default function Onboarding() {
         </View>
         <Text style={[styles.title, { color: theme.text }]}>{page.title}</Text>
         <Text style={[styles.body, { color: theme.text }]}>{page.body}</Text>
+        {asksForName && index === 0 && !personal.dedication.trim() ? (
+          <TextInput
+            style={[styles.nameInput, { color: theme.text, backgroundColor: theme.card, borderColor: theme.border }]}
+            value={typedName}
+            onChangeText={setTypedName}
+            placeholder="Your name"
+            placeholderTextColor={theme.text + '55'}
+            autoCapitalize="words"
+            returnKeyType="next"
+            onSubmitEditing={() => { saveName(); setIndex(index + 1); }}
+          />
+        ) : null}
         {page.footer ? <Text style={[styles.footer, { color: theme.accent }]}>{page.footer}</Text> : null}
 
         <View style={styles.dots}>
@@ -72,7 +98,7 @@ export default function Onboarding() {
 
         <TouchableOpacity
           style={[styles.button, { backgroundColor: theme.buttonBackground }]}
-          onPress={last ? finish : () => setIndex(index + 1)}
+          onPress={last ? finish : () => { if (index === 0) saveName(); setIndex(index + 1); }}
         >
           <Text style={[styles.buttonText, { color: theme.buttonText }]}>{last ? 'Get started' : 'Next'}</Text>
         </TouchableOpacity>
@@ -92,6 +118,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '800', textAlign: 'center', marginBottom: 14 },
   body: { fontSize: 17, lineHeight: 26, textAlign: 'center', opacity: 0.85 },
   footer: { fontSize: 18, fontWeight: '700', marginTop: 18 },
+  nameInput: { width: '100%', borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, fontSize: 18, marginTop: 22, textAlign: 'center' },
   dots: { flexDirection: 'row', gap: 8, marginTop: 36, marginBottom: 28 },
   dot: { width: 8, height: 8, borderRadius: 4 },
   button: { borderRadius: 28, paddingVertical: 14, paddingHorizontal: 48 },

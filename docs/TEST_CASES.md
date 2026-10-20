@@ -1,4 +1,4 @@
-# Urudhi — Phone Test Cases
+# Urudhi - Phone Test Cases
 
 **Build under test:** branch `workout-screen` at commit `fed968f` (includes the AI Coach work and the `minimal` changes)
 **APK:** `Urudhi-test-fed968f.apk`
@@ -224,7 +224,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
 | UIX-01 | 🔴 | Open the app on a **fresh install** (or Settings → Personalise → **Replay welcome**). | A short welcome: (a dedication page if you set one), *Plan your week*, *Train, one set at a time*, and a page about the coach. **Next**, **Skip** and **Get started** work. It does not reappear after that. | ☐ | |
-| UIX-02 | 🔴 | Look at every main screen in **dark** and in **light**: Home, Workout Plans, Sessions, Progress, Settings, a workout in progress. | One deep-teal accent on buttons, selected chips, the ribbon, the tab bar and progress bars. Text is readable everywhere; nothing is white-on-white or black-on-black. A fresh install starts in **dark**. | ☐ | |
+| UIX-02 | 🔴 | Look at every main screen in **dark** and in **light**: Home, Workout Plans, Sessions, Progress, Settings, a workout in progress. | One deep-teal accent on buttons, selected chips, the ribbon, the tab bar and progress bars. Text is readable everywhere; nothing is white-on-white or black-on-black. A fresh install starts in **light**. | ☐ | |
 | UIX-03 | 🔴 | Settings → **Personalise**: enter a name, a signer, a greeting. Go to Home. | The greeting is the large line at the top of Home (Tamil text shows correctly). Urudhi and the Odiyan line move below it. | ☐ | |
 | UIX-04 | 🔴 | With a signer set, open Settings and a workout start screen. | The section and the coach's card are called **Advice from <signer>**. With the signer empty it says **AI Coach**. | ☐ | |
 | UIX-05 | 🔴 | Finish a workout. | The summary check animates in, and (if notes are set) a note appears under the summary, signed by the signer. | ☐ | |
@@ -267,7 +267,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 ---
 
-## 12. AI Coach — key and connection
+## 12. AI Coach - key and connection
 
 *Skip sections 12–17 if you don't want to use your key.*
 
@@ -282,7 +282,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 ---
 
-## 13. AI Coach — notes before a workout
+## 13. AI Coach - notes before a workout
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
@@ -297,13 +297,13 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 ---
 
-## 14. AI Coach — generate a plan
+## 14. AI Coach - generate a plan
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
 | GEN-01 | 🔴 | Workout Plans → **Generate a plan with AI**. | A form with sections **About you** (experience, main goal, focus areas), **Your week** (training days, time per session, split), **Preferences** (intensity, equipment, injuries, likes/dislikes). | ☐ | |
 | GEN-02 | 🔴 | Before choosing any day, look at the **Generate plan** button. | Greyed out, with "Pick at least one training day." | ☐ | |
-| GEN-03 | 🟡 | Select four focus areas. | The fourth is ignored (maximum 3). | ☐ | |
+| GEN-03 | 🟡 | Select four or more focus areas, then tap **All**, then **All** again. | No limit. **All** selects every area; tapping it again clears them. | ☐ | |
 | GEN-04 | 🟡 | Check the **Injuries and constraints** card. | Shows what you saved under Settings → AI Coach, or a hint to add some. | ☐ | |
 | GEN-05 | 🔴 | Pick Mon / Wed / Fri, a goal, 60 min, and **Generate plan**. | A spinner, then (within about a minute) a **DRAFT** with a name and one day per training day. Each day shows its weekday (for example "Upper A · Mon"). | ☐ | |
 | GEN-06 | 🔴 | Read the draft against your inputs. | Number of days matches your training days; focus areas get extra attention; nothing uses equipment you did not select; nothing aggravates a saved injury. Note anything that does. | ☐ | |
@@ -316,11 +316,13 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | GEN-13 | 🟡 | With a draft showing, press Back. | Asks to discard; Cancel keeps it, Discard leaves. | ☐ | |
 | GEN-14 | 🟡 | Refine five or more times. | A gentle note that many rounds have been used. | ☐ | |
 | GEN-15 | ⚪ | Try unusual choices: 5-day Push/Pull/Legs, or **Bodyweight only**, or 30-minute sessions. | The plan is still sensible (or clearly says why not). | ☐ | |
-| GEN-16 | ⚪ | Try "Let the coach decide" with 2 days and with 6 days. | Reasonable splits (for example upper/lower for 2). | ☐ | |
+| GEN-16 | ⚪ | Try "Let the coach decide" with 2 days and with 6 days. | Reasonable splits (for example upper/lower for 2). | ☐ | |
+| GEN-17 | 🔴 | Generate any plan and open a few exercises (and a warm-up or cardio entry). | Every exercise has a **thorough** form note: why, setup, how to do it with tempo, and what to avoid (about 3 to 6 sentences). Warm-up, cardio and stretching entries are numbered steps with counts. No em dashes. The same holds after **Refine**. | ☐ | |
+| GEN-18 | 🟡 | Fresh install: on the first welcome page type a name and finish. Then generate a plan and look at Home. | Home greets you with *Hi, <name>!*. The name is used in the notes at nice moments and may appear in a coach note or plan note. | ☐ | |
 
 ---
 
-## 15. AI Coach — profile and body data
+## 15. AI Coach - profile and body data
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
@@ -335,7 +337,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 ---
 
-## 16. AI Coach — spending limit
+## 16. AI Coach - spending limit
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
@@ -390,7 +392,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 ---
 
-## Appendix A — Sample shared workout (older format, no weekday)
+## Appendix A - Sample shared workout (older format, no weekday)
 
 Save this as `old-format-test.json` on the phone (any text editor) and import it in SHR-04.
 
@@ -409,7 +411,7 @@ Save this as `old-format-test.json` on the phone (any text editor) and import it
 }
 ```
 
-## Appendix B — Sample InBody CSV
+## Appendix B - Sample InBody CSV
 
 Save as `inbody-sample.csv` and import it in INB-01. (The first row is the header. Dates are `YYYYMMDDHHMMSS`.)
 
@@ -420,7 +422,7 @@ Date,Weight(kg),Skeletal Muscle Mass(kg),Soft Lean Mass(kg),Body Fat Mass(kg),BM
 20260903090000,78.9,34.4,56.4,17.1,25.1,21.7,1705,76,0.89,7
 ```
 
-## Appendix C — Bug report template
+## Appendix C - Bug report template
 
 Copy this for each problem and send it to me (or paste it into a note):
 

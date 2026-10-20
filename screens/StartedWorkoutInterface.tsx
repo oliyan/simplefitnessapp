@@ -107,7 +107,7 @@ export default function StartedWorkoutInterface() {
   const { t } = useTranslation();
   const db = useSQLiteContext();
   const { notificationPermissionGranted, requestNotificationPermission, weightFormat } = useSettings();
-  const { coachName, noteText } = usePersonal();
+  const { coachName, noteText, personal } = usePersonal();
   
   const { workout_log_id } = route.params;
   
@@ -578,7 +578,7 @@ export default function StartedWorkoutInterface() {
         }
 
         setCoachNote({ status: 'loading', note: null });
-        const note = await generateCoachNote(context);
+        const note = await generateCoachNote(context, personal.userName);
         // Cache even when the user has left or started: the call is already paid for.
         await saveCoachNote(db, workout.workout_name, workout.day_name, workout.workout_date, note);
         if (cancelled) return;

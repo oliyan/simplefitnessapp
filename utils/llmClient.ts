@@ -6,11 +6,12 @@ import type { CoachNote } from './coachNotesUtils';
 import type { ExportedWorkout } from './workoutSharingUtils';
 import { normalizeWeekday } from './weekdays';
 import { mentionsPounds } from './weightUnit';
+import { stripDashes, MIN_NOTE_CHARS, MIN_ROUTINE_NOTE_CHARS } from './textRules';
 
 const API_URL = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
 const TIMEOUT_MS = 30000;
-const PLAN_TIMEOUT_MS = 120000;
+const PLAN_TIMEOUT_MS = 240000; // long, detailed form notes take a while to write
 
 export const MODELS = {
   fast: 'claude-haiku-5-5', // coach notes
@@ -158,10 +159,10 @@ export const getUserFacingErrorMessage = (error: unknown): string => {
 };
 
 // Returns the note, or null when the model decided there was nothing to say.
-export const generateCoachNote = async (context: string): Promise<CoachNote | null> => {
+export const generateCoachNote = async (context: string, userName?: string): Promise<CoachNote | null> => {
   const ask = async (extra: string) =>
     (
-      await callClaude(buildCoachNotePrompt(context) + extra, {
+      await callClaude(buildCoachNotePrompt(context, userName) + extra, {
         model: MODELS.fast,
         maxTokens: 600,
         lowEffort: true,
@@ -181,20 +182,20 @@ export const generateCoachNote = async (context: string): Promise<CoachNote | nu
   const end = text.lastIndexOf('}');
   if (start === -1 || end <= start) {
     // Not JSON despite the instructions; treat the whole reply as the summary.
-    return { summary: text, exercises: {} };
+    return { summary: stripDashes(text), exercises: {} };
   }
   try {
     const parsed = JSON.parse(text.slice(start, end + 1));
     const exercises: Record<string, string> = {};
     for (const [name, line] of Object.entries(parsed.exercises ?? {})) {
-      if (typeof line === 'string' && line.trim()) exercises[name.trim()] = line.trim();
+      if (typeof line === 'string' && line.trim()) exercises[name.trim()] = stripDashes(line.trim());
     }
     const summary =
-      typeof parsed.summary === 'string' && parsed.summary.trim() ? parsed.summary.trim() : null;
+      typeof parsed.summary === 'string' && parsed.summary.trim() ? stripDashes(parsed.summary.trim()) : null;
     if (!summary && Object.keys(exercises).length === 0) return null;
     return { summary, exercises };
   } catch {
-    return { summary: text, exercises: {} };
+    return { summary: stripDashes(text), exercises: {} };
   }
 };
 
@@ -209,6 +210,7 @@ const MUSCLE_GROUPS = [
 // and tidies muscle_group (the join key for coach notes). Never pass unvalidated
 // JSON to the database.
 const validatePlan = (raw: any): ExportedWorkout => {
+  const tooShort: string[] = [];
   if (!raw || typeof raw.workout_name !== 'string' || !raw.workout_name.trim()) {
     throw new LLMSchemaError('missing workout_name');
   }
@@ -234,18 +236,28 @@ const validatePlan = (raw: any): ExportedWorkout => {
         console.warn(`Unknown muscle_group "${ex.muscle_group}" for ${ex.exercise_name}; set to null`);
         muscleGroup = null;
       }
+      const notes = typeof ex.exercise_notes === 'string' ? stripDashes(ex.exercise_notes.trim()) : '';
+      const isRoutine = Math.round(sets) === 1 && Math.round(reps) === 1;
+      if (notes.length < (isRoutine ? MIN_ROUTINE_NOTE_CHARS : MIN_NOTE_CHARS)) {
+        tooShort.push(ex.exercise_name.trim());
+      }
       return {
-        exercise_name: ex.exercise_name.trim(),
+        exercise_name: stripDashes(ex.exercise_name.trim()),
         sets: Math.round(sets),
         reps: Math.round(reps),
         web_link: typeof ex.web_link === 'string' && ex.web_link.trim() ? ex.web_link.trim() : null,
         muscle_group: muscleGroup,
-        exercise_notes: typeof ex.exercise_notes === 'string' && ex.exercise_notes.trim() ? ex.exercise_notes.trim() : null,
+        exercise_notes: notes || null,
       };
     });
-    return { day_name: day.day_name.trim(), weekday: normalizeWeekday(day.weekday), exercises };
+    return { day_name: stripDashes(day.day_name.trim()), weekday: normalizeWeekday(day.weekday), exercises };
   });
-  return { workout_name: raw.workout_name.trim(), days };
+  // Hard rule: every exercise carries a thorough form note. A plan with thin notes is rejected,
+  // which makes callForPlan ask again and name the exercises that need more.
+  if (tooShort.length > 0) {
+    throw new LLMSchemaError(`These exercises need a thorough form note (why, setup, how to do it, what to avoid): ${tooShort.join('; ')}`);
+  }
+  return { workout_name: stripDashes(raw.workout_name.trim()), days };
 };
 
 const parsePlan = (text: string): ExportedWorkout => {
@@ -264,12 +276,15 @@ const parsePlan = (text: string): ExportedWorkout => {
 // One silent retry for a malformed plan (a one-off glitch); network/auth/rate errors
 // are not retried, and a timeout is a network error.
 const callForPlan = async (prompt: string): Promise<ExportedWorkout> => {
-  const options: CallOptions = { model: MODELS.smart, maxTokens: 8000, effort: 'medium', timeoutMs: PLAN_TIMEOUT_MS };
+  const options: CallOptions = { model: MODELS.smart, maxTokens: 16000, effort: 'medium', timeoutMs: PLAN_TIMEOUT_MS };
   try {
     return parsePlan(await callClaude(prompt, options));
   } catch (error) {
     if (!(error instanceof LLMSchemaError)) throw error;
-    return parsePlan(await callClaude(prompt, options));
+    const again = `${prompt}
+
+Your previous reply was rejected: ${error.message}. Return the complete plan again and fix that.`;
+    return parsePlan(await callClaude(again, options));
   }
 };
 
