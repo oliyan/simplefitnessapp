@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -44,7 +44,7 @@ type LogData = {
   logged_exercise_id: number;
   dayName?: string; // For time data
 };
-type TimeFrame = 'week' | 'month' | 'year' | 'all';
+type TimeFrame = 'week' | 'month' | '3months' | 'year' | 'all';
 type CalculationType = 'CES' | '1RM' | 'Sets' | 'Reps' | 'Time' | 'MuscleDistribution' | 'OverallMuscleGroups' | 'MuscleGroupVolume' | 'DayVolume';
 type GraphMode = 'Exercise' | 'Time' | 'Overall';
 type ProcessedDataPoint = {
@@ -133,7 +133,7 @@ type DayVolumeData = {
   dayKey?: string; // Add this if you want to use it for the x-axis label
 };
 
-export default function GraphsWorkoutDetails() {
+export default function GraphsWorkoutDetails({ embedded = false }: { embedded?: boolean } = {}) {
   const navigation = useNavigation<GraphsNavigationProp>();
   const db = useSQLiteContext();
   const { theme } = useTheme();
@@ -175,7 +175,7 @@ export default function GraphsWorkoutDetails() {
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [exercises, setExercises] = useState<ExerciseOption[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<string>('');
-  const [timeFrame, setTimeFrame] = useState<TimeFrame>('month');
+  const [timeFrame, setTimeFrame] = useState<TimeFrame>('3months');
   const [calculationType, setCalculationType] = useState<CalculationType>('Sets');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [logData, setLogData] = useState<LogData[]>([]);
@@ -206,6 +206,7 @@ export default function GraphsWorkoutDetails() {
   const [workoutSessionExercises, setWorkoutSessionExercises] = useState<WorkoutSessionExercise[]>([]);
   const [muscleGroupDayDetails, setMuscleGroupDayDetails] = useState<MuscleGroupLogData[]>([]);
   const [percentageChange, setPercentageChange] = useState<number | null>(null);
+  const [showChartHelp, setShowChartHelp] = useState<boolean>(false);
 
   // Smart data sampling functions
   const getOptimalDataPoints = (data: ProcessedDataPoint[], timeFrame: TimeFrame): ProcessedDataPoint[] => {
@@ -219,6 +220,7 @@ export default function GraphsWorkoutDetails() {
         return sortedData;
         
       case 'month':
+      case '3months':
         return sortedData;
         
       case 'year':
@@ -292,13 +294,42 @@ export default function GraphsWorkoutDetails() {
 
   useEffect(() => {
     if (graphMode === 'Exercise') {
-      setCalculationType('Sets');
+      setCalculationType('1RM');
     } else if (graphMode === 'Time') {
       setCalculationType('Time');
     } else if (graphMode === 'Overall') {
       setCalculationType('OverallMuscleGroups');
     }
   }, [graphMode]);
+
+  // An exercise done without weight has no estimated max, so it opens on reps instead of an empty chart.
+  useEffect(() => {
+    if (graphMode === 'Exercise' && calculationType === '1RM' && logData.length > 0 && logData.every((l) => !(l.weight_logged > 0))) {
+      setCalculationType('Reps');
+    }
+  }, [logData]);
+
+  // Open on what was trained most recently instead of an empty set of dropdowns.
+  const pendingDefault = useRef<{ day: string; exercise: string } | null>(null);
+  useEffect(() => {
+    if (allWorkouts.length === 0 || selectedWorkout) return;
+    (async () => {
+      try {
+        const row = await db.getFirstAsync<{ workout_name: string; day_name: string; exercise_name: string }>(
+          `SELECT Workout_Log.workout_name, Workout_Log.day_name, Weight_Log.exercise_name
+           FROM Weight_Log INNER JOIN Workout_Log ON Weight_Log.workout_log_id = Workout_Log.workout_log_id
+           WHERE Weight_Log.weight_logged > 0
+           ORDER BY Workout_Log.workout_date DESC, Weight_Log.weight_log_id DESC LIMIT 1;`
+        );
+        if (row) {
+          pendingDefault.current = { day: row.day_name, exercise: row.exercise_name };
+          setSelectedWorkout(row.workout_name);
+        }
+      } catch (error) {
+        console.error('Error choosing the default exercise:', error);
+      }
+    })();
+  }, [allWorkouts]);
 
   // Fetch days for the selected workout
   useEffect(() => {
@@ -496,6 +527,11 @@ export default function GraphsWorkoutDetails() {
       }));
       
       setDays(dayOptions);
+      if (pendingDefault.current && dayOptions.some((d) => d.value === pendingDefault.current!.day)) {
+        setSelectedDay(pendingDefault.current.day);
+      } else {
+        pendingDefault.current = null;
+      }
       
     } catch (error) {
       console.error('Error fetching days:', error);
@@ -521,6 +557,11 @@ export default function GraphsWorkoutDetails() {
       
       setExercises(exerciseOptions);
       setSelectedExercise(''); // Reset exercise selection when day changes
+      if (pendingDefault.current) {
+        const wanted = pendingDefault.current.exercise;
+        pendingDefault.current = null;
+        if (exerciseOptions.some((e) => e.value === wanted)) setSelectedExercise(wanted);
+      }
     } catch (error) {
       console.error('Error fetching exercises:', error);
     }
@@ -539,6 +580,9 @@ export default function GraphsWorkoutDetails() {
           break;
         case 'month':
           startDate.setMonth(now.getMonth() - 1);
+          break;
+        case '3months':
+          startDate.setMonth(now.getMonth() - 3);
           break;
         case 'year':
           startDate.setFullYear(now.getFullYear() - 1);
@@ -587,6 +631,9 @@ export default function GraphsWorkoutDetails() {
         case 'month':
           startDate.setMonth(now.getMonth() - 1);
           break;
+        case '3months':
+          startDate.setMonth(now.getMonth() - 3);
+          break;
         case 'year':
           startDate.setFullYear(now.getFullYear() - 1);
           break;
@@ -627,6 +674,9 @@ export default function GraphsWorkoutDetails() {
           break;
         case 'month':
           startDate.setMonth(now.getMonth() - 1);
+          break;
+        case '3months':
+          startDate.setMonth(now.getMonth() - 3);
           break;
         case 'year':
           startDate.setFullYear(now.getFullYear() - 1);
@@ -716,6 +766,9 @@ export default function GraphsWorkoutDetails() {
         case 'month':
           startDate.setMonth(now.getMonth() - 1);
           break;
+        case '3months':
+          startDate.setMonth(now.getMonth() - 3);
+          break;
         case 'year':
           startDate.setFullYear(now.getFullYear() - 1);
           break;
@@ -783,6 +836,9 @@ export default function GraphsWorkoutDetails() {
         case 'month':
           startDate.setMonth(now.getMonth() - 1);
           break;
+        case '3months':
+          startDate.setMonth(now.getMonth() - 3);
+          break;
         case 'year':
           startDate.setFullYear(now.getFullYear() - 1);
           break;
@@ -849,6 +905,9 @@ export default function GraphsWorkoutDetails() {
           break;
         case 'month':
           startDate.setMonth(now.getMonth() - 1);
+          break;
+        case '3months':
+          startDate.setMonth(now.getMonth() - 3);
           break;
         case 'year':
           startDate.setFullYear(now.getFullYear() - 1);
@@ -3115,21 +3174,68 @@ const calculateCES = (sets: LogData[]): number => {
     );
   };
 
+  // The explanation of the chart sits behind a small (i) button instead of taking space all the time.
+  const renderInfoButton = () => {
+    if (!getChartExplanation().text) return null;
+    return (
+      <TouchableOpacity
+        onPress={() => setShowChartHelp((v) => !v)}
+        accessibilityRole="button"
+        accessibilityLabel="What does this chart show?"
+        style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Ionicons name={showChartHelp ? 'information-circle' : 'information-circle-outline'} size={24} color={theme.accent} />
+      </TouchableOpacity>
+    );
+  };
+
+  const renderChartHelp = () => {
+    if (!showChartHelp || !getChartExplanation().text) return null;
+    return (
+      <View style={[styles.infoBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Text style={[styles.infoTitle, { color: theme.text }]}>{getChartExplanation().title}</Text>
+        <Text style={[styles.infoText, { color: theme.text }]}>{getChartExplanation().text}</Text>
+      </View>
+    );
+  };
+
+  // One plain sentence about the line that is drawn, so the chart does not have to be decoded.
+  const renderChartSentence = () => {
+    if (isLoading || !chartData || chartData.length === 0) return null;
+    const timeBased = graphMode === 'Time' && calculationType === 'Time';
+    if (calculationType === 'MuscleDistribution' || calculationType === 'OverallMuscleGroups') return null;
+    let text: string;
+    if (chartData.length < 2) {
+      text = 'One data point so far. Log again and a line appears.';
+    } else if (timeBased) {
+      const avg = chartData.reduce((a, p) => a + p.y, 0) / chartData.length;
+      text = `Your sessions average ${Math.round(avg / 60)} minutes.`;
+    } else if (percentageChange !== null) {
+      const rounded = Math.round(Math.abs(percentageChange));
+      text =
+        percentageChange === 999 ? 'Up from nothing. A great start.'
+        : percentageChange >= 1 ? `Up ${rounded}% over this time frame.`
+        : percentageChange <= -1 ? `Down ${rounded}% over this time frame. A lighter spell is normal and you can build back.`
+        : 'Holding steady over this time frame.';
+    } else {
+      return null;
+    }
+    return <Text style={{ color: theme.text, fontSize: 15, lineHeight: 21, marginTop: 10 }}>{text}</Text>;
+  };
+
   // Render timeframe selector buttons
   const renderTimeFrameButtons = () => {
     const timeFrames: { value: TimeFrame; label: string }[] = [
       { value: 'week', label: t('Week') },
       { value: 'month', label: t('Month') },
+      { value: '3months', label: t('3 Months') },
       { value: 'year', label: t('Year') },
       { value: 'all', label: t('All Time') }
     ];
 
     return (
       <View style={styles.timeFrameContainer}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>
-          {t('Time Frame')}
-        </Text>
-        <View style={styles.buttonRow}>
+        <View style={styles.timeFrameRow}>
           {timeFrames.map((frame) => (
             <TouchableOpacity
               key={frame.value}
@@ -3143,6 +3249,8 @@ const calculateCES = (sets: LogData[]): number => {
               onPress={() => setTimeFrame(frame.value)}
             >
               <Text 
+                numberOfLines={1}
+                adjustsFontSizeToFit
                 style={[
                   styles.timeFrameButtonText, 
                   timeFrame === frame.value && styles.timeFrameButtonTextActive,
@@ -3346,19 +3454,27 @@ const calculateCES = (sets: LogData[]): number => {
     );
   };
 
+  // Inside the Progress tabs the page already scrolls, so the charts are laid out in a plain view.
+  const Wrapper: any = embedded ? View : ScrollView;
+  const wrapperProps: any = embedded
+    ? {}
+    : {
+        style: [styles.container, { backgroundColor: theme.background }],
+        nestedScrollEnabled: true,
+        showsVerticalScrollIndicator: false,
+        contentContainerStyle: styles.scrollContent,
+      };
+
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: theme.background }]}
-      nestedScrollEnabled={true}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <View style={styles.titleContainer}>
-        <Ionicons name="trending-up" size={30} color={theme.text} style={styles.titleIcon} />
-        <Text style={[styles.title, { color: theme.text }]}>
-          {t('myProgress')}
-        </Text>
-      </View>
+    <Wrapper {...wrapperProps}>
+      {!embedded && (
+        <View style={styles.titleContainer}>
+          <Ionicons name="trending-up" size={30} color={theme.text} style={styles.titleIcon} />
+          <Text style={[styles.title, { color: theme.text }]}>
+            {t('myProgress')}
+          </Text>
+        </View>
+      )}
 
       {isInitialLoading ? (
         <ActivityIndicator size="large" color={theme.buttonBackground} style={{ marginTop: 40 }}/>
@@ -3402,7 +3518,10 @@ const calculateCES = (sets: LogData[]): number => {
                     {getChartTitle()}
                   </Text>
                   {renderPercentageChange()}
+                  {renderInfoButton()}
                 </View>
+
+                {calculationType !== 'MuscleDistribution' && renderTimeFrameButtons()}
 
                 {isLoading ? (
                   <ActivityIndicator
@@ -3414,27 +3533,10 @@ const calculateCES = (sets: LogData[]): number => {
                   renderChart()
                 )}
 
-                {/* Info about calculation */}
-                <View
-                  style={[
-                    styles.infoBox,
-                    {
-                      backgroundColor: theme.card,
-                      borderColor: theme.border,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.infoTitle, { color: theme.text }]}>
-                    {getChartExplanation().title}
-                  </Text>
-                  <Text style={[styles.infoText, { color: theme.text }]}>
-                    {getChartExplanation().text}
-                  </Text>
-                </View>
+                {renderChartHelp()}
+                {renderChartSentence()}
               </View>
 
-              {/* Timeframe selector */}
-              {calculationType !== 'MuscleDistribution' && renderTimeFrameButtons()}
 
 
             </>
@@ -3450,7 +3552,10 @@ const calculateCES = (sets: LogData[]): number => {
                     {getChartTitle()}
                   </Text>
                   {renderPercentageChange()}
+                  {renderInfoButton()}
                 </View>
+
+                {calculationType !== 'MuscleDistribution' && renderTimeFrameButtons()}
 
                 {isLoading ? (
                   <ActivityIndicator
@@ -3462,27 +3567,10 @@ const calculateCES = (sets: LogData[]): number => {
                   renderChart()
                 )}
 
-                {/* Info about calculation */}
-                <View
-                  style={[
-                    styles.infoBox,
-                    {
-                      backgroundColor: theme.card,
-                      borderColor: theme.border,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.infoTitle, { color: theme.text }]}>
-                    {getChartExplanation().title}
-                  </Text>
-                  <Text style={[styles.infoText, { color: theme.text }]}>
-                    {getChartExplanation().text}
-                  </Text>
-                </View>
+                {renderChartHelp()}
+                {renderChartSentence()}
               </View>
 
-              {/* Timeframe selector */}
-              {calculationType !== 'MuscleDistribution' && renderTimeFrameButtons()}
 
 
             </>
@@ -3498,7 +3586,10 @@ const calculateCES = (sets: LogData[]): number => {
                     {getChartTitle()}
                   </Text>
                   {renderPercentageChange()}
+                  {renderInfoButton()}
                 </View>
+
+                {calculationType !== 'MuscleDistribution' && renderTimeFrameButtons()}
 
                 {isLoading ? (
                   <ActivityIndicator
@@ -3510,26 +3601,9 @@ const calculateCES = (sets: LogData[]): number => {
                   renderChart()
                 )}
 
-                {/* Info about calculation */}
-                <View
-                  style={[
-                    styles.infoBox,
-                    {
-                      backgroundColor: theme.card,
-                      borderColor: theme.border,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.infoTitle, { color: theme.text }]}>
-                    {getChartExplanation().title}
-                  </Text>
-                  <Text style={[styles.infoText, { color: theme.text }]}>
-                    {getChartExplanation().text}
-                  </Text>
-                </View>
+                {renderChartHelp()}
+                {renderChartSentence()}
               </View>
-               {/* Timeframe selector */}
-               {calculationType !== 'MuscleDistribution' && renderTimeFrameButtons()}
             </>
           )}
 
@@ -3546,14 +3620,16 @@ const calculateCES = (sets: LogData[]): number => {
             </>
           )}
 
-                        {/* Tip Text */}
-              <Text style={[styles.tipText, { color: theme.text }]}>
-                {t('graphTipText')}
-              </Text>
+          {!embedded && (
+            <>
+              <Text style={[styles.tipText, { color: theme.text }]}>{t('graphTipText')}</Text>
+              <ProgressHighlights />
+            </>
+          )}
 
-          <ProgressHighlights />
-
-          {/* View Logs Button */}
+          {/* View Logs Button (the Progress tabs have a History tab instead) */}
+          {!embedded && (
+            <>
           <TouchableOpacity
             style={[styles.logsButton, { backgroundColor: theme.buttonBackground }]}
             onPress={() => navigation.navigate('MyProgress')}
@@ -3574,11 +3650,14 @@ const calculateCES = (sets: LogData[]): number => {
             </Text>
           </TouchableOpacity>
 
+            </>
+          )}
+
           {/* Tooltip Modal */}
           {renderTooltip()}
         </>
       )}
-    </ScrollView>
+    </Wrapper>
   );
 }
 
@@ -3802,12 +3881,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
+  timeFrameRow: {
+    flexDirection: 'row',
+  },
   timeFrameButton: {
+    flex: 1,
     borderRadius: 10,
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 4,
     marginVertical: 5,
-    minWidth: '22%',
+    marginHorizontal: 3,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {

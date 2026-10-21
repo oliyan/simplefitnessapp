@@ -35,6 +35,8 @@
   import { checkAndSyncPermissions } from './utils/notificationUtils';
   import { AppState } from 'react-native';
   import GraphsWorkoutDetails from './screens/GraphsWorkoutDetails';
+  import ProgressHome from './screens/ProgressHome';
+  import ExerciseProgress from './screens/ExerciseProgress';
 
 
 
@@ -139,6 +141,8 @@
     WeightLogDetail:{ workoutName: string }
     AllLogs: undefined;
     GraphsWorkoutDetails: undefined;
+    ProgressHome: undefined;
+    ExerciseProgress: { name: string };
   }
 
   export type StartWorkoutStackParamList = {
@@ -237,6 +241,16 @@
           headerShown: false, // Disable headers for all screens in this stack
         }}
       >
+        <WeightLogStackScreen.Screen
+          name="ProgressHome"
+          component={ProgressHome}
+          options={{ headerShown: false }}
+        />
+        <WeightLogStackScreen.Screen
+          name="ExerciseProgress"
+          component={ExerciseProgress}
+          options={{ headerShown: false }}
+        />
         <WeightLogStackScreen.Screen
           name="GraphsWorkoutDetails"
           component={GraphsWorkoutDetails}

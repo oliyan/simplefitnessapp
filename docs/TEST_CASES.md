@@ -26,7 +26,7 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 |---|---|---|
 | 1 | If this phone already has Urudhi (or the old Simple Fitness), open it and use **Settings → Data Management → Export Data**. Save the file somewhere safe (Drive, email to yourself). | The new build changes the database slightly. Export first so you can always go back. |
 | 2 | Copy the APK to the phone and open it. Allow "install from this source" if asked. | |
-| 3 | Have your **Anthropic API key** ready (or plan to skip sections 12–17). | AI tests need it. |
+| 3 | Have your **Anthropic API key** ready (or plan to skip sections 12-17). | AI tests need it. |
 | 4 | Have **Wi-Fi/mobile data toggles** handy. | Offline tests. |
 | 5 | Know where your **InBody CSV** is on the phone (or use the sample in Appendix B). | InBody tests. |
 | 6 | Charge the phone and keep volume up. | Rest-timer sound tests. |
@@ -60,7 +60,7 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 | HOM-03 | 🔴 | After logging today's workout, return to Home. | That session shows **Done ✓**. The *This week* circle for today is filled with a tick. | ☐ | |
 | HOM-04 | 🟡 | Look at **This week**. | Monday to Sunday. Done = filled tick, planned = ring, missed (past, not logged) = dashed, rest = faint. Today underlined. "X of Y done" matches. | ☐ | |
 | HOM-05 | 🟡 | Tap the **This week** card. | Opens the calendar. | ☐ | |
-| HOM-06 | 🟡 | Check **Week streak** after logging in this week only. Then (if you have older logs) compare with how many consecutive weeks you trained. | Counts weeks (Mon–Sun) in a row with at least one logged workout. A new week with nothing logged yet does **not** reset it. | ☐ | |
+| HOM-06 | 🟡 | Check **Week streak** after logging in this week only. Then (if you have older logs) compare with how many consecutive weeks you trained. | Counts weeks (Mon-Sun) in a row with at least one logged workout. A new week with nothing logged yet does **not** reset it. | ☐ | |
 | HOM-07 | 🟡 | Check **Lifted this week**. | Roughly the sum of weight × reps of this week's logged sets. Shows a comparison with last week (or "No data from last week yet"). | ☐ | |
 | HOM-08 | 🟡 | Log a set heavier than you have ever lifted on one exercise (you need an earlier log of that exercise first). Return to Home. | It appears under **Recent personal records** with the weight × reps and "Today". | ☐ | |
 | HOM-09 | 🟡 | Look at personal records for an exercise you have only ever done once. | Not listed (the first time only sets the starting point). | ☐ | |
@@ -199,7 +199,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | WRK-07 | 🔴 | While an exercise still has unlogged sets, look at **+ Add extra set**. | It is **greyed out and cannot be tapped.** | ☐ | |
 | WRK-08 | 🔴 | After the last set, tap **+ Add extra set**. | A new blank set appears (for example `4/5 sets` in the top bar, a 5th chip). An **Exercise name** field appears above the Form card, with the hint "Change the name to log a different exercise". Weight and reps are empty with grey hints. Form notes and the coach line of the original exercise are still shown. | ☐ | |
 | WRK-09 | 🔴 | With that extra set open (don't complete it), tap **Skip to Next Exercise**, or open the top-right menu and pick another exercise. | The **top bar and the exercise name change correctly** to the other exercise. Open the menu again: the unfinished extra set is gone and the earlier exercise still shows its original count. (This was a bug in the old version.) | ☐ | |
-| WRK-10 | 🔴 | Add an extra set, complete it, add another, complete it, and so on 2–3 times. | After each one the count is always logged/total (`4/5`, then `5/5`, then `5/6` when you add another...). It never jumps around. Each extra set is saved. | ☐ | |
+| WRK-10 | 🔴 | Add an extra set, complete it, add another, complete it, and so on 2-3 times. | After each one the count is always logged/total (`4/5`, then `5/5`, then `5/6` when you add another...). It never jumps around. Each extra set is saved. | ☐ | |
 | WRK-11 | 🔴 | Add an extra set and change its name to something else (for example `Dumbbell Press`). | The top bar shows the new name and `0/1 sets`. The Form card says there are no notes, the original coach line disappears, and the video icon greys out. Complete it. It is saved. | ☐ | |
 | WRK-12 | 🟡 | On an extra set, type another name, then type the **original** name back. | The original notes, video link and coach line come back. | ☐ | |
 | WRK-13 | 🔴 | Log a set with a wrong number. Tap its **✓ chip**, change weight and reps in the pop-up, then **Save changes**. | The new numbers show. Open the day on the calendar afterwards: the log shows the **corrected** values. Nothing else changed. | ☐ | |
@@ -241,17 +241,98 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 ---
 
-## 10. My Progress and logs
+## 10. My Progress
+
+The Progress tab now has four tabs: **Overview**, **Exercises**, **Charts** and **History**. To see them filled in without weeks of training, load the sample history: `python tools/sample-data/make_sample_db.py sample.db`, copy it to the phone (`adb push sample.db /sdcard/Download/SimpleDB.db`), then **Settings > Import data**. It replaces everything, so use a test install. The numbers behind the cards are checked by `node -r sucrase/register tools/progress-tests/progressStats.test.ts`.
+
+### 10.1 The page and its tabs
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| PRG-01 | 🔴 | Open **My Progress**. | One **ribbon** at the very top, under the title, with three segments: **Exercise Stats**, **Workout Stats**, **Overall Stats** (the selected one is filled); a **Select Workout** menu; **View Logs**. | ☐ | |
-| PRG-07 | 🔴 | Tap each segment of the ribbon in turn, especially **Overall Stats**. | The ribbon **stays at the top** in every mode. It never moves below the graph. Only the content under it changes. | ☐ | |
-| PRG-02 | 🔴 | Select a workout you have logged and look at each graph type. | Graphs render with your data; no crash; empty states are readable if there is no data. | ☐ | |
-| PRG-03 | 🟡 | Tap a point on a graph. | Shows details for that session. | ☐ | |
-| PRG-04 | 🟡 | **View Logs**: expand a session; tap an exercise to edit a set; save. | Edits persist and the graphs update. | ☐ | |
-| PRG-05 | 🟡 | In View Logs, set a **start and end date**. | List filters to that range. | ☐ | |
-| PRG-06 | 🟡 | Tap the **export** icon in View Logs. | A CSV file is created and the share sheet opens. Dates in it read `dd-mm-yyyy`. | ☐ | |
+| PRG-01 | 🔴 | Open **My Progress** (first time). | Title, then four tabs: **Overview, Exercises, Charts, History**. **Overview** is selected and is the first thing you see (no dropdowns). | ☐ | |
+| PRG-02 | 🟡 | Tap **History**, switch to another bottom tab, come back. | It reopens on **History** (the last tab you used is remembered). | ☐ | |
+| PRG-03 | 🔴 | Fresh install, no workouts logged. Open each tab. | Overview and Exercises show a friendly picture, "Your progress starts with the first workout", a bar "0 of 3 workouts logged" and a faded sample of what you will see. Charts shows its empty message. History says you are not tracking any workouts. No crash. | ☐ | |
+| PRG-04 | 🟡 | Log one workout, then open Overview. | Streak, sessions this week and badges are filled in, and the "1 of 3 workouts logged" bar still shows below with the sample. | ☐ | |
+| PRG-05 | ⚪ | Open My Progress on a phone with a big history. | Pulsing grey placeholder cards appear for a moment, then the real cards replace them without the page jumping. | ☐ | |
+| PRG-06 | 🟡 | Log a workout, go to My Progress, pull the page down. | The spinner shows and the numbers update. | ☐ | |
+
+### 10.2 Overview
+
+| ID | Pri | Steps | Expected | Result | Notes |
+|---|---|---|---|---|---|
+| PRG-10 | 🔴 | Open Overview with history loaded. | Order: the three big numbers (weeks in a row, sessions this week, badges), the week recap, Consistency, Highlights, **Best lifts** and **Body weight**, Muscle balance, Milestones, then the **See each exercise** button. Best lifts is no longer at the bottom of a long page. | ☐ | |
+| PRG-11 | 🔴 | Compare the weeks in a row and sessions this week with Home. | The same numbers. The sentence under them says how much you lifted in the last 30 days, in tonnes once it is large (for example "8.4 tonnes"). | ☐ | |
+| PRG-12 | 🟡 | Read the sentence in these situations: more than the previous 30 days; less; about the same; nothing logged. | "...X% more than the 30 before", "...a bit less than the 30 before. Easy weeks happen.", "...about the same...", "No weight logged in the last 30 days...". Never scolding. | ☐ | |
+| PRG-13 | 🔴 | Look at the recap card, then tap **Share**. | It reads **This week** (or **Last week** if nothing was logged yet this week) with sessions, sets, kg lifted and records, and the heaviest lift. The share sheet opens with plain text of the same numbers. Nothing is shared until you tap Share. | ☐ | |
+| PRG-14 | 🟡 | Look at **Consistency**. | 12 columns (weeks, oldest left) and 7 rows (M to S). Days you trained are teal, darker for more lifted. Days after today are empty. It matches the calendar. | ☐ | |
+| PRG-15 | 🟡 | With 3 or more sessions of one exercise in the last 60 days and a real rise (3% or more), look at **Highlights**. | A **Most improved** card names it with the rise in percent. Tapping it opens that exercise. With flat lifts the card is absent. | ☐ | |
+| PRG-16 | 🟡 | Look at the records under Highlights. | At most 4 records, newest first, each with a trophy, date, and weight x reps. Tapping one opens that exercise. | ☐ | |
+| PRG-17 | 🔴 | Beat your best on an exercise, then open My Progress. | A banner "New record! ..." shows once with a short buzz. Leave and come back: it does not show again for the same record. | ☐ | |
+| PRG-18 | ⚪ | Turn on the phone's **Remove animations**, then repeat PRG-17 with a new record. | No banner and no buzz. | ☐ | |
+| PRG-19 | 🔴 | Look at **Muscle balance**. | A front and a back figure with the muscles you trained coloured teal (stronger for more sets) and the rest pale. Under it one sentence and up to six bars with the number of sets. | ☐ | |
+| PRG-20 | 🟡 | Check the balance sentence with: mostly push work; mostly pull; no leg work; an even mix; under 12 sets. | "Push work is well ahead...", "Pull work is well ahead...", "No leg work in the last 30 days...", "Push and pull are balanced...", "Log a few more sessions...". | ☐ | |
+| PRG-21 | 🟡 | Look at **Milestones**. | Ten badges. Earned ones are teal, the rest faint. Tapping an unearned one says what it takes and where you are ("7 of 10"). Tapping an earned one says so. | ☐ | |
+| PRG-22 | ⚪ | Tap **See each exercise**. | Switches to the Exercises tab. | ☐ | |
+
+### 10.3 Exercises
+
+| ID | Pri | Steps | Expected | Result | Notes |
+|---|---|---|---|---|---|
+| PRG-30 | 🔴 | Open **Exercises**. | One row per logged exercise, most recently trained first. Each shows the name, latest value, date, number of sessions, a small trend line and a percent (green up, red down, grey for flat). | ☐ | |
+| PRG-31 | 🟡 | Type in the search box, then tap the x. | The list narrows as you type, "No exercise matches that." when nothing does, and the x clears it. | ☐ | |
+| PRG-32 | 🟡 | With more than one muscle group logged, tap the muscle chips. | The list filters to that muscle. **All** brings it back. | ☐ | |
+| PRG-33 | 🟡 | Find a bodyweight exercise (for example Plank). | Its latest value is in **reps**, not kg. | ☐ | |
+| PRG-34 | 🔴 | Tap a row. | That exercise's own page opens (10.4). | ☐ | |
+
+### 10.4 One exercise
+
+| ID | Pri | Steps | Expected | Result | Notes |
+|---|---|---|---|---|---|
+| PRG-40 | 🔴 | Open an exercise with several sessions. | Name at the top, a back arrow, a switch between **Estimated max / Heaviest set / Total lifted**, time frame chips **4 weeks / 3 months / 1 year / All**, a chart, a sentence, three tiles, last session set by set, and Records. | ☐ | |
+| PRG-41 | 🟡 | Tap each metric. | The chart and numbers change. A bodyweight exercise has only **Reps** and no switch. | ☐ | |
+| PRG-42 | 🟡 | Note the opening time frame, then tap each chip. | It opens on **3 months** when that has at least 2 sessions, otherwise on **All**. A frame with no sessions says "No sessions in this time frame" and **Show everything** fixes it. | ☐ | |
+| PRG-43 | 🟡 | Look at the chart. | A few gridlines with kg labels, dates under both ends, gold larger dots for records, a faint dashed trend line when there are 3 or more points. | ☐ | |
+| PRG-44 | 🔴 | Press and drag a finger along the chart. | The nearest session's dot grows, a card shows its date, value and every set, and **the page does not scroll** while you drag. Letting go keeps the last one. | ☐ | |
+| PRG-45 | 🔴 | Read the sentence under the chart for a rising, a falling, a flat and a one-session exercise. | "Up 12% in 8 weeks. Best: 52.5 kg on 3 Mar.", "Down 20% ... A lighter spell is normal and you can build back.", "Holding steady ...", "One session so far ... Log it again to see a line." | ☐ | |
+| PRG-46 | 🟡 | Tap the (i) button. | A short plain explanation of the chosen metric. Tap again to hide it. | ☐ | |
+| PRG-47 | 🟡 | Look at the three tiles and the lists. | **Best**, **Latest**, **Sessions** (with the percent since the first). Last session lists each set. **Records** lists up to 5, newest first. | ☐ | |
+| PRG-48 | 🟡 | Open an exercise with only one logged session. | A big number and "Log it once more and a line appears." No broken chart. | ☐ | |
+
+### 10.5 Charts (the full tools)
+
+| ID | Pri | Steps | Expected | Result | Notes |
+|---|---|---|---|---|---|
+| PRG-50 | 🔴 | Open **Charts**. | A ribbon **By exercise / By workout / Overall** at the top (stays on top in every mode). No second title, no Best lifts card and no View Logs button on this tab. | ☐ | |
+| PRG-51 | 🔴 | Open Charts on a phone with history. | It opens already showing the most recently trained workout, day and exercise with a graph drawn (not empty dropdowns), measured as **Estimated max**. | ☐ | |
+| PRG-52 | 🟡 | Look at the metric buttons and their heading. | Heading **What to show**. Names are plain: **Each set, Effort score, Estimated max, Reps**, and in By workout **Duration**. | ☐ | |
+| PRG-53 | 🔴 | Look above the chart. | The time frame buttons **Week, Month, 3 Months, Year, All Time** sit directly above the chart with no heading. **3 Months** is selected first. Changing it redraws the chart. | ☐ | |
+| PRG-54 | 🟡 | Look under the chart, then tap the (i) next to the title. | No long explanation box by default. The (i) shows it and hides it again. | ☐ | |
+| PRG-55 | 🟡 | Read the line under the chart in each mode. | A plain sentence such as "Up 12% over this time frame." (or the average session length for Duration). Nothing shown for pie style charts. | ☐ | |
+| PRG-56 | 🟡 | Tap a dot on a chart. | The session details popup still opens (as before). | ☐ | |
+| PRG-57 | 🟡 | In **By workout** and **Overall** try every metric and the muscle charts. | Each still renders with data and does not crash. | ☐ | |
+
+### 10.6 History and logs
+
+| ID | Pri | Steps | Expected | Result | Notes |
+|---|---|---|---|---|---|
+| PRG-60 | 🔴 | Open **History**. | **All Logs** and one row per plan that has logs. | ☐ | |
+| PRG-61 | 🔴 | Tap the **trash** icon on a plan row, then confirm. Then repeat with a long press on another row. | Both ask first, then delete that plan's logged sets. Overview and Exercises show the lower numbers when you go back. | ☐ | |
+| PRG-62 | 🟡 | Open **All Logs**: expand a session; tap an exercise to edit a set; save. | Edits persist and the charts and Overview update. | ☐ | |
+| PRG-63 | 🟡 | In All Logs, set a **start and end date**. | List filters to that range. | ☐ | |
+| PRG-64 | 🟡 | Tap the **export** icon in the logs. | A CSV file is created and the share sheet opens. Dates in it read `dd-mm-yyyy`. | ☐ | |
+
+### 10.7 Look, feel and care
+
+| ID | Pri | Steps | Expected | Result | Notes |
+|---|---|---|---|---|---|
+| PRG-70 | 🔴 | Switch to the dark theme and visit all four tabs and an exercise page. | Everything is readable: cards, chart lines, gold dots, body map, badges. | ☐ | |
+| PRG-71 | 🟡 | Set the phone's font size to large and look at the tabs, hero numbers and cards. | Nothing is cut off or overlaps. | ☐ | |
+| PRG-72 | ⚪ | With TalkBack on, move over the tabs, a heat cell and a badge. | Tabs say selected; each heat cell says the date and whether you trained; each badge says earned or how far. | ☐ | |
+| PRG-73 | ⚪ | Tap the small controls: the (i), time frame chips, trash icon, search clear. | Each is easy to hit (about 44 dp), no mis-taps. | ☐ | |
+| PRG-74 | 🔴 | On a build with a personal coach voice, open the Progress tab. | The same page works. No text mentions AI or a name that should not be there. | ☐ | |
+| PRG-75 | 🟡 | Scroll Overview and switch tabs with 12 weeks of history. | Smooth, no freezes, tab switches take under a second. | ☐ | |
+| PRG-76 | 🟡 | Look at every number on these pages. | Only kg (never lb); thousands have a comma (1,250); no more than one decimal. | ☐ | |
+| PRG-77 | 🟡 | Read all the new text. | No dashes used as punctuation (only commas, colons, plain hyphens). | ☐ | |
 
 ---
 
@@ -269,7 +350,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 
 ## 12. AI Coach - key and connection
 
-*Skip sections 12–17 if you don't want to use your key.*
+*Skip sections 12-17 if you don't want to use your key.*
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
@@ -452,9 +533,9 @@ Happens every time?  (always / sometimes / once)
 | 9 Doing a workout | 8 | | | |
 | 9A Workout screen (incl. RES) | 17 | | | |
 | 9B Look, feel, personal | 7 | | | |
-| 10 Progress | 3 | | | |
+| 10 Progress | 19 | | | |
 | 11 Backup | 2 | | | |
-| 12–17 AI Coach | 15 | | | |
+| 12-17 AI Coach | 15 | | | |
 | 18 Dark theme | 1 | | | |
 
-**Total 🔴 cases: 74.**
+**Total 🔴 cases: 90.**
