@@ -73,6 +73,6 @@ Most viewed relevant clip first; two alternatives per exercise. Do not use these
 
 1. Read the subtitles of the title-only entries, slowly (one request every 10 seconds or more, a few at a time, because YouTube blocks after about 35).
 2. Replace the cool-down clip (a 65 second one with few views) with a better routine of 2 minutes or less that shows the stretches in her notes.
-3. Leg curl: confirm the clip is the seated machine, not lying.
+3. Leg curl is always the seated machine (confirmed by the owner), so the "Seated Leg Curl" clip is right.
 4. After changing `data/exercise-videos.json`, copy it to the oliyan/urudhi-data repo too.
 5. Re-check links every few months.
