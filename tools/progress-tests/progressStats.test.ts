@@ -2,7 +2,7 @@
 import assert from 'assert';
 import {
   estimate1RM, exerciseSeries, insightFor, heroSummary, consistencyGrid, mostImproved, badges, muscleLoads,
-  balanceSentence, weeklyRecap, formatLifted, formatKg, inFrame, trendLine, exerciseSummaries, ProgSet, ProgSession,
+  balanceSentence, weeklyRecap, compareWithPrevious, compareSentence, formatLifted, formatKg, inFrame, trendLine, exerciseSummaries, ProgSet, ProgSession,
 } from '../../utils/progressStats';
 
 const day = (y: number, m: number, d: number) => Math.floor(new Date(y, m - 1, d).getTime() / 1000);
@@ -120,5 +120,15 @@ assert.strictEqual(list.length, 3);
 assert.strictEqual(list[0].name, 'Plank', 'most recently trained first');
 assert.strictEqual(list.find((l) => l.name === 'Plank')!.metric, 'reps');
 assert.strictEqual(list.find((l) => l.name === 'Bench Press')!.spark.length, 6);
+
+// --- compare with the period before
+const cmp = compareWithPrevious(bench, '4w', TODAY)!; // 23 Sep to today against 26 Aug to 22 Sep
+assert.strictEqual(cmp.frameLabel, '4 weeks');
+assert.ok(cmp.pct! > 0 && cmp.cur > cmp.prev);
+assert.match(compareSentence(cmp, 'kg'), /^Against the 4 weeks before: best .* kg then, .* kg now, up \d+%\.$/);
+assert.strictEqual(compareWithPrevious(bench, 'all', TODAY), null, 'all time has no period before it');
+assert.strictEqual(compareWithPrevious(bench.slice(4), '4w', TODAY), null, 'nothing before: no comparison');
+assert.match(compareSentence({ frameLabel: '3 months', prev: 50, cur: 50.2, pct: 0.4 }, 'kg'), /about the same/);
+assert.ok(!/[–—]/.test(compareSentence(cmp, 'kg')));
 
 console.log('progressStats: all checks passed');

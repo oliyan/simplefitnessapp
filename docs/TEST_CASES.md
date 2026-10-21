@@ -263,7 +263,7 @@ The Progress tab now has four tabs: **Overview**, **Exercises**, **Charts** and 
 | PRG-10 | 🔴 | Open Overview with history loaded. | Order: the three big numbers (weeks in a row, sessions this week, badges), the week recap, Consistency, Highlights, **Best lifts** and **Body weight**, Muscle balance, Milestones, then the **See each exercise** button. Best lifts is no longer at the bottom of a long page. | ☐ | |
 | PRG-11 | 🔴 | Compare the weeks in a row and sessions this week with Home. | The same numbers. The sentence under them says how much you lifted in the last 30 days, in tonnes once it is large (for example "8.4 tonnes"). | ☐ | |
 | PRG-12 | 🟡 | Read the sentence in these situations: more than the previous 30 days; less; about the same; nothing logged. | "...X% more than the 30 before", "...a bit less than the 30 before. Easy weeks happen.", "...about the same...", "No weight logged in the last 30 days...". Never scolding. | ☐ | |
-| PRG-13 | 🔴 | Look at the recap card, then tap **Share**. | It reads **This week** (or **Last week** if nothing was logged yet this week) with sessions, sets, kg lifted and records, and the heaviest lift. The share sheet opens with plain text of the same numbers. Nothing is shared until you tap Share. | ☐ | |
+| PRG-13 | 🔴 | Look at the recap card, then tap **Share**. | It reads **This week** (or **Last week** if nothing was logged yet this week) with sessions, sets, kg lifted and records, and the heaviest lift. The share sheet opens with the recap **as a picture** (without the Share button in it, and with a small "Urudhi" in the corner). If the phone cannot share a picture it shares the same numbers as plain text. Nothing is shared until you tap Share and pick where it goes. | ☐ | |
 | PRG-14 | 🟡 | Look at **Consistency**. | 12 columns (weeks, oldest left) and 7 rows (M to S). Days you trained are teal, darker for more lifted. Days after today are empty. It matches the calendar. | ☐ | |
 | PRG-15 | 🟡 | With 3 or more sessions of one exercise in the last 60 days and a real rise (3% or more), look at **Highlights**. | A **Most improved** card names it with the rise in percent. Tapping it opens that exercise. With flat lifts the card is absent. | ☐ | |
 | PRG-16 | 🟡 | Look at the records under Highlights. | At most 4 records, newest first, each with a trophy, date, and weight x reps. Tapping one opens that exercise. | ☐ | |
@@ -273,6 +273,7 @@ The Progress tab now has four tabs: **Overview**, **Exercises**, **Charts** and 
 | PRG-20 | 🟡 | Check the balance sentence with: mostly push work; mostly pull; no leg work; an even mix; under 12 sets. | "Push work is well ahead...", "Pull work is well ahead...", "No leg work in the last 30 days...", "Push and pull are balanced...", "Log a few more sessions...". | ☐ | |
 | PRG-21 | 🟡 | Look at **Milestones**. | Ten badges. Earned ones are teal, the rest faint. Tapping an unearned one says what it takes and where you are ("7 of 10"). Tapping an earned one says so. | ☐ | |
 | PRG-22 | ⚪ | Tap **See each exercise**. | Switches to the Exercises tab. | ☐ | |
+| PRG-23 | 🟡 | Open My Progress for the first time, then the Exercises tab. Tap **Got it** on each hint, then leave and return. | One short hint shows on Overview and one on Exercises. After Got it, each stays gone for good. | ☐ | |
 
 ### 10.3 Exercises
 
@@ -291,12 +292,13 @@ The Progress tab now has four tabs: **Overview**, **Exercises**, **Charts** and 
 | PRG-40 | 🔴 | Open an exercise with several sessions. | Name at the top, a back arrow, a switch between **Estimated max / Heaviest set / Total lifted**, time frame chips **4 weeks / 3 months / 1 year / All**, a chart, a sentence, three tiles, last session set by set, and Records. | ☐ | |
 | PRG-41 | 🟡 | Tap each metric. | The chart and numbers change. A bodyweight exercise has only **Reps** and no switch. | ☐ | |
 | PRG-42 | 🟡 | Note the opening time frame, then tap each chip. | It opens on **3 months** when that has at least 2 sessions, otherwise on **All**. A frame with no sessions says "No sessions in this time frame" and **Show everything** fixes it. | ☐ | |
-| PRG-43 | 🟡 | Look at the chart. | A few gridlines with kg labels, dates under both ends, gold larger dots for records, a faint dashed trend line when there are 3 or more points. | ☐ | |
+| PRG-43 | 🟡 | Look at the chart. | A few gridlines with kg labels, dates under both ends, gold larger dots for records, a faint dashed trend line when there are 3 or more points. A break of two weeks or more between sessions is drawn as a faint dotted line instead of a steep climb. With more than 30 sessions the dots get smaller. | ☐ | |
 | PRG-44 | 🔴 | Press and drag a finger along the chart. | The nearest session's dot grows, a card shows its date, value and every set, and **the page does not scroll** while you drag. Letting go keeps the last one. | ☐ | |
 | PRG-45 | 🔴 | Read the sentence under the chart for a rising, a falling, a flat and a one-session exercise. | "Up 12% in 8 weeks. Best: 52.5 kg on 3 Mar.", "Down 20% ... A lighter spell is normal and you can build back.", "Holding steady ...", "One session so far ... Log it again to see a line." | ☐ | |
 | PRG-46 | 🟡 | Tap the (i) button. | A short plain explanation of the chosen metric. Tap again to hide it. | ☐ | |
 | PRG-47 | 🟡 | Look at the three tiles and the lists. | **Best**, **Latest**, **Sessions** (with the percent since the first). Last session lists each set. **Records** lists up to 5, newest first. | ☐ | |
 | PRG-48 | 🟡 | Open an exercise with only one logged session. | A big number and "Log it once more and a line appears." No broken chart. | ☐ | |
+| PRG-49 | 🟡 | On an exercise with history older than the chosen time frame, look under the sentence. | A second softer line: "Against the 3 months before: best 111 kg then, 129 kg now, up 16%." It is absent for **All** and when there is nothing before. | ☐ | |
 
 ### 10.5 Charts (the full tools)
 
@@ -310,6 +312,7 @@ The Progress tab now has four tabs: **Overview**, **Exercises**, **Charts** and 
 | PRG-55 | 🟡 | Read the line under the chart in each mode. | A plain sentence such as "Up 12% over this time frame." (or the average session length for Duration). Nothing shown for pie style charts. | ☐ | |
 | PRG-56 | 🟡 | Tap a dot on a chart. | The session details popup still opens (as before). | ☐ | |
 | PRG-57 | 🟡 | In **By workout** and **Overall** try every metric and the muscle charts. | Each still renders with data and does not crash. | ☐ | |
+| PRG-58 | 🟡 | Open **Each set** (or By workout with several days) so several colours show. | Colours stay easy to tell apart for someone who cannot tell red from green (orange, sky blue, green, yellow, blue, vermilion, pink, grey...). | ☐ | |
 
 ### 10.6 History and logs
 
@@ -333,6 +336,7 @@ The Progress tab now has four tabs: **Overview**, **Exercises**, **Charts** and 
 | PRG-75 | 🟡 | Scroll Overview and switch tabs with 12 weeks of history. | Smooth, no freezes, tab switches take under a second. | ☐ | |
 | PRG-76 | 🟡 | Look at every number on these pages. | Only kg (never lb); thousands have a comma (1,250); no more than one decimal. | ☐ | |
 | PRG-77 | 🟡 | Read all the new text. | No dashes used as punctuation (only commas, colons, plain hyphens). | ☐ | |
+| PRG-78 | 🟡 | Make a year of history (`python tools/sample-data/make_sample_db.py year.db 0 52`), import it and use all four tabs. | About 140 sessions and 2,000 sets load in a second or two; scrolling, tabs and the exercise chart stay smooth. | ☐ | |
 
 ---
 

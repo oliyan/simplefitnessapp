@@ -1,6 +1,6 @@
 """Builds a SimpleDB.db with about 12 weeks of believable workout history, for trying the Progress screens.
 
-    python make_sample_db.py out.db [days_back_for_last_session]
+    python make_sample_db.py out.db [days_back_for_last_session] [weeks]
 
 Copy the file to the phone or emulator (adb push out.db /sdcard/Download/SimpleDB.db) and use
 Settings > Import data. It replaces everything in the app, so use a test install.
@@ -10,6 +10,7 @@ import sqlite3, sys, random, datetime
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'sample.db'
 LAST = int(sys.argv[2]) if len(sys.argv) > 2 else 0          # 0 = the newest session is today
+WEEKS = int(sys.argv[3]) if len(sys.argv) > 3 else 12        # how many weeks of history
 TZ = datetime.timezone(datetime.timedelta(hours=5, minutes=30))   # the test emulator's zone (India, no DST); change to yours
 random.seed(7)
 
@@ -55,9 +56,9 @@ today = datetime.datetime.now(TZ).date() - datetime.timedelta(days=LAST)
 # Mon, Wed, Fri for 12 weeks ending this week; week 7 skipped, week 3 only one session.
 monday = today - datetime.timedelta(days=today.weekday())
 sessions = []
-for w in range(12):
-    start = monday - datetime.timedelta(weeks=11 - w)
-    if w == 6:
+for w in range(WEEKS):
+    start = monday - datetime.timedelta(weeks=WEEKS - 1 - w)
+    if w % 12 == 6:
         continue
     offs = [0, 2, 4] if w != 2 else [2]
     for o in offs:

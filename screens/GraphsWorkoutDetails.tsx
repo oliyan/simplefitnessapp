@@ -142,30 +142,31 @@ export default function GraphsWorkoutDetails({ embedded = false }: { embedded?: 
   const screenWidth = Dimensions.get('window').width - 40; // Account for padding
 
   // Add colors for different sets
+  // Colour-blind safe (the Okabe-Ito set), so sets can be told apart without telling red from green.
   const setColors = [
-    'rgba(255, 99, 132, 1)',   // Red
-    'rgba(54, 162, 235, 1)',   // Blue  
-    'rgba(255, 205, 86, 1)',   // Yellow
-    'rgba(75, 192, 192, 1)',   // Teal
-    'rgba(153, 102, 255, 1)',  // Purple
-    'rgba(255, 159, 64, 1)',   // Orange
-    'rgba(199, 199, 199, 1)',  // Grey
-    'rgba(83, 102, 146, 1)',   // Dark Blue
-    'rgba(255, 99, 255, 1)',   // Pink
-    'rgba(99, 255, 132, 1)',   // Green
+    'rgba(230, 159, 0, 1)',    // Orange
+    'rgba(86, 180, 233, 1)',   // Sky blue
+    'rgba(0, 158, 115, 1)',    // Bluish green
+    'rgba(240, 228, 66, 1)',   // Yellow
+    'rgba(0, 114, 178, 1)',    // Blue
+    'rgba(213, 94, 0, 1)',     // Vermilion
+    'rgba(204, 121, 167, 1)',  // Reddish purple
+    'rgba(120, 120, 120, 1)',  // Grey
+    'rgba(68, 170, 153, 1)',   // Teal
+    'rgba(136, 34, 85, 1)',    // Wine
   ];
 
   const timeChartDayColors = [
-    'rgb(255, 114, 38)',
-    'rgba(0, 168, 132, 1)',
-    'rgba(107, 107, 255, 1)',
-    'rgba(255, 165, 0, 1)',
-    'rgba(128, 0, 128, 1)',
-    'rgba(0, 128, 128, 1)',
-    'rgba(255, 20, 147, 1)',
-    'rgba(0, 191, 255, 1)',
-    'rgba(218, 165, 32, 1)',
-    'rgba(128, 128, 0, 1)',
+    'rgba(213, 94, 0, 1)',
+    'rgba(0, 158, 115, 1)',
+    'rgba(0, 114, 178, 1)',
+    'rgba(230, 159, 0, 1)',
+    'rgba(204, 121, 167, 1)',
+    'rgba(86, 180, 233, 1)',
+    'rgba(136, 34, 85, 1)',
+    'rgba(68, 170, 153, 1)',
+    'rgba(240, 228, 66, 1)',
+    'rgba(120, 120, 120, 1)',
   ];
 
   // State variables

@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { View, Text, PanResponder, LayoutChangeEvent } from 'react-native';
-import Svg, { Line, Polyline, Circle, Text as SvgText } from 'react-native-svg';
+import Svg, { Line, Circle, Text as SvgText } from 'react-native-svg';
 import { useTheme } from '../../context/ThemeContext';
 import { SeriesPoint, formatKg, shortDate, trendLine, MetricKind, metricUnit } from '../../utils/progressStats';
 
@@ -78,6 +78,7 @@ export default function ProgressChart({ points, metric, height = 220 }: Props) {
   const { min, max, xs, y } = geometry;
   const trend = trendLine(points);
   const ticks = [0, 0.5, 1].map((f) => min + f * (max - min));
+  const dense = points.length > 30; // many sessions: smaller dots so the line stays readable
   const sel = active !== null && active < points.length ? active : points.length - 1;
   const p = points[sel];
 
@@ -96,12 +97,28 @@ export default function ProgressChart({ points, metric, height = 220 }: Props) {
           {trend && (
             <Line x1={xs[0]} y1={y(trend[0])} x2={xs[xs.length - 1]} y2={y(trend[1])} stroke={theme.accent} strokeOpacity={0.4} strokeWidth={2} strokeDasharray="6 5" />
           )}
-          {points.length > 1 && (
-            <Polyline points={points.map((pt, i) => `${xs[i]},${y(pt.v)}`).join(' ')} fill="none" stroke={theme.accent} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
-          )}
+          {points.slice(1).map((pt, k) => {
+            const i = k + 1;
+            // A break of two weeks or more (rest, travel, illness) is drawn faint and dashed, not as a steep climb.
+            const gap = pt.d - points[i - 1].d >= 14 * 86400;
+            return (
+              <Line
+                key={`seg${i}`}
+                x1={xs[i - 1]}
+                y1={y(points[i - 1].v)}
+                x2={xs[i]}
+                y2={y(pt.v)}
+                stroke={theme.accent}
+                strokeOpacity={gap ? 0.35 : 1}
+                strokeWidth={gap ? 2 : 3}
+                strokeDasharray={gap ? '3 5' : undefined}
+                strokeLinecap="round"
+              />
+            );
+          })}
           {active !== null && <Line x1={xs[sel]} x2={xs[sel]} y1={PAD_T} y2={height - PAD_B} stroke={theme.text} strokeOpacity={0.35} strokeWidth={1} />}
           {points.map((pt, i) => (
-            <Circle key={i} cx={xs[i]} cy={y(pt.v)} r={i === sel ? 7 : pt.isRecord ? 5.5 : 3.5} fill={pt.isRecord ? '#E0A400' : theme.accent} stroke={theme.card} strokeWidth={i === sel ? 2 : 1} />
+            <Circle key={i} cx={xs[i]} cy={y(pt.v)} r={i === sel ? 7 : pt.isRecord ? (dense ? 3.5 : 5.5) : dense ? 1.8 : 3.5} fill={pt.isRecord ? '#E0A400' : theme.accent} stroke={theme.card} strokeWidth={i === sel ? 2 : 1} />
           ))}
           <SvgText x={PAD_L} y={height - 6} fontSize={11} fill={theme.text} fillOpacity={0.6} textAnchor="start">
             {shortDate(points[0].d)}

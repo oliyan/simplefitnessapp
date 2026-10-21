@@ -9,7 +9,7 @@ import useProgressData from '../components/progress/useProgressData';
 import ProgressChart from '../components/progress/ProgressChart';
 import {
   MetricKind, FRAMES, FrameKey, exerciseSeries, inFrame, insightFor, isLoaded, metricHelp, metricLabel, metricUnit,
-  formatKg, shortDate, percentChange,
+  formatKg, shortDate, percentChange, compareWithPrevious, compareSentence,
 } from '../utils/progressStats';
 
 type Nav = StackNavigationProp<WeightLogStackParamList, 'ExerciseProgress'>;
@@ -43,6 +43,7 @@ export default function ExerciseProgress() {
   const points = useMemo(() => inFrame(all, activeFrame, today), [all, activeFrame, today]);
   const activeMetric = metrics.includes(metric) ? metric : metrics[0];
 
+  const comparison = useMemo(() => compareWithPrevious(all, activeFrame, today), [all, activeFrame, today]);
   const records = useMemo(() => [...all].filter((p) => p.isRecord).reverse().slice(0, 5), [all]);
   const best = all.length ? all.reduce((a, b) => (b.v > a.v ? b : a)) : null;
   const last = all.length ? all[all.length - 1] : null;
@@ -118,6 +119,7 @@ export default function ExerciseProgress() {
               <ProgressChart points={points} metric={activeMetric} />
             )}
             <Text style={{ color: theme.text, fontSize: 15, lineHeight: 21, marginTop: 12 }}>{insightFor(points, activeMetric)}</Text>
+            {comparison && <Text style={[muted, { fontSize: 13, lineHeight: 19, marginTop: 6 }]}>{compareSentence(comparison, metricUnit(activeMetric))}</Text>}
           </View>
 
           <View style={styles.statRow}>

@@ -4,6 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../context/ThemeContext';
 import { ProgSet, exerciseSummaries, formatKg, shortDate, metricUnit } from '../../utils/progressStats';
 import Sparkline from './Sparkline';
+import FirstVisitTip from './FirstVisitTip';
 
 interface Props {
   sets: ProgSet[];
@@ -25,6 +26,7 @@ export default function ExercisesTab({ sets, onOpenExercise }: Props) {
 
   return (
     <View>
+      <FirstVisitTip id="exercises" text="Tap an exercise to see its chart. On the chart, press and drag a finger to read each session." />
       <View style={[styles.search, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <Ionicons name="search" size={18} color={theme.text} style={{ opacity: 0.5, marginRight: 8 }} />
         <TextInput

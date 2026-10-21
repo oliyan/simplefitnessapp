@@ -176,6 +176,34 @@ export const insightFor = (points: SeriesPoint[], metric: MetricKind): string =>
   return `${lead} Best: ${formatKg(best.v)} ${unit} on ${shortDate(best.d)}.`;
 };
 
+// ---------------------------------------------------------------- compare with the period before
+
+export interface Comparison {
+  frameLabel: string;
+  prev: number;
+  cur: number;
+  pct: number | null;
+}
+
+// The best value in the chosen time frame against the best in the same length of time just before it.
+export const compareWithPrevious = (all: SeriesPoint[], frame: FrameKey, today: Date): Comparison | null => {
+  const f = FRAMES.find((x) => x.key === frame);
+  if (!f || !f.days) return null;
+  const end = seconds(midnight(today));
+  const start = end - f.days * DAY;
+  const prevStart = start - f.days * DAY;
+  const cur = all.filter((p) => p.d >= start);
+  const prev = all.filter((p) => p.d >= prevStart && p.d < start);
+  if (cur.length === 0 || prev.length === 0) return null;
+  const best = (ps: SeriesPoint[]) => Math.max(...ps.map((p) => p.v));
+  return { frameLabel: f.label, prev: best(prev), cur: best(cur), pct: percentChange(best(prev), best(cur)) };
+};
+
+export const compareSentence = (c: Comparison, unit: string): string => {
+  const change = c.pct === null || Math.abs(c.pct) < 1 ? 'about the same' : `${c.pct > 0 ? 'up' : 'down'} ${Math.abs(Math.round(c.pct))}%`;
+  return `Against the ${c.frameLabel} before: best ${formatKg(c.prev)} ${unit} then, ${formatKg(c.cur)} ${unit} now, ${change}.`;
+};
+
 // ---------------------------------------------------------------- exercise list
 
 export interface ExerciseSummary {

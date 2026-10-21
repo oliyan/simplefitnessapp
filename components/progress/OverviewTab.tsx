@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Share, Alert, AccessibilityInfo, Vibration, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { useTheme } from '../../context/ThemeContext';
 import { loadSettings, saveSettings } from '../../utils/settingsStorage';
 import {
@@ -10,6 +12,7 @@ import {
 import ProgressHighlights from '../ProgressHighlights';
 import Celebration from '../Celebration';
 import BodyMap from './BodyMap';
+import FirstVisitTip from './FirstVisitTip';
 
 interface Props {
   sessions: ProgSession[];
@@ -24,6 +27,8 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
   const { theme } = useTheme();
   const today = useMemo(() => new Date(), []);
   const [celebration, setCelebration] = useState<string | null>(null);
+  const recapRef = useRef<View>(null);
+  const [capturing, setCapturing] = useState(false);
 
   const hero = useMemo(() => heroSummary(sessions, sets, today), [sessions, sets, today]);
   const grid = useMemo(() => consistencyGrid(sessions, sets, today, 12), [sessions, sets, today]);
@@ -58,7 +63,23 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
   const heading = [styles.heading, { color: theme.text }];
   const muted = { color: theme.text, opacity: 0.65 };
 
+  // Shares the recap card as a picture; if the phone cannot, shares the same numbers as plain text.
+  // Nothing leaves the phone until the person taps Share and picks where it goes.
   const shareRecap = async () => {
+    try {
+      if (recapRef.current && (await Sharing.isAvailableAsync())) {
+        // The Share button hides itself while the picture is taken, so it is not in the picture.
+        setCapturing(true);
+        await new Promise((resolve) => setTimeout(resolve, 80));
+        const uri = await captureRef(recapRef, { format: 'png', quality: 1 });
+        setCapturing(false);
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Share your week' });
+        return;
+      }
+    } catch (error) {
+      setCapturing(false);
+      console.error('Sharing the picture failed, sharing text instead:', error);
+    }
     try {
       await Share.share({ message: recap.text });
     } catch (error) {
@@ -80,6 +101,7 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
   return (
     <View>
       <Celebration message={celebration} onDone={() => setCelebration(null)} />
+      <FirstVisitTip id="overview" text="Tap a record, a badge or a highlight to explore it. Pull down to refresh." />
 
       {/* Hero */}
       <View style={card}>
@@ -104,10 +126,10 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
       </View>
 
       {/* Weekly recap */}
-      <View style={card}>
+      <View ref={recapRef} collapsable={false} style={card}>
         <View style={styles.rowBetween}>
           <Text style={heading}>{recap.label}</Text>
-          <TouchableOpacity onPress={shareRecap} accessibilityRole="button" accessibilityLabel="Share this recap" style={[styles.pill, { borderColor: theme.border }]}>
+          <TouchableOpacity onPress={shareRecap} accessibilityRole="button" accessibilityLabel="Share this recap" style={[styles.pill, { borderColor: theme.border, opacity: capturing ? 0 : 1 }]}>
             <Ionicons name="share-social-outline" size={16} color={theme.accent} />
             <Text style={{ color: theme.accent, fontWeight: '700', marginLeft: 6 }}>Share</Text>
           </TouchableOpacity>
@@ -123,6 +145,7 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
             Heaviest: {recap.topLift.name}, {formatKg(recap.topLift.wt)} kg x {recap.topLift.reps}
           </Text>
         )}
+        <Text style={{ color: theme.accent, fontWeight: '800', fontSize: 12, textAlign: 'right', marginTop: 8 }}>Urudhi</Text>
       </View>
 
       {/* Consistency */}
