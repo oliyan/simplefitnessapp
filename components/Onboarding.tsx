@@ -34,7 +34,7 @@ export default function Onboarding() {
   if (asksForName) {
     pages.push({
       icon: 'person-circle-outline',
-      title: 'What should I call you?',
+      title: 'How do I call you?',
       body: 'Optional. Your name is used in greetings and by the coach.',
     });
   }

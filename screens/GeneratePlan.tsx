@@ -45,7 +45,7 @@ export default function GeneratePlan() {
   const db = useSQLiteContext();
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { personal } = usePersonal();
+  const { personal, coachName } = usePersonal();
 
   const [experience, setExperience] = useState(EXPERIENCE[1]);
   const [mainGoal, setMainGoal] = useState(GOALS[0]);
@@ -131,7 +131,7 @@ export default function GeneratePlan() {
 
   const handleGenerate = async () => {
     if (!(await getApiKey())) {
-      Alert.alert(t('aiCoach'), t('planNeedsKey'));
+      Alert.alert(coachName, t('planNeedsKey'));
       return;
     }
     setBusy(true);
@@ -144,7 +144,7 @@ export default function GeneratePlan() {
       setRounds(0);
       setFeedback('');
     } catch (error) {
-      if (mountedRef.current) Alert.alert(t('aiCoach'), getUserFacingErrorMessage(error));
+      if (mountedRef.current) Alert.alert(coachName, getUserFacingErrorMessage(error));
     } finally {
       if (mountedRef.current) setBusy(false);
     }
@@ -161,7 +161,7 @@ export default function GeneratePlan() {
       setRounds((r) => r + 1);
       setFeedback('');
     } catch (error) {
-      if (mountedRef.current) Alert.alert(t('aiCoach'), getUserFacingErrorMessage(error));
+      if (mountedRef.current) Alert.alert(coachName, getUserFacingErrorMessage(error));
     } finally {
       if (mountedRef.current) setBusy(false);
     }

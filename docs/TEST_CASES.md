@@ -316,9 +316,9 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | GEN-13 | 🟡 | With a draft showing, press Back. | Asks to discard; Cancel keeps it, Discard leaves. | ☐ | |
 | GEN-14 | 🟡 | Refine five or more times. | A gentle note that many rounds have been used. | ☐ | |
 | GEN-15 | ⚪ | Try unusual choices: 5-day Push/Pull/Legs, or **Bodyweight only**, or 30-minute sessions. | The plan is still sensible (or clearly says why not). | ☐ | |
-| GEN-16 | ⚪ | Try "Let the coach decide" with 2 days and with 6 days. | Reasonable splits (for example upper/lower for 2). | ☐ | |
+| GEN-16 | ⚪ | Try "Let the coach decide" with 2 days and with 6 days. | Reasonable splits (for example upper/lower for 2). | ☐ | |
 | GEN-17 | 🔴 | Generate any plan and open a few exercises (and a warm-up or cardio entry). | Every exercise has a **thorough** form note: why, setup, how to do it with tempo, and what to avoid (about 3 to 6 sentences). Warm-up, cardio and stretching entries are numbered steps with counts. No em dashes. The same holds after **Refine**. | ☐ | |
-| GEN-18 | 🟡 | Fresh install: on the first welcome page type a name and finish. Then generate a plan and look at Home. | Home greets you with *Hi, <name>!*. The name is used in the notes at nice moments and may appear in a coach note or plan note. | ☐ | |
+| GEN-18 | 🟡 | Fresh install: on the first welcome page ("How do I call you?") type a name and finish. Then open Settings > Personalise: the Name field shows it. Then generate a plan and look at Home. | Home greets you with *Hi, <name>!*. The name is used in the notes at nice moments and may appear in a coach note or plan note. | ☐ | |
 
 ---
 

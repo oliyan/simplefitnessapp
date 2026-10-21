@@ -12,6 +12,7 @@ import { exportWorkout, importWorkout } from '../utils/workoutSharingUtils';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { BUILD } from '../config/buildFlags';
+import { usePersonal } from '../context/PersonalContext';
 
 
 type WorkoutListNavigationProp = StackNavigationProp<WorkoutStackParamList, 'WorkoutsList'>;
@@ -28,6 +29,7 @@ export default function WorkoutList({
   const navigation = useNavigation<WorkoutListNavigationProp>();
   const { theme } = useTheme(); // Get the current theme
   const { t } = useTranslation(); // Initialize translations
+  const { personal } = usePersonal();
   const db = useSQLiteContext();
   const sortedWorkouts = [...workouts].sort((a, b) => b.workout_id - a.workout_id);
   
@@ -104,7 +106,7 @@ export default function WorkoutList({
           activeOpacity={0.7}
           onPress={() => navigation.navigate('GeneratePlan')}
         >
-          <Text style={[styles.workoutText, { color: theme.text }]}>{t('planGenerateEntry')}</Text>
+          <Text style={[styles.workoutText, { color: theme.text }]}>{`Generate a plan with ${personal.senderName.trim() || 'AI'}`}</Text>
           <Ionicons name="sparkles-outline" size={20} color={theme.text} />
         </TouchableOpacity>
       )}

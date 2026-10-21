@@ -331,7 +331,7 @@ export default function Home({ navigation }: any) {
       <Text style={heading}>{t('dashWelcome')}</Text>
       <Text style={[muted, { marginBottom: 4 }]}>{t(BUILD.mentionAi ? 'dashWelcomeBody' : 'dashWelcomeBodyPlain')}</Text>
       {bigButton(t('homeCreateWorkout'), () => goToWorkouts('CreateWorkout'))}
-      {BUILD.showAiPlanGenerator && bigButton(t('planGenerateEntry'), () => goToWorkouts('GeneratePlan'), false)}
+      {BUILD.showAiPlanGenerator && bigButton(`Generate a plan with ${personal.senderName.trim() || 'AI'}`, () => goToWorkouts('GeneratePlan'), false)}
     </View>
   );
 
