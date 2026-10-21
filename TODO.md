@@ -1,10 +1,10 @@
 # To do
 
-Things we agreed to do later. Nothing here is started.
+Things we agreed to do later. Nothing here is started except where a heading says so.
 
-## Host the exercise video list outside the app
+## Keep the hosted video list in step (hosted already)
 
-The list ships inside the app (`data/exercise-videos.json`) and the app already knows how to fetch a newer copy: set `VIDEO_LIST_URL` in `config/videoList.ts`. What is left is to create a small **public** repo (or gist) that holds only that JSON file, and paste its raw URL there. The repo itself can go private later without breaking this, because the list lives elsewhere.
+`VIDEO_LIST_URL` in `config/videoList.ts` points at the public repo oliyan/urudhi-data (the same JSON file). To fix or add a link, edit the file there; the app picks it up the next time it opens online. Keep `data/exercise-videos.json` in this repo in step with it. This repo can go private without breaking anything.
 
 ## Grow and re-check the video list
 

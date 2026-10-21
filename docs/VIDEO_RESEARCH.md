@@ -1,6 +1,6 @@
 # Exercise videos
 
-Status: **first version done.** `data/exercise-videos.json` holds 30 entries (29 exercises plus one cool-down routine), each live and 120 seconds or under. 10 were checked against their subtitles, the rest by title and description. Anu's plan uses these links. The app looks links up by name when a plan is saved (`utils/exerciseVideos.ts`) and can fetch a newer list from `VIDEO_LIST_URL` (`config/videoList.ts`, empty until a public repo or gist exists). What remains is under "To finish".
+Status: **first version done.** `data/exercise-videos.json` holds 30 entries (29 exercises plus one cool-down routine), each live and 120 seconds or under. 10 were checked against their subtitles, the rest by title and description. Anu's plan uses these links. The app looks links up by name when a plan is saved (`utils/exerciseVideos.ts`) and can fetch a newer list from `VIDEO_LIST_URL` (`config/videoList.ts`, pointing at the public repo oliyan/urudhi-data). What remains is under "To finish".
 
 ## What was asked for
 
@@ -74,5 +74,5 @@ Most viewed relevant clip first; two alternatives per exercise. Do not use these
 1. Read the subtitles of the title-only entries, slowly (one request every 10 seconds or more, a few at a time, because YouTube blocks after about 35).
 2. Replace the cool-down clip (a 65 second one with few views) with a better routine of 2 minutes or less that shows the stretches in her notes.
 3. Leg curl: confirm the clip is the seated machine, not lying.
-4. Host the list in a public repo or gist and set `VIDEO_LIST_URL`.
+4. After changing `data/exercise-videos.json`, copy it to the oliyan/urudhi-data repo too.
 5. Re-check links every few months.
