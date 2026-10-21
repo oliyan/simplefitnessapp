@@ -1,0 +1,379 @@
+{
+  "updated": "2026-10-21",
+  "rules": "English, 120 seconds or less, link confirmed alive via oEmbed",
+  "videos": [
+    {
+      "exercise": "Incline Dumbbell Press",
+      "aliases": [
+        "Incline DB Press",
+        "Incline Dumbbell Bench Press"
+      ],
+      "url": "https://www.youtube.com/watch?v=IP4oeKh1Sd4",
+      "title": "How to do the INCLINE DUMBBELL BENCH PRESS! | 2 Minute Tutorial",
+      "channel": "Max Euceda",
+      "seconds": 120,
+      "views": 1033205,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Dumbbell Overhead Tricep Extension",
+      "aliases": [
+        "Overhead Tricep Extension",
+        "Seated Overhead Tricep Extension"
+      ],
+      "url": "https://www.youtube.com/watch?v=YbX7Wd8jQ-Q",
+      "title": "How To: Dumbbell Seated Overhead Tricep Extension",
+      "channel": "ScottHermanFitness",
+      "seconds": 115,
+      "views": 3566398,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Lat Pulldown",
+      "aliases": [
+        "Wide Grip Lat Pulldown"
+      ],
+      "url": "https://www.youtube.com/watch?v=lueEJGjTuPQ",
+      "title": "Wide-Grip Lat Pulldown | Back Exercise Guide",
+      "channel": "Bodybuilding.com",
+      "seconds": 65,
+      "views": 1593718,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Face Pulls",
+      "aliases": [
+        "Face Pull",
+        "Rope Face Pull"
+      ],
+      "url": "https://www.youtube.com/watch?v=V8dZ3pyiCBo",
+      "title": "Face Pulls | How To Perform Them Properly",
+      "channel": "KAGED ",
+      "seconds": 116,
+      "views": 2049636,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Goblet Squat",
+      "aliases": [
+        "Dumbbell Goblet Squat"
+      ],
+      "url": "https://www.youtube.com/watch?v=mF5tnEBrdkc",
+      "title": "Goblet Squat",
+      "channel": "LivestrongWoman",
+      "seconds": 53,
+      "views": 1693650,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Leg Curl Machine",
+      "aliases": [
+        "Seated Leg Curl",
+        "Leg Curl"
+      ],
+      "url": "https://www.youtube.com/watch?v=Orxowest56U",
+      "title": "Seated Leg Curl",
+      "channel": "Renaissance Periodization",
+      "seconds": 11,
+      "views": 957361,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Seated Dumbbell Shoulder Press",
+      "aliases": [
+        "Dumbbell Shoulder Press",
+        "Seated DB Shoulder Press"
+      ],
+      "url": "https://www.youtube.com/watch?v=HzIiNhHhhtA",
+      "title": "Seated Dumbbell Shoulder Press",
+      "channel": "Renaissance Periodization",
+      "seconds": 13,
+      "views": 1000056,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Plank",
+      "aliases": [
+        "Forearm Plank"
+      ],
+      "url": "https://www.youtube.com/watch?v=pSHjTRCQxIw",
+      "title": "How To: Plank",
+      "channel": "ScottHermanFitness",
+      "seconds": 77,
+      "views": 22461983,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Dumbbell Bicep Curl",
+      "aliases": [
+        "Bicep Curl",
+        "Dumbbell Curl"
+      ],
+      "url": "https://www.youtube.com/watch?v=ykJmrZ5v0Oo",
+      "title": "How to Do a Dumbbell Biceps Curl | Arm Workout",
+      "channel": "Howcast",
+      "seconds": 109,
+      "views": 8287987,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Dumbbell Step-up",
+      "aliases": [
+        "Dumbbell Step Up",
+        "Step-up"
+      ],
+      "url": "https://www.youtube.com/watch?v=9ZknEYboBOQ",
+      "title": "Dumbbell Step-up - How To",
+      "channel": "Bobby Maximus",
+      "seconds": 25,
+      "views": 816879,
+      "checked": "subtitles"
+    },
+    {
+      "exercise": "Pec Fly Machine",
+      "aliases": [
+        "Pec Deck",
+        "Chest Fly Machine"
+      ],
+      "url": "https://www.youtube.com/watch?v=Z57CtFmRMxA",
+      "title": "How to Do Chest Fly Exercises on a Machine",
+      "channel": "LIVESTRONG",
+      "seconds": 89,
+      "views": 1894440,
+      "checked": "title"
+    },
+    {
+      "exercise": "Hip Thrust",
+      "aliases": [
+        "Barbell Hip Thrust"
+      ],
+      "url": "https://www.youtube.com/watch?v=Zp26q4BY5HE",
+      "title": "How To Do a Barbell Hip Thrust",
+      "channel": "Girls Gone Strong | Women's Health & Fitness",
+      "seconds": 88,
+      "views": 2774341,
+      "checked": "title"
+    },
+    {
+      "exercise": "Seated Row (Cable Machine)",
+      "aliases": [
+        "Seated Cable Row",
+        "Cable Row"
+      ],
+      "url": "https://www.youtube.com/watch?v=UCXxvVItLoM",
+      "title": "Seated Cable Row",
+      "channel": "Renaissance Periodization",
+      "seconds": 18,
+      "views": 1637475,
+      "checked": "title"
+    },
+    {
+      "exercise": "Back Extension",
+      "aliases": [
+        "Hyperextension",
+        "45 Degree Back Extension"
+      ],
+      "url": "https://www.youtube.com/watch?v=ph3pddpKzzw",
+      "title": "How to Do Back Extensions",
+      "channel": "LIVESTRONG",
+      "seconds": 84,
+      "views": 2894412,
+      "checked": "title"
+    },
+    {
+      "exercise": "Leg Press",
+      "aliases": [
+        "Seated Leg Press",
+        "Machine Leg Press"
+      ],
+      "url": "https://www.youtube.com/watch?v=Aq5uxXrXq7c",
+      "title": "Instructional Fitness - Seated Leg Press",
+      "channel": "Instructionalfitness",
+      "seconds": 97,
+      "views": 897984,
+      "checked": "title"
+    },
+    {
+      "exercise": "Hip Abductor Machine",
+      "aliases": [
+        "Hip Abduction Machine"
+      ],
+      "url": "https://www.youtube.com/watch?v=EHq78mQYLbI",
+      "title": "Cable Hip Abduction & Adduction",
+      "channel": "Just Raw Skill",
+      "seconds": 44,
+      "views": 627140,
+      "checked": "title"
+    },
+    {
+      "exercise": "Dumbbell Lateral Raise",
+      "aliases": [
+        "Lateral Raise",
+        "Side Lateral Raise"
+      ],
+      "url": "https://www.youtube.com/watch?v=3VcKaXpzqRo",
+      "title": "How To: Dumbbell Side Lateral Raise",
+      "channel": "ScottHermanFitness",
+      "seconds": 115,
+      "views": 14227879,
+      "checked": "title"
+    },
+    {
+      "exercise": "Side Plank",
+      "aliases": [],
+      "url": "https://www.youtube.com/watch?v=NXr4Fw8q60o",
+      "title": "How to Do a Side Plank | Ab Workout",
+      "channel": "Howcast",
+      "seconds": 114,
+      "views": 3127776,
+      "checked": "title"
+    },
+    {
+      "exercise": "Hammer Curl",
+      "aliases": [
+        "Dumbbell Hammer Curl"
+      ],
+      "url": "https://www.youtube.com/watch?v=OPqe0kCxmR8",
+      "title": "Dumbbell Hammer Curls Tutorial | CORRECT TECHNIQUE (!)",
+      "channel": "One Minute Tutorial",
+      "seconds": 64,
+      "views": 1334906,
+      "checked": "title"
+    },
+    {
+      "exercise": "Dumbbell Reverse Lunge",
+      "aliases": [
+        "Reverse Lunge"
+      ],
+      "url": "https://www.youtube.com/watch?v=xrPteyQLGAo",
+      "title": "How To Reverse Lunge",
+      "channel": "PureGym",
+      "seconds": 15,
+      "views": 2126484,
+      "checked": "title"
+    },
+    {
+      "exercise": "Tricep Rope Pushdown",
+      "aliases": [
+        "Rope Pushdown",
+        "Tricep Pushdown"
+      ],
+      "url": "https://www.youtube.com/watch?v=2-LAMcpzODU",
+      "title": "How To: Tricep Pushdown (Life Fitness Cable)",
+      "channel": "ScottHermanFitness",
+      "seconds": 112,
+      "views": 7524161,
+      "checked": "title"
+    },
+    {
+      "exercise": "Cable Glute Kickback",
+      "aliases": [
+        "Glute Kickback"
+      ],
+      "url": "https://www.youtube.com/watch?v=dU1R-AHW4IM",
+      "title": "How To: Cable Glute Kickback",
+      "channel": "Kia Khadem",
+      "seconds": 27,
+      "views": 398214,
+      "checked": "title"
+    },
+    {
+      "exercise": "Assisted Pull-up Machine",
+      "aliases": [
+        "Assisted Pull Up",
+        "Assisted Pull-up"
+      ],
+      "url": "https://www.youtube.com/watch?v=8zFcJWD9Y_E",
+      "title": "How-To Use the \"Dip/Chin Assist\" machine",
+      "channel": "Tri Cities Gold's Gym",
+      "seconds": 97,
+      "views": 448639,
+      "checked": "title"
+    },
+    {
+      "exercise": "Dead Bug",
+      "aliases": [],
+      "url": "https://www.youtube.com/watch?v=g_BYB0R-4Ws",
+      "title": "Core Exercise: Dead Bug",
+      "channel": "Children's Hospital Colorado",
+      "seconds": 98,
+      "views": 5714450,
+      "checked": "title"
+    },
+    {
+      "exercise": "Romanian Deadlift - Dumbbell",
+      "aliases": [
+        "Dumbbell Romanian Deadlift",
+        "DB RDL"
+      ],
+      "url": "https://www.youtube.com/watch?v=hQgFixeXdZo",
+      "title": "Dumbbell Romanian (RDL) Deadlift |TECHNIQUE for Beginners",
+      "channel": "Mike | J2FIT Strength & Conditioning",
+      "seconds": 79,
+      "views": 4000355,
+      "checked": "title"
+    },
+    {
+      "exercise": "Leg Extension",
+      "aliases": [
+        "Leg Extension Machine"
+      ],
+      "url": "https://www.youtube.com/watch?v=4ZDm5EbiFI8",
+      "title": "How To Do A Leg Extension",
+      "channel": "PureGym",
+      "seconds": 14,
+      "views": 813036,
+      "checked": "title"
+    },
+    {
+      "exercise": "Reverse Pec Fly Machine",
+      "aliases": [
+        "Reverse Fly Machine",
+        "Rear Delt Fly Machine"
+      ],
+      "url": "https://www.youtube.com/watch?v=5YK4bgzXDp0",
+      "title": "Machine Reverse Flye",
+      "channel": "Renaissance Periodization",
+      "seconds": 14,
+      "views": 438806,
+      "checked": "title"
+    },
+    {
+      "exercise": "Bicycle Crunch",
+      "aliases": [
+        "Bicycle Crunches"
+      ],
+      "url": "https://www.youtube.com/watch?v=9FGilxCbdz8",
+      "title": "How to Do the Bicycle",
+      "channel": "LIVESTRONG",
+      "seconds": 85,
+      "views": 5543980,
+      "checked": "title"
+    },
+    {
+      "exercise": "Bench Dips",
+      "aliases": [
+        "Tricep Bench Dips"
+      ],
+      "url": "https://www.youtube.com/watch?v=0326dy_-CzM",
+      "title": "How to Do Triceps Bench Dips",
+      "channel": "LIVESTRONG",
+      "seconds": 108,
+      "views": 3691618,
+      "checked": "title"
+    },
+    {
+      "exercise": "Cool-down Stretches",
+      "aliases": [
+        "Cooldown",
+        "Post Workout Stretches"
+      ],
+      "url": "https://www.youtube.com/watch?v=iDGWlH3ygWg",
+      "title": "Quick 1 Minute Cool Down",
+      "channel": "Nadia Valentina",
+      "seconds": 65,
+      "views": 31214,
+      "checked": "title"
+    }
+  ]
+}
