@@ -1,6 +1,6 @@
-# Exercise videos (parked)
+# Exercise videos
 
-Status: **research half done, nothing added to any plan yet.** Written down so it can be picked up later without this conversation.
+Status: **first version done.** `data/exercise-videos.json` holds 30 entries (29 exercises plus one cool-down routine), each live and 120 seconds or under. 10 were checked against their subtitles, the rest by title and description. Anu's plan uses these links. The app looks links up by name when a plan is saved (`utils/exerciseVideos.ts`) and can fetch a newer list from `VIDEO_LIST_URL` (`config/videoList.ts`, empty until a public repo or gist exists). What remains is under "To finish".
 
 ## What was asked for
 
@@ -69,11 +69,10 @@ Most viewed relevant clip first; two alternatives per exercise. Do not use these
 | Bench Dips | [How to Do Triceps Bench Dips](https://www.youtube.com/watch?v=0326dy_-CzM) | LIVESTRONG | 108s | 3,691,618 | [P4P WORKOUTS ](https://www.youtube.com/watch?v=dl8_opV0A0Y), [ScottHermanFitne](https://www.youtube.com/watch?v=c3ZGl4pAwZ4) |
 | Cool-down Stretches | [Best Post-Workout Stretches to Boost Recovery / WebM](https://www.youtube.com/watch?v=wrIZ3JxTZJY) | WebMD | 139s | 436,145 | [My One Minute Wo](https://www.youtube.com/watch?v=kXbryJUQTZc), [Nadia Valentina](https://www.youtube.com/watch?v=iDGWlH3ygWg) |
 
-## To finish (in order)
+## To finish
 
-1. Wait for the subtitle block to clear (about a day), then `python verify.py` inside `tools/video-research/` (it resumes from `verified.json`).
-2. For each exercise read the subtitles of the top 3, pick one that shows the right variation and cues, and note why.
-3. Pick the cool-down routine.
-4. Check each chosen link still opens: `https://www.youtube.com/oembed?format=json&url=<link>` returns 200 when it is alive.
-5. Write the links into `assets/seed/anu-plan.json` on the `anu` branch (`web_link`), rebuild with `scripts/build-anu.sh`.
-6. Later, for the main app: turn the chosen list into a data file of exercise name and link, and apply it when a plan is saved (see `TODO.md`).
+1. Read the subtitles of the title-only entries, slowly (one request every 10 seconds or more, a few at a time, because YouTube blocks after about 35).
+2. Replace the cool-down clip (a 65 second one with few views) with a better routine of 2 minutes or less that shows the stretches in her notes.
+3. Leg curl: confirm the clip is the seated machine, not lying.
+4. Host the list in a public repo or gist and set `VIDEO_LIST_URL`.
+5. Re-check links every few months.

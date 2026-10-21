@@ -1,3 +1,4 @@
+import { videoExerciseNames } from './exerciseVideos';
 import type { ExportedWorkout } from './workoutSharingUtils';
 import { BUILD } from '../config/buildFlags';
 
@@ -138,11 +139,16 @@ Rules:
 - Only use the equipment listed. Respect any injuries or constraints.
 - "workout_name" is short and descriptive.`;
 
+// Exercises that already have a form video in the app. Using these exact names lets a plan pick the video up.
+const preferredNames = (): string =>
+  `
+When one of these exercises fits, use its exact name so the app can attach a form video: ${videoExerciseNames().join(', ')}.`;
+
 export const buildGeneratePlanPrompt = (request: PlanRequest): string => `You are an experienced strength coach designing a workout plan for one person.
 
 ${describeRequest(request)}
 
-${PLAN_FORMAT}`;
+${PLAN_FORMAT}${preferredNames()}`;
 
 export const buildRefinePlanPrompt = (
   draft: ExportedWorkout,
@@ -163,4 +169,4 @@ ${feedback.trim()}
 
 Apply the feedback and return the complete revised plan. Change only what the feedback asks for.
 
-${PLAN_FORMAT}`;
+${PLAN_FORMAT}${preferredNames()}`;

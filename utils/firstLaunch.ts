@@ -5,6 +5,7 @@ import { getApiKey, saveApiKey } from './secureSettings';
 import { ensureWorkoutColumns } from './exerciseDetailUtils';
 import { computeOccurrences, scheduleOccurrences, PlanDay } from './schedulePlan';
 import { insertWorkoutData, workoutNameExists } from './workoutSharingUtils';
+import { refreshVideoList } from './exerciseVideos';
 
 // Once, on the first launch: save the embedded key (if the build has one) and add the seed plan
 // (if the build has one). The database's own user_version is the "already done" marker, so a plan
@@ -35,5 +36,6 @@ export const applyFirstLaunch = async (db: SQLiteDatabase): Promise<void> => {
 // Runs whenever the database opens.
 export const initDatabase = async (db: SQLiteDatabase): Promise<void> => {
   await ensureWorkoutColumns(db);
+  void refreshVideoList();
   await applyFirstLaunch(db);
 };

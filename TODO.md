@@ -2,19 +2,17 @@
 
 Things we agreed to do later. Nothing here is started.
 
-## Exercise videos for the main app's plans
+## Host the exercise video list outside the app
 
-Anu's private build gets a hand-researched video for every exercise (short, vertical clips preferred, English). The main app has nothing like that yet:
+The list ships inside the app (`data/exercise-videos.json`) and the app already knows how to fetch a newer copy: set `VIDEO_LIST_URL` in `config/videoList.ts`. What is left is to create a small **public** repo (or gist) that holds only that JSON file, and paste its raw URL there. The repo itself can go private later without breaking this, because the list lives elsewhere.
 
-- AI-made plans always have `web_link` set to null, so the workout screen shows a greyed-out video icon.
-- Idea: a curated exercise-to-video list shipped with the app (name, a few common spellings, the link). When a plan is saved (AI-made, shared or typed in), a known exercise name picks up its link automatically.
-- Reuse the research method from Anu's build: search YouTube, keep short form videos, check the subtitles against the exercise and its variation, take the most viewed that passes, check each link still works.
-- Keep the list in a data file, not in code, so links can be fixed without a release. Re-check the links every few months.
+## Grow and re-check the video list
+
+- 29 of the 30 entries have been checked by title; 10 also by subtitles. Read the subtitles of the rest when YouTube allows it (one request every 10 seconds or slower, in small batches). See `docs/VIDEO_RESEARCH.md`.
+- Replace the weak cool-down clip with a better routine of 2 minutes or less.
+- Re-check that every link is alive every few months (`https://www.youtube.com/oembed?format=json&url=<link>` returns 200).
+- Add exercises as new plans bring them in.
 
 ## Other ideas that came up
 
 - Show the video link on the exercise name in the plan editor too.
-
-## Anu's exercise videos (parked)
-
-Full write-up, status and how to resume: **`docs/VIDEO_RESEARCH.md`** (scripts and shortlist in `tools/video-research/`).

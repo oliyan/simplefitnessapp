@@ -18,6 +18,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext'; // Import theme context
 import { useTranslation } from 'react-i18next';
 import WeekdayPicker from '../components/WeekdayPicker';
+import { videoLinkFor } from '../utils/exerciseVideos';
 
 
 type WorkoutListNavigationProp = StackNavigationProp<WorkoutStackParamList, 'WorkoutsList'>;
@@ -63,8 +64,8 @@ async function createWorkout(
         for (const exercise of day.exercises) {
           console.log(`Inserting exercise: ${exercise.exerciseName}`);
           await db.runAsync(
-            'INSERT INTO Exercises (day_id, exercise_name, sets, reps, muscle_group) VALUES (?, ?, ?, ?, ?);',
-            [dayId, exercise.exerciseName, exercise.sets, exercise.reps, exercise.muscle_group]
+            'INSERT INTO Exercises (day_id, exercise_name, sets, reps, web_link, muscle_group) VALUES (?, ?, ?, ?, ?, ?);',
+            [dayId, exercise.exerciseName, exercise.sets, exercise.reps, videoLinkFor(exercise.exerciseName), exercise.muscle_group]
           );
         }
       }

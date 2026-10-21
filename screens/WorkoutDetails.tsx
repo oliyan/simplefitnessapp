@@ -11,6 +11,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { exportWorkout } from '../utils/workoutSharingUtils';
 import { weekdayShort } from '../utils/weekdays';
+import { withVideoLink } from '../utils/exerciseVideos';
 
 type WorkoutListNavigationProp = StackNavigationProp<WorkoutStackParamList, 'WorkoutDetails'>;
 
@@ -317,7 +318,7 @@ export default function WorkoutDetails() {
     if (currentDayId) {
       await db.runAsync(
         'INSERT INTO Exercises (day_id, exercise_name, sets, reps, web_link, muscle_group, exercise_notes) VALUES (?, ?, ?, ?, ?, ?, ?);',
-        [currentDayId, exerciseName.trim(), parseInt(sets, 10), parseInt(reps, 10), webLink || null, newExerciseMuscleGroup || null, exerciseNotesInput.trim()]
+        [currentDayId, exerciseName.trim(), parseInt(sets, 10), parseInt(reps, 10), withVideoLink(exerciseName.trim(), webLink), newExerciseMuscleGroup || null, exerciseNotesInput.trim()]
       );
       await updateWorkoutLogsForAdditions(workout_id);
       fetchWorkoutDetails();

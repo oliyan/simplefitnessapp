@@ -5,6 +5,7 @@ import i18n from './i18n'; // Import the i18n instance
 import slugify from 'slugify';
 import { normalizeWeekday } from './weekdays';
 import { ensureWorkoutColumns } from './exerciseDetailUtils';
+import { withVideoLink } from './exerciseVideos';
 
 
 
@@ -137,7 +138,7 @@ export const insertWorkoutData = async (db: any, workoutData: ExportedWorkout): 
       for (const exercise of day.exercises) {
         await db.runAsync(
           'INSERT INTO Exercises (day_id, exercise_name, sets, reps, web_link, muscle_group, exercise_notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [newDayId, exercise.exercise_name, exercise.sets, exercise.reps, exercise.web_link || null, exercise.muscle_group || null, exercise.exercise_notes || null]
+          [newDayId, exercise.exercise_name, exercise.sets, exercise.reps, withVideoLink(exercise.exercise_name, exercise.web_link), exercise.muscle_group || null, exercise.exercise_notes || null]
         );
       }
     }

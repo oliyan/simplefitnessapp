@@ -319,6 +319,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | GEN-16 | ⚪ | Try "Let the coach decide" with 2 days and with 6 days. | Reasonable splits (for example upper/lower for 2). | ☐ | |
 | GEN-17 | 🔴 | Generate any plan and open a few exercises (and a warm-up or cardio entry). | Every exercise has a **thorough** form note: why, setup, how to do it with tempo, and what to avoid (about 3 to 6 sentences). Warm-up, cardio and stretching entries are numbered steps with counts. No em dashes. The same holds after **Refine**. | ☐ | |
 | GEN-18 | 🟡 | Fresh install: on the first welcome page ("How do I call you?") type a name and finish. Then open Settings > Personalise: the Name field shows it. Then generate a plan and look at Home. | Home greets you with *Hi, <name>!*. The name is used in the notes at nice moments and may appear in a coach note or plan note. | ☐ | |
+| GEN-19 | 🟡 | Create a plan by hand with an exercise the video list knows (for example "Plank" or "Goblet Squat"), then start that workout. Also generate an AI plan. | The known exercise has a lit YouTube icon that opens its clip. An exercise the list does not know has the greyed icon. AI plans that use a listed name get the link too. | ☐ | |
 
 ---
 
