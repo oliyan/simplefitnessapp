@@ -368,7 +368,7 @@
     "forCommit": "this is for a commit",
    
     "No data available for the selected criteria": "No data available for the selected criteria",
-    "Combined Effort Score": "Combined Effort Score",
+    "Combined Effort Score": "Effort score",
     "About CES": "About Effort score",
     "About 1RM": "About Estimated max",
     "CESExplanation": "CES (Combined Effort Score) measures your total workout volume accounting for weight, reps, and intensity.",
@@ -377,7 +377,7 @@
     "1RM": "Estimated max",
     "3 Months": "3 Months",
     "Time Frame": "Time Frame",
-    "Estimated 1RM": "Estimated 1RM",
+    "Estimated 1RM": "Estimated max",
     "Week": "Week",
     "Month": "Month",
     "Year": "Year",

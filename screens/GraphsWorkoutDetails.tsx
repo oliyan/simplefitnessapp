@@ -2112,7 +2112,7 @@ const calculateCES = (sets: LogData[]): number => {
           color: lineChartConfig.color,
           strokeWidth: 2
         }],
-        legend: [calculationType === 'CES' ? 'Combined Effort Score' : t('Estimated 1RM')]
+        legend: [calculationType === 'CES' ? t('Combined Effort Score') : t('Estimated 1RM')]
       },
       width: lineChartContentWidth,
       height: chartHeight + 20,
