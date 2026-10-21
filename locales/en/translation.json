@@ -620,6 +620,8 @@
     "planLikesPlaceholder": "e.g. no burpees, love pull-ups, avoid overhead pressing",
     "planInjuriesHeading": "Injuries and constraints",
     "planInjuriesNone": "None saved. Add them in Settings > AI Coach and every plan will respect them.",
+    "planInjuriesNonePlain": "None saved.",
+    "planInjuriesFromPlain": "From your profile:",
     "planInjuriesFrom": "From your profile (edit in Settings > AI Coach):",
     "planDaysCount": "{{count}} training days selected",
     "planDaysNeeded": "Pick at least one training day.",

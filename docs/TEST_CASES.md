@@ -66,7 +66,7 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 | HOM-09 | 🟡 | Look at personal records for an exercise you have only ever done once. | Not listed (the first time only sets the starting point). | ☐ | |
 | HOM-10 | 🟡 | On a rest day (nothing scheduled today). | Card reads **Rest day** and shows the next workout ("Next: Tomorrow · Pull"), or offers *Schedule a plan* if nothing is scheduled. | ☐ | |
 | HOM-11 | ⚪ | Tap **Recent personal records**. | Opens My Progress. | ☐ | |
-| HOM-12 | ⚪ | Scroll the page to the bottom. | **GitHub** button opens the repo in a browser. | ☐ | |
+| HOM-12 | ⚪ | Scroll the Home page to the bottom, then open Settings and scroll to **Community**. | Home has no GitHub button. The **GitHub** button in Settings opens the repo in a browser. | ☐ | |
 | HOM-13 | ⚪ | Make two sessions on the same day (one done, one not). | Both appear in *Today*, each with the right status. | ☐ | |
 
 ---
@@ -233,7 +233,7 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | UIX-08 | 🔴 | Complete a set that is not the last. Watch the rest screen. | A **circular countdown** with the seconds in the middle; the arc shrinks. **+15s** adds time and the ring grows. | ☐ | |
 | UIX-09 | 🟡 | On a blank set (an extra set, or a first set you have never done) after a previous set. | A **Same as last: 70 kg × 8** button appears; tapping it fills weight and reps. It is not shown when the fields are already filled. | ☐ | |
 | UIX-10 | 🔴 | Schedule a plan with **Remind me at…**, choose a time, schedule. Then look at a scheduled day in the calendar. | Sessions are added. At the chosen time on a session day a notification arrives (needs Notifications on in Settings). Deleting that session cancels its reminder. | ☐ | |
-| UIX-11 | 🟡 | Home with at least 5 logged workouts and no backup in the last 30 days. | A **Back up your data** card: **Back up now** opens Settings, **Later** hides it for a week. After you export, it stays away for 30 days. | ☐ | |
+| UIX-11 | 🟡 | Home with at least 5 logged workouts and no backup in the last 30 days **since your last export, or since the first launch if you never exported**. A brand-new install never shows it on the first day. | A **Back up your data** card: **Back up now** opens Settings, **Later** hides it for a week. After you export, it stays away for 30 days. | ☐ | |
 | UIX-12 | 🟡 | Home, after you have logged a workout: tap **Share my week**. | The share sheet opens with a short text summary (workouts done, weight lifted, streak). | ☐ | |
 | UIX-13 | 🟡 | My Progress, scroll down. | A **Best lifts** card (up to 6 heaviest lifts). If you imported InBody scans (two or more), a **Body weight** line chart too. | ☐ | |
 | UIX-14 | 🟡 | Open **Workout Plans** with no plans (delete them all or use a fresh install). | A friendly "No plans yet" card instead of an empty list. | ☐ | |

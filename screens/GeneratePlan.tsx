@@ -15,6 +15,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { usePersonal } from '../context/PersonalContext';
+import { BUILD } from '../config/buildFlags';
 import { WorkoutStackParamList } from '../App';
 import { getApiKey } from '../utils/secureSettings';
 import { generateWorkoutPlan, refineWorkoutPlan, getUserFacingErrorMessage } from '../utils/llmClient';
@@ -325,11 +326,11 @@ export default function GeneratePlan() {
         <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           {savedConstraints.trim() ? (
             <>
-              <Text style={{ color: theme.text, opacity: 0.6, marginBottom: 4 }}>{t('planInjuriesFrom')}</Text>
+              <Text style={{ color: theme.text, opacity: 0.6, marginBottom: 4 }}>{t(BUILD.showAiSettings ? 'planInjuriesFrom' : 'planInjuriesFromPlain')}</Text>
               <Text style={{ color: theme.text }}>{savedConstraints.trim()}</Text>
             </>
           ) : (
-            <Text style={{ color: theme.text, opacity: 0.6 }}>{t('planInjuriesNone')}</Text>
+            <Text style={{ color: theme.text, opacity: 0.6 }}>{t(BUILD.showAiSettings ? 'planInjuriesNone' : 'planInjuriesNonePlain')}</Text>
           )}
         </View>
 

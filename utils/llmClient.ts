@@ -6,7 +6,7 @@ import type { CoachNote } from './coachNotesUtils';
 import type { ExportedWorkout } from './workoutSharingUtils';
 import { normalizeWeekday } from './weekdays';
 import { mentionsPounds } from './weightUnit';
-import { stripDashes, MIN_NOTE_CHARS, MIN_ROUTINE_NOTE_CHARS } from './textRules';
+import { stripDashes, mentionsHindi, MIN_NOTE_CHARS, MIN_ROUTINE_NOTE_CHARS } from './textRules';
 
 const API_URL = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
@@ -180,6 +180,11 @@ export const generateCoachNote = async (
   if (mentionsPounds(text)) {
     text = await ask('\n\nYour previous reply used pounds. Rewrite it using kilograms (kg) only.');
     if (mentionsPounds(text)) return null;
+  }
+  // No Hindi, ever (Tamil, Tanglish or English only). One more try, then the note is dropped.
+  if (mentionsHindi(text)) {
+    text = await ask('\n\nYour previous reply used Hindi words. Rewrite it using only English, Tamil or Tanglish. No Hindi words at all.');
+    if (mentionsHindi(text)) return null;
   }
   if (!text || /^none/i.test(text)) return null;
 

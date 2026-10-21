@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Linking, Share } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Share } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSQLiteContext } from 'expo-sqlite';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -79,7 +79,13 @@ export default function Home({ navigation }: any) {
              ORDER BY w.workout_date, wl.weight_log_id;`,
           );
           const saved = await loadSettings();
-          const lastBackup: number = saved?.lastBackup ?? 0;
+          // The 30 days count from the last export, or from the first launch if there has been none,
+          // so a new install never greets someone with a backup reminder.
+          let lastBackup: number = saved?.lastBackup ?? 0;
+          if (!lastBackup) {
+            lastBackup = Date.now();
+            saveSettings({ lastBackup });
+          }
           const snoozedUntil: number = saved?.backupSnoozedUntil ?? 0;
           const hasHistory = rows.filter((r) => r.logged).length >= 5;
           if (!active) return;
@@ -385,13 +391,6 @@ export default function Home({ navigation }: any) {
         </>
       )}
 
-      <TouchableOpacity
-        style={[styles.github, { borderColor: theme.border, backgroundColor: theme.card }]}
-        onPress={() => Linking.openURL('https://github.com/oliyan/urudhi')}
-      >
-        <Ionicons name="logo-github" size={18} color={theme.text} style={{ marginRight: 8 }} />
-        <Text style={{ color: theme.text, fontWeight: '700' }}>{t('GitHub')}</Text>
-      </TouchableOpacity>
       <Onboarding />
     </ScrollView>
   );

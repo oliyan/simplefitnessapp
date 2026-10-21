@@ -17,9 +17,4 @@ Anu's private build gets a hand-researched video for every exercise (short, vert
 
 ## Anu's exercise videos (parked)
 
-Her plan has links on 16 of its exercises (two dead ones were removed). The research for a proper set is half done, in `tools/video-research/`:
-
-- `research.py` searches YouTube for each exercise and keeps short clips; `info.py` pulls their details; `shortlist.json` has the top 3 relevant clips for 30 exercises (most viewed first).
-- Still to do: check the subtitles of the shortlist against each exercise (`verify.py`), pick one per exercise, and add the cool-down routine. Needs YouTube to stop blocking caption requests from this machine (we sent too many at once; wait a day, then go slowly, one request every few seconds).
-- Findings: real vertical Shorts are rare for form searches (only 3 of 194 clips); most short clips are landscape and 10 to 120 seconds long. Three existing links were poor matches (Romanian deadlift shows the barbell version, leg curl shows the prone version, and long-form clips elsewhere).
-- Cool-down stretches need a routine clip (several stretches in one); single-stretch clips cover only one of the three listed each day.
+Full write-up, status and how to resume: **`docs/VIDEO_RESEARCH.md`** (scripts and shortlist in `tools/video-research/`).
