@@ -1,71 +1,65 @@
-import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Share } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSQLiteContext } from 'expo-sqlite';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { ensureInProgressColumn } from '../utils/workoutProgress';
-import { useSettings } from '../context/SettingsContext';
 import { usePersonal } from '../context/PersonalContext';
 import { BUILD } from '../config/buildFlags';
 import Onboarding from '../components/Onboarding';
+import Ring from '../components/goals/Ring';
+import WeeklyGoalModal from '../components/goals/WeeklyGoalModal';
+import useProgressData from '../components/progress/useProgressData';
 import { loadSettings, saveSettings } from '../utils/settingsStorage';
+import useGoals from '../utils/useGoals';
+import { buildWeek, dayDiff, nextUpcoming, WeekCell, weeklyStreak, WorkoutRow } from '../utils/dashboardStats';
+import { consistencyGrid, freshRecord, formatKg } from '../utils/progressStats';
 import {
-  buildWeek,
-  dayDiff,
-  findPersonalRecords,
-  nextUpcoming,
-  PersonalRecord,
-  SetRow,
-  WeekCell,
-  weekStart,
-  weekVolumes,
-  weeklyStreak,
-  WorkoutRow,
-} from '../utils/dashboardStats';
+  checklistSteps, homeInsight, partOfDay, pickHomeCard, weekKey, weeklyTarget, HomeCard,
+} from '../utils/motivation';
+import { loadSessionDetails, SessionDetail } from '../utils/homeDetails';
 import { dateToWeekday, WEEKDAY_LETTERS, weekdayShort } from '../utils/weekdays';
 
 interface Dashboard {
   workoutCount: number;
   rows: WorkoutRow[];
   week: WeekCell[];
-  streak: number;
-  volume: { thisWeek: number; lastWeek: number };
-  records: PersonalRecord[];
 }
 
 const formatDM = (date: Date) =>
   `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
 
-const formatVolume = (value: number) => (value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value)));
-
-// Home: a dashboard of today, this week, streak, volume and recent records, all computed
-// from the workouts you have scheduled and logged.
+// Home: what to do today and whether the week is on track. The long view (graphs, records, streak
+// history, badges) lives in My Progress; Home only peeks at it and links there.
 export default function Home({ navigation }: any) {
   const db = useSQLiteContext();
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { weightFormat } = useSettings();
   const { personal, noteText } = usePersonal();
-  // The greeting you wrote, or a plain "Hi, <name>!" once a name is known.
-  const greetingText = personal.greeting.trim() || (personal.userName.trim() ? `Hi, ${personal.userName.trim()}!` : '');
+  const { sessions, sets } = useProgressData();
+  const { goals, update } = useGoals();
+
+  const today = useMemo(() => new Date(), []);
+  // The greeting you wrote, or a time-of-day hello with the name once one is known.
+  const name = personal.userName.trim();
+  const greetingText = personal.greeting.trim() || (name ? `${partOfDay(today.getHours())}, ${name}!` : '');
 
   const [data, setData] = useState<Dashboard | null>(null);
+  const [details, setDetails] = useState<Record<number, SessionDetail>>({});
   const [needsBackup, setNeedsBackup] = useState(false);
+  const [goalModal, setGoalModal] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
       (async () => {
         try {
-          const today = new Date();
-          const since = Math.floor(
-            new Date(today.getFullYear(), today.getMonth(), today.getDate() - 730).getTime() / 1000,
-          );
+          const since = Math.floor(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 730).getTime() / 1000);
           await ensureInProgressColumn(db);
           const [countRow] = await db.getAllAsync<{ c: number }>('SELECT COUNT(*) AS c FROM Workouts;');
-          const rows = await db.getAllAsync<WorkoutRow>(
+          const rows = await db.getAllAsync<WorkoutRow & { workout_name: string }>(
             `SELECT w.workout_log_id, w.workout_date, w.workout_name, w.day_name,
                     (EXISTS(SELECT 1 FROM Weight_Log x WHERE x.workout_log_id = w.workout_log_id)
                       AND COALESCE(w.in_progress, 0) = 0) AS logged,
@@ -73,11 +67,12 @@ export default function Home({ navigation }: any) {
              FROM Workout_Log w WHERE w.workout_date >= ?;`,
             [since],
           );
-          const sets = await db.getAllAsync<SetRow>(
-            `SELECT w.workout_date AS d, wl.exercise_name AS name, wl.weight_logged AS wt, wl.reps_logged AS reps
-             FROM Weight_Log wl JOIN Workout_Log w ON w.workout_log_id = wl.workout_log_id
-             ORDER BY w.workout_date, wl.weight_log_id;`,
-          );
+          const week = buildWeek(rows, today);
+          const todayCell = week.find((c) => c.isToday);
+          const pending = (todayCell?.workouts ?? []).filter((s) => !s.logged);
+          const next = pending.length === 0 ? nextUpcoming(rows, today) : null;
+          const wanted = [...pending, ...(next ? [next] : [])];
+          const info = await loadSessionDetails(db, wanted);
           const saved = await loadSettings();
           // The 30 days count from the last export, or from the first launch if there has been none,
           // so a new install never greets someone with a backup reminder.
@@ -90,14 +85,8 @@ export default function Home({ navigation }: any) {
           const hasHistory = rows.filter((r) => r.logged).length >= 5;
           if (!active) return;
           setNeedsBackup(hasHistory && Date.now() - lastBackup > 30 * 86400000 && Date.now() > snoozedUntil);
-          setData({
-            workoutCount: countRow?.c ?? 0,
-            rows,
-            week: buildWeek(rows, today),
-            streak: weeklyStreak(rows, today),
-            volume: weekVolumes(sets, today),
-            records: findPersonalRecords(sets, 3),
-          });
+          setDetails(info);
+          setData({ workoutCount: countRow?.c ?? 0, rows, week });
         } catch (error) {
           console.error('Error loading dashboard:', error);
         }
@@ -107,8 +96,6 @@ export default function Home({ navigation }: any) {
       };
     }, [db]),
   );
-
-  const today = new Date();
 
   const relativeDay = (workoutDate: number): string => {
     const diff = dayDiff(workoutDate, today);
@@ -124,6 +111,11 @@ export default function Home({ navigation }: any) {
   const heading = [styles.heading, { color: theme.text }];
   const muted = { color: theme.text, opacity: 0.65 };
 
+  const goToCalendar = () => navigation.navigate('My Calendar', { screen: 'MyCalendar' }); // back to the calendar even if a workout screen is open
+  const goToWorkouts = (screen: string) => navigation.navigate('My Workouts', { screen, initial: false });
+  const goToProgress = () => navigation.navigate('My Progress');
+  const goToExercise = (exercise: string) => navigation.navigate('My Progress', { screen: 'ExerciseProgress', params: { name: exercise } });
+
   const bigButton = (label: string, onPress: () => void, filled = true) => (
     <TouchableOpacity
       onPress={onPress}
@@ -138,23 +130,36 @@ export default function Home({ navigation }: any) {
     </TouchableOpacity>
   );
 
-  const goToCalendar = () => navigation.navigate('My Calendar', { screen: 'MyCalendar' }); // back to the calendar even if a workout screen is open
-  const goToWorkouts = (screen: string) => navigation.navigate('My Workouts', { screen, initial: false });
+  // What is in a workout, in one or two lines: size, time, muscles and the coach's first line.
+  const renderDetail = (id: number) => {
+    const d = details[id];
+    if (!d || d.exercises === 0) return null;
+    return (
+      <View style={{ marginTop: 4 }}>
+        <Text style={muted}>
+          {d.exercises} {d.exercises === 1 ? 'exercise' : 'exercises'}, about {d.minutes} min
+          {d.muscles.length > 0 ? `, ${d.muscles.join(', ')}` : ''}
+        </Text>
+        {d.note ? <Text style={{ color: theme.text, fontStyle: 'italic', marginTop: 4, lineHeight: 20 }}>{`"${d.note}"`}</Text> : null}
+      </View>
+    );
+  };
 
   const renderToday = (d: Dashboard) => {
     const todayCell = d.week.find((c) => c.isToday);
-    const sessions = todayCell?.workouts ?? [];
-    const pending = sessions.filter((s) => !s.logged);
+    const sessionsToday = todayCell?.workouts ?? [];
+    const pending = sessionsToday.filter((s) => !s.logged);
 
-    if (sessions.length > 0) {
+    if (sessionsToday.length > 0) {
       return (
         <View style={[card, { backgroundColor: theme.accentSoft, borderColor: theme.accent }]}>
           <Text style={[heading, { color: theme.accent }]}>{t('Today')}</Text>
-          {sessions.map((s) => (
+          {sessionsToday.map((s) => (
             <View key={s.workout_log_id} style={styles.todayRow}>
-              <View style={{ flex: 1 }}>
+              <View style={{ flex: 1, paddingRight: 8 }}>
                 <Text style={[styles.todayName, { color: theme.text }]}>{s.day_name}</Text>
                 <Text style={muted}>{s.workout_name}</Text>
+                {!s.logged && renderDetail(s.workout_log_id)}
               </View>
               {s.logged ? (
                 <View style={styles.doneBadge}>
@@ -187,9 +192,11 @@ export default function Home({ navigation }: any) {
       <View style={card}>
         <Text style={heading}>{t('dashRestDay')}</Text>
         {next ? (
-          <Text style={{ color: theme.text, fontSize: 16 }}>
-            {t('dashNext', { when: relativeDay(next.workout_date), name: next.day_name })}
-          </Text>
+          <>
+            <Text style={{ color: theme.text, fontSize: 16 }}>{t('dashNext', { when: relativeDay(next.workout_date), name: next.day_name })}</Text>
+            {renderDetail(next.workout_log_id)}
+            <Text style={[muted, { marginTop: 8 }]}>Rest is part of the plan. A relaxed walk counts too.</Text>
+          </>
         ) : (
           <>
             <Text style={muted}>{t('dashNothingPlanned')}</Text>
@@ -200,21 +207,38 @@ export default function Home({ navigation }: any) {
     );
   };
 
+  // The week at a glance plus a ring toward this week's goal (the plan's sessions unless one was chosen).
   const renderWeek = (d: Dashboard) => {
-    const planned = d.week.filter((c) => c.workouts.length > 0);
-    const done = planned.filter((c) => c.state === 'done').length;
+    const planned = d.week.flatMap((c) => c.workouts);
+    const done = planned.filter((s) => s.logged).length;
+    const target = weeklyTarget(planned.length, goals.weeklySessions);
     return (
       <TouchableOpacity style={card} activeOpacity={0.8} onPress={goToCalendar}>
         <View style={styles.weekHeader}>
-          <Text style={heading}>{t('dashThisWeek')}</Text>
-          {planned.length > 0 && <Text style={muted}>{t('dashWeekSummary', { done, total: planned.length })}</Text>}
+          <View style={{ flex: 1 }}>
+            <Text style={heading}>{t('dashThisWeek')}</Text>
+            {target > 0 && (
+              <Text style={muted}>
+                {done >= target ? `Goal met: ${done} of ${target} sessions` : `${done} of ${target} sessions${goals.weeklySessions ? ' (your goal)' : ''}`}
+              </Text>
+            )}
+          </View>
+          {target > 0 && (
+            <TouchableOpacity onPress={() => setGoalModal(true)} accessibilityRole="button" accessibilityLabel="Change the weekly goal" style={{ padding: 4 }}>
+              <Ring size={52} stroke={6} progress={done / target} color={done >= target ? '#28A745' : undefined}>
+                {done >= target ? (
+                  <Ionicons name="checkmark" size={22} color="#28A745" />
+                ) : (
+                  <Text style={{ color: theme.text, fontWeight: '800', fontSize: 13 }}>{done}/{target}</Text>
+                )}
+              </Ring>
+            </TouchableOpacity>
+          )}
         </View>
         <View style={styles.weekRow}>
           {d.week.map((cell, index) => (
             <View key={index} style={styles.dayCol}>
-              <Text style={[styles.dayLetter, { color: theme.text, opacity: cell.isToday ? 1 : 0.6 }]}>
-                {WEEKDAY_LETTERS[index]}
-              </Text>
+              <Text style={[styles.dayLetter, { color: theme.text, opacity: cell.isToday ? 1 : 0.6 }]}>{WEEKDAY_LETTERS[index]}</Text>
               <View
                 style={[
                   styles.dayCircle,
@@ -236,87 +260,178 @@ export default function Home({ navigation }: any) {
     );
   };
 
-  const renderStats = (d: Dashboard) => {
-    const { thisWeek, lastWeek } = d.volume;
-    const pct = lastWeek > 0 ? Math.round(((thisWeek - lastWeek) / lastWeek) * 100) : null;
-    const arrow = pct === null ? '' : pct >= 0 ? '▲ ' : '▼ ';
+  // One kind card at a time: a welcome back, the streak, a close goal, a plateau, a near badge, or the person's own reason.
+  const renderMotivation = (d: Dashboard) => {
+    const sessionsToday = d.week.find((c) => c.isToday)?.workouts ?? [];
+    const doneToday = sessionsToday.length > 0 && sessionsToday.every((s) => s.logged);
+    const pick: HomeCard | null = pickHomeCard({ sessions, sets, today, goals, doneToday });
+    if (!pick) return null;
+    const base = [styles.card, { backgroundColor: theme.card, borderColor: theme.border }];
+    const row = (icon: string, color: string, title: string, body: string, extra?: React.ReactNode, onPress?: () => void) => (
+      <TouchableOpacity activeOpacity={onPress ? 0.8 : 1} onPress={onPress} disabled={!onPress} style={base} accessibilityRole={onPress ? 'button' : undefined}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+          <Ionicons name={icon as any} size={26} color={color} style={{ marginRight: 12, marginTop: 2 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: theme.text, fontWeight: '800', fontSize: 16 }}>{title}</Text>
+            <Text style={{ color: theme.text, opacity: 0.8, lineHeight: 21, marginTop: 2 }}>{body}</Text>
+            {extra}
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+    const thisWeek = weekKey(today);
+    switch (pick.kind) {
+      case 'comeback':
+        return row('sunny', '#E0A400', 'Welcome back', pick.message);
+      case 'guard':
+        return row(
+          'flame', '#F97316', 'Keep your streak going', pick.message,
+          <TouchableOpacity onPress={() => update({ restWeeks: [...goals.restWeeks, thisWeek] })} style={styles.cardLink} accessibilityRole="button">
+            <Text style={{ color: theme.accent, fontWeight: '800' }}>Ill or away? Mark this week as a rest week</Text>
+          </TouchableOpacity>,
+        );
+      case 'rested':
+        return row(
+          'bed', theme.accent, 'Rest week is on', 'Your streak is safe. Rest well and come back strong.',
+          <TouchableOpacity onPress={() => update({ restWeeks: goals.restWeeks.filter((w) => w !== thisWeek) })} style={styles.cardLink} accessibilityRole="button">
+            <Text style={{ color: theme.accent, fontWeight: '800' }}>Undo</Text>
+          </TouchableOpacity>,
+        );
+      case 'goal':
+        return row('flag', theme.accent, `Nearly there: ${pick.name}`, pick.sentence, undefined, () => goToExercise(pick.name));
+      case 'plateau':
+        return row('bulb', '#E0A400', `A little stuck on ${pick.name}?`, `It happens to everyone. ${pick.tip}`, undefined, () => goToExercise(pick.name));
+      case 'milestone':
+        return row('ribbon', theme.accent, 'Your next badge', pick.message, undefined, goToProgress);
+      case 'why':
+        return row('heart', '#E0457B', 'Why you started', `"${pick.text}"`);
+      default:
+        return null;
+    }
+  };
+
+  // A small look at progress, with the way into the full page.
+  const renderPeek = (d: Dashboard) => {
+    if (!d.rows.some((r) => r.logged)) return null;
+    const streak = weeklyStreak(d.rows, today, goals.restWeeks);
+    const grid = consistencyGrid(sessions, sets, today, 4);
+    const fresh = freshRecord(sets, today);
+    const cellColor = (level: number, future: boolean) => {
+      if (future) return 'transparent';
+      if (level === 0) return theme.type === 'dark' ? 'rgba(234,244,242,0.08)' : 'rgba(16,32,30,0.07)';
+      const a = [0, 0.3, 0.6, 1][level];
+      return theme.type === 'dark' ? `rgba(45,212,191,${a})` : `rgba(15,118,110,${a})`;
+    };
     return (
-      <View style={styles.statsRow}>
-        <View style={[card, styles.statCard]}>
-          <Text style={[styles.bigNumber, { color: theme.accent }]}>{d.streak}</Text>
-          <Text style={[styles.statLabel, { color: theme.text }]}>{t('dashStreak')}</Text>
-        </View>
-        <View style={[card, styles.statCard]}>
-          <Text style={[styles.bigNumber, { color: theme.accent }]}>
-            {formatVolume(thisWeek)}
-            <Text style={styles.unit}> {weightFormat}</Text>
-          </Text>
-          <Text style={[styles.statLabel, { color: theme.text }]}>{t('dashVolume')}</Text>
-          <Text style={[muted, { fontSize: 12, marginTop: 2 }]}>
-            {pct === null ? t('dashVolumeNoPrev') : `${arrow}${Math.abs(pct)}% ${t('dashVsLastWeek')}`}
-          </Text>
-        </View>
+      <View>
+        {fresh && (
+          <TouchableOpacity onPress={() => goToExercise(fresh.name)} style={[styles.recordChip, { backgroundColor: 'rgba(224,164,0,0.16)', borderColor: '#E0A400' }]} accessibilityRole="button">
+            <Ionicons name="trophy" size={18} color="#E0A400" style={{ marginRight: 8 }} />
+            <Text style={{ color: theme.text, fontWeight: '800', flex: 1 }} numberOfLines={1}>
+              New record: {fresh.name}, {formatKg(fresh.wt)} kg x {fresh.reps}
+            </Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={card} activeOpacity={0.8} onPress={goToProgress} accessibilityRole="button" accessibilityLabel="Open My Progress">
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ alignItems: 'center', marginRight: 16 }}>
+              <Ionicons name="flame" size={26} color={streak > 0 ? '#F97316' : theme.text} style={{ opacity: streak > 0 ? 1 : 0.35 }} />
+              <Text style={{ color: theme.text, fontSize: 28, fontWeight: '900' }}>{streak}</Text>
+              <Text style={[muted, { fontSize: 11 }]}>{streak === 1 ? 'week' : 'weeks'}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: theme.text, fontWeight: '800', fontSize: 16 }}>Your progress</Text>
+              <Text style={{ color: theme.text, opacity: 0.8, lineHeight: 20, marginTop: 2 }}>{homeInsight(sessions, sets, today, goals.restWeeks)}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', marginLeft: 10 }}>
+              {grid.map((col, w) => (
+                <View key={w} style={{ marginRight: w === grid.length - 1 ? 0 : 3 }}>
+                  {col.map((cell, i) => (
+                    <View key={i} style={{ width: 9, height: 9, borderRadius: 3, marginBottom: i === 6 ? 0 : 3, backgroundColor: cellColor(cell.level, cell.future) }} />
+                  ))}
+                </View>
+              ))}
+            </View>
+          </View>
+          <Text style={{ color: theme.accent, fontWeight: '800', marginTop: 10 }}>See my progress</Text>
+        </TouchableOpacity>
       </View>
     );
   };
 
-  // A short text summary of this week to send to someone.
-  const shareWeek = (d: Dashboard) => {
-    const planned = d.week.filter((c) => c.workouts.length > 0);
-    const done = planned.filter((c) => c.state === 'done').length;
-    const lines = [
-      `${personal.userName.trim() ? personal.userName.trim() + "'s" : 'My'} week on Urudhi`,
-      `${done} of ${planned.length} workouts done`,
-      `${formatVolume(d.volume.thisWeek)} ${weightFormat} lifted`,
-      d.streak > 0 ? `${d.streak} week streak` : '',
-    ].filter(Boolean);
-    Share.share({ message: lines.join('\n') }).catch(() => {});
-  };
-
-  const renderShare = (d: Dashboard) =>
-    d.rows.some((r) => r.logged) ? (
+  // Fast ways in: a workout without a plan, one from the past, or a generated plan.
+  const renderQuick = () => (
+    <View style={styles.quickRow}>
       <TouchableOpacity
-        style={[styles.shareButton, { borderColor: theme.accent, backgroundColor: theme.card }]}
-        onPress={() => shareWeek(d)}
+        style={[styles.quick, { backgroundColor: theme.card, borderColor: theme.border }]}
+        onPress={() => navigation.navigate('My Calendar', { screen: 'LogWorkout', params: { selectedDate: new Date().toISOString() }, initial: false })}
+        accessibilityRole="button"
       >
-        <Ionicons name="share-social-outline" size={18} color={theme.accent} style={{ marginRight: 8 }} />
-        <Text style={{ color: theme.accent, fontWeight: '800' }}>{t('shareMyWeek')}</Text>
+        <Ionicons name="flash" size={20} color={theme.accent} />
+        <Text style={[styles.quickText, { color: theme.text }]}>Quick workout</Text>
       </TouchableOpacity>
-    ) : null;
-
-  const renderRecords = (d: Dashboard) => (
-    <TouchableOpacity style={card} activeOpacity={0.8} onPress={() => navigation.navigate('My Progress')}>
-      <Text style={heading}>{t('dashPRs')}</Text>
-      {d.records.length === 0 ? (
-        <Text style={muted}>{t('dashPRNone')}</Text>
-      ) : (
-        d.records.map((r, i) => (
-          <View key={i} style={styles.prRow}>
-            <Ionicons name="trophy-outline" size={20} color={theme.text} style={{ marginRight: 10 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.prName, { color: theme.text }]}>{r.name}</Text>
-              <Text style={muted}>
-                {r.wt} {weightFormat} × {r.reps} · {relativeDay(r.d)}
-              </Text>
-            </View>
-          </View>
-        ))
+      <TouchableOpacity
+        style={[styles.quick, { backgroundColor: theme.card, borderColor: theme.border }]}
+        onPress={() => navigation.navigate('My Calendar', { screen: 'LogWorkout', params: { selectedDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 12).toISOString() }, initial: false })}
+        accessibilityRole="button"
+      >
+        <Ionicons name="time-outline" size={20} color={theme.accent} />
+        <Text style={[styles.quickText, { color: theme.text }]}>Log a past one</Text>
+      </TouchableOpacity>
+      {BUILD.showAiPlanGenerator && (
+        <TouchableOpacity
+          style={[styles.quick, { backgroundColor: theme.card, borderColor: theme.border }]}
+          onPress={() => goToWorkouts('GeneratePlan')}
+          accessibilityRole="button"
+        >
+          <Ionicons name="sparkles-outline" size={20} color={theme.accent} />
+          <Text style={[styles.quickText, { color: theme.text }]} numberOfLines={1}>New plan</Text>
+        </TouchableOpacity>
       )}
-    </TouchableOpacity>
+    </View>
   );
+
+  // A short list for the first days, which goes away once everything is done (or when hidden).
+  const renderChecklist = (d: Dashboard) => {
+    if (goals.checklistHidden) return null;
+    const steps = checklistSteps({
+      plans: d.workoutCount,
+      scheduled: d.rows.length,
+      logged: d.rows.filter((r) => r.logged).length,
+      visitedProgress: goals.progressVisited,
+    });
+    if (steps.every((s) => s.done)) return null;
+    return (
+      <View style={card}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={heading}>Getting started</Text>
+          <TouchableOpacity onPress={() => update({ checklistHidden: true })} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center', paddingLeft: 12 }}>
+            <Text style={{ color: theme.accent, fontWeight: '700' }}>Hide</Text>
+          </TouchableOpacity>
+        </View>
+        {steps.map((s) => (
+          <View key={s.label} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5 }}>
+            <Ionicons name={s.done ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={s.done ? theme.accent : theme.text} style={{ marginRight: 10, opacity: s.done ? 1 : 0.4 }} />
+            <Text style={{ color: theme.text, opacity: s.done ? 0.55 : 1, textDecorationLine: s.done ? 'line-through' : 'none' }}>{s.label}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
 
   // A short note from the sender, chosen by what is happening today.
   const renderNote = (d: Dashboard) => {
-    const sessions = d.week.find((c) => c.isToday)?.workouts ?? [];
-    const allDone = sessions.length > 0 && sessions.every((s) => s.logged);
-    const recordToday = d.records.some((r) => dayDiff(r.d, new Date()) >= -1);
+    const sessionsToday = d.week.find((c) => c.isToday)?.workouts ?? [];
+    const allDone = sessionsToday.length > 0 && sessionsToday.every((s) => s.logged);
+    const recordToday = freshRecord(sets, today) ? dayDiff(freshRecord(sets, today)!.d, today) >= -1 : false;
     const loggedCount = d.rows.filter((r) => r.logged).length;
+    const streak = weeklyStreak(d.rows, today, goals.restWeeks);
     let text = '';
     if (recordToday) text = noteText('pr');
     else if (allDone && loggedCount === 1) text = noteText('firstWorkout');
-    else if (allDone && d.streak >= 2) text = noteText('streak', d.streak);
+    else if (allDone && streak >= 2) text = noteText('streak', streak);
     else if (allDone) text = noteText('finish');
-    else if (sessions.length > 0) text = noteText('welcomeBack');
+    else if (sessionsToday.length > 0) text = noteText('welcomeBack');
     else if (d.workoutCount > 0 || d.rows.length > 0) text = noteText('restDay');
     if (!text) return null;
     return (
@@ -335,12 +450,10 @@ export default function Home({ navigation }: any) {
     </View>
   );
 
+  const plannedPerWeek = data ? data.week.flatMap((c) => c.workouts).length : 0;
+
   return (
-    <ScrollView
-      style={{ backgroundColor: theme.background }}
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       {greetingText ? (
         <>
           <Text style={[styles.greeting, { color: theme.accent }]}>{greetingText}</Text>
@@ -360,10 +473,7 @@ export default function Home({ navigation }: any) {
           <Text style={{ color: theme.text, fontWeight: '800', marginBottom: 4 }}>{t('backupReminderTitle')}</Text>
           <Text style={{ color: theme.text, opacity: 0.8, marginBottom: 10 }}>{t('backupReminderBody')}</Text>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <TouchableOpacity
-              style={[styles.startButton, { backgroundColor: theme.buttonBackground }]}
-              onPress={() => navigation.navigate('Settings')}
-            >
+            <TouchableOpacity style={[styles.startButton, { backgroundColor: theme.buttonBackground }]} onPress={() => navigation.navigate('Settings')}>
               <Text style={{ color: theme.buttonText, fontWeight: '700' }}>{t('backupReminderNow')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -385,11 +495,23 @@ export default function Home({ navigation }: any) {
         <>
           {renderToday(data)}
           {renderWeek(data)}
-          {renderStats(data)}
-          {renderShare(data)}
-          {renderRecords(data)}
+          {renderMotivation(data)}
+          {renderPeek(data)}
+          {renderChecklist(data)}
+          {renderQuick()}
         </>
       )}
+
+      <WeeklyGoalModal
+        visible={goalModal}
+        planned={plannedPerWeek}
+        current={goals.weeklySessions}
+        onPick={(value) => {
+          update({ weeklySessions: value });
+          setGoalModal(false);
+        }}
+        onClose={() => setGoalModal(false)}
+      />
 
       <Onboarding />
     </ScrollView>
@@ -400,7 +522,6 @@ const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, paddingTop: 50, paddingBottom: 30 },
   title: { fontSize: 36, fontWeight: '900', textAlign: 'center' },
   greeting: { fontSize: 28, fontWeight: '800', textAlign: 'center' },
-  shareButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: 24, paddingVertical: 12, marginBottom: 14 },
   note: { borderWidth: 1, borderLeftWidth: 4, borderRadius: 14, padding: 14, marginBottom: 14 },
   tagline: { fontSize: 14, textAlign: 'center', opacity: 0.7, marginBottom: 18 },
   card: { borderWidth: 1, borderRadius: 20, padding: 18, marginBottom: 14 },
@@ -410,33 +531,15 @@ const styles = StyleSheet.create({
   todayName: { fontSize: 22, fontWeight: '800' },
   startButton: { borderRadius: 20, paddingVertical: 10, paddingHorizontal: 16 },
   doneBadge: { flexDirection: 'row', alignItems: 'center' },
-  weekHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  weekHeader: { flexDirection: 'row', alignItems: 'center' },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   dayCol: { alignItems: 'center', width: 40 },
   dayLetter: { fontWeight: '700', marginBottom: 6 },
-  dayCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  dayCircle: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   todayBar: { height: 3, width: 18, borderRadius: 2, marginTop: 6 },
-  statsRow: { flexDirection: 'row', gap: 12 },
-  statCard: { flex: 1, alignItems: 'center', marginBottom: 14 },
-  bigNumber: { fontSize: 32, fontWeight: '900' },
-  unit: { fontSize: 14, fontWeight: '700' },
-  statLabel: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
-  prRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
-  prName: { fontSize: 16, fontWeight: '700' },
-  github: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 10,
-    marginTop: 6,
-  },
+  cardLink: { minHeight: 44, justifyContent: 'center', marginTop: 4 },
+  recordChip: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 18, paddingVertical: 10, paddingHorizontal: 14, marginBottom: 12, minHeight: 44 },
+  quickRow: { flexDirection: 'row', marginBottom: 14 },
+  quick: { flex: 1, borderWidth: 1, borderRadius: 18, paddingVertical: 12, alignItems: 'center', marginHorizontal: 4, minHeight: 64, justifyContent: 'center' },
+  quickText: { fontSize: 12, fontWeight: '700', marginTop: 4, textAlign: 'center' },
 });

@@ -2,7 +2,7 @@
 import assert from 'assert';
 import {
   normaliseGoals, DEFAULT_GOALS, weeklyTarget, goalProgress, streakGuard, comeback, nextMilestone, findPlateau,
-  pickHomeCard, homeInsight, checklistSteps, monthReview, reviewMonthFor, weekKey, LiftGoal,
+  pickHomeCard, homeInsight, checklistSteps, monthReview, reviewMonthFor, weekKey, LiftGoal, partOfDay, estimateMinutes, firstSentence,
 } from '../../utils/motivation';
 import { weeklyStreak } from '../../utils/dashboardStats';
 import { badges, ProgSet, ProgSession } from '../../utils/progressStats';
@@ -147,5 +147,20 @@ assert.ok(!NOPE.test(mr.text));
 assert.strictEqual(monthReview(sessions, sets, new Date(2026, 10, 2), 2026, 9).partial, false);
 assert.strictEqual(monthReview([], [], WED, 2026, 9).sessions, 0);
 assert.strictEqual(weekKey(WED), day(2026, 10, 19));
+
+// --- home helpers
+assert.strictEqual(partOfDay(7), 'Good morning');
+assert.strictEqual(partOfDay(13), 'Good afternoon');
+assert.strictEqual(partOfDay(19), 'Good evening');
+assert.strictEqual(partOfDay(2), 'Hello');
+assert.strictEqual(partOfDay(23), 'Hello');
+assert.strictEqual(estimateMinutes(15, null), 45, '15 sets: 37.5 + 5 = 42.5, rounded to 45');
+assert.strictEqual(estimateMinutes(2, null), 10, 'never under 10 minutes');
+assert.strictEqual(estimateMinutes(15, 3000), 50, 'past sessions averaged 50 minutes');
+assert.strictEqual(estimateMinutes(15, 30), 45, 'a nonsense duration is ignored');
+assert.strictEqual(firstSentence('Keep your elbows tucked. Breathe out on the push.'), 'Keep your elbows tucked.');
+assert.strictEqual(firstSentence('No full stop here'), 'No full stop here');
+assert.ok(firstSentence('x'.repeat(300)).length <= 130);
+assert.strictEqual(firstSentence('  Spaces   and \n lines. More.  '), 'Spaces and lines.');
 
 console.log('motivation: all checks passed');

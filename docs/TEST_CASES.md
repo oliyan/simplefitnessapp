@@ -51,23 +51,31 @@ Tested on an Android emulator only, with fake data: Home, calendar, scheduling a
 
 ## 2. Home dashboard
 
-*Set up first: schedule `T-Plan` for the coming weeks (section 7) and log at least one workout (section 9).*
+*Set up first: schedule `T-Plan` for the coming weeks (section 7) and log at least one workout (section 9). To see Home with a long history, load the sample data described in section 10.*
+
+Home is for today: what to do now and whether the week is on track. The long view (graphs, records, badges) is in My Progress; Home only gives a peek and a link.
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| HOM-01 | 🔴 | Open Home on a day with a scheduled workout. | **Today** card lists it with a **Start workout** button. | ☐ | |
+| HOM-01 | 🔴 | Open Home on a day with a scheduled workout. | **Today** card lists it with a **Start workout** button, and under the name one line such as "5 exercises, about 50 min, chest, shoulders". | ☐ | |
 | HOM-02 | 🔴 | Tap **Start workout**. | Opens that workout's start screen. **Back** returns to the **calendar** (not a blank or stuck screen). | ☐ | |
-| HOM-03 | 🔴 | After logging today's workout, return to Home. | That session shows **Done ✓**. The *This week* circle for today is filled with a tick. | ☐ | |
-| HOM-04 | 🟡 | Look at **This week**. | Monday to Sunday. Done = filled tick, planned = ring, missed (past, not logged) = dashed, rest = faint. Today underlined. "X of Y done" matches. | ☐ | |
-| HOM-05 | 🟡 | Tap the **This week** card. | Opens the calendar. | ☐ | |
-| HOM-06 | 🟡 | Check **Week streak** after logging in this week only. Then (if you have older logs) compare with how many consecutive weeks you trained. | Counts weeks (Mon-Sun) in a row with at least one logged workout. A new week with nothing logged yet does **not** reset it. | ☐ | |
-| HOM-07 | 🟡 | Check **Lifted this week**. | Roughly the sum of weight × reps of this week's logged sets. Shows a comparison with last week (or "No data from last week yet"). | ☐ | |
-| HOM-08 | 🟡 | Log a set heavier than you have ever lifted on one exercise (you need an earlier log of that exercise first). Return to Home. | It appears under **Recent personal records** with the weight × reps and "Today". | ☐ | |
-| HOM-09 | 🟡 | Look at personal records for an exercise you have only ever done once. | Not listed (the first time only sets the starting point). | ☐ | |
-| HOM-10 | 🟡 | On a rest day (nothing scheduled today). | Card reads **Rest day** and shows the next workout ("Next: Tomorrow · Pull"), or offers *Schedule a plan* if nothing is scheduled. | ☐ | |
-| HOM-11 | ⚪ | Tap **Recent personal records**. | Opens My Progress. | ☐ | |
+| HOM-03 | 🔴 | After logging today's workout, return to Home. | That session shows **Done**. The *This week* circle for today is filled with a tick. | ☐ | |
+| HOM-04 | 🟡 | Look at **This week**. | Monday to Sunday. Done = filled tick, planned = ring, missed (past, not logged) = dashed, rest = faint. Today underlined. Next to the heading, "2 of 3 sessions" and a ring with "2/3". | ☐ | |
+| HOM-05 | 🟡 | Tap the **This week** card (not the ring). | Opens the calendar. | ☐ | |
+| HOM-06 | 🟡 | Look at the **Your progress** card (needs at least one logged session). | A flame with the weeks in a row, one plain sentence ("Bench Press is up 12% in the last 2 months"), a tiny 4-week grid and **See my progress**. Tapping it opens My Progress. It matches the Overview tab. | ☐ | |
+| HOM-07 | 🟡 | Check Home for things that moved to My Progress. | No **Lifted this week** card, no **Recent personal records** list and no **Share my week** button on Home (the recap and its Share are on the Overview tab). | ☐ | |
+| HOM-08 | 🟡 | Log a set heavier than you have ever lifted on one exercise (you need an earlier log of that exercise first). Return to Home. | A gold chip "New record: Squat, 60 kg x 8" shows above the progress card for 7 days. Tapping it opens that exercise's page. | ☐ | |
+| HOM-09 | 🟡 | Look at records for an exercise you have only ever done once. | No chip (the first time only sets the starting point). | ☐ | |
+| HOM-10 | 🟡 | On a rest day (nothing scheduled today). | Card reads **Rest day** with the next workout ("Next: Tomorrow, Pull") plus its size line, and "Rest is part of the plan. A relaxed walk counts too." Or it offers *Schedule a plan* if nothing is scheduled. | ☐ | |
 | HOM-12 | ⚪ | Scroll the Home page to the bottom, then open Settings and scroll to **Community**. | Home has no GitHub button. The **GitHub** button in Settings opens the repo in a browser. | ☐ | |
 | HOM-13 | ⚪ | Make two sessions on the same day (one done, one not). | Both appear in *Today*, each with the right status. | ☐ | |
+| HOM-14 | 🟡 | Open Home in the morning, afternoon and evening (or change the phone's clock), with a name set and no custom greeting. | "Good morning, Priya!", "Good afternoon, ...", "Good evening, ...". A custom greeting (for example on a personal build) is shown as written. | ☐ | |
+| HOM-15 | 🟡 | With a coach note already saved for today's workout (open the Start screen once with the AI Coach on), return to Home. | Today's card also shows the note's first sentence in italics. Home itself never calls the AI. | ☐ | |
+| HOM-16 | 🔴 | Tap the **ring** on This week. | A small sheet "Sessions per week": **Follow my plan** (selected by default) and 1 to 7. Picking 4 changes the ring to "x/4" and the text adds "(your goal)". **Follow my plan** goes back to the plan's number. | ☐ | |
+| HOM-17 | 🟡 | Reach the weekly goal. | The ring turns green with a tick and the text reads "Goal met: 3 of 3 sessions". | ☐ | |
+| HOM-18 | 🟡 | Look at the bottom of Home. | Three quick buttons: **Quick workout**, **Log a past one**, and (where AI plans are on) **New plan**. Each opens the right screen: Quick workout opens today's log, Log a past one opens it dated yesterday, New plan opens the plan generator. | ☐ | |
+| HOM-19 | 🟡 | New user: create a plan, schedule it, finish a workout, open My Progress, checking Home between steps. | A **Getting started** card lists 4 steps and ticks them off as done. It disappears when all are done, or when you tap **Hide**. | ☐ | |
+| HOM-20 | 🟡 | Check how many motivation cards show at once. | Never more than one (welcome back, streak, goal, stuck tip, next badge or your reason; see section 10A). | ☐ | |
 
 ---
 
@@ -304,7 +312,7 @@ The Progress tab now has four tabs: **Overview**, **Exercises**, **Charts** and 
 
 | ID | Pri | Steps | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| PRG-50 | 🔴 | Open **Charts**. | A ribbon **By exercise / By workout / Overall** at the top (stays on top in every mode). No second title, no Best lifts card and no View Logs button on this tab. | ☐ | |
+| PRG-50 | 🔴 | Open **Charts**. | A ribbon **Getting stronger? / Doing enough? / Balanced?** (captions By exercise, By workout, Overall) at the top, staying on top in every mode. No second title, no Best lifts card and no View Logs button on this tab. | ☐ | |
 | PRG-51 | 🔴 | Open Charts on a phone with history. | It opens already showing the most recently trained workout, day and exercise with a graph drawn (not empty dropdowns), measured as **Estimated max**. | ☐ | |
 | PRG-52 | 🟡 | Look at the metric buttons and their heading. | Heading **What to show**. Names are plain: **Each set, Effort score, Estimated max, Reps**, and in By workout **Duration**. | ☐ | |
 | PRG-53 | 🔴 | Look above the chart. | The time frame buttons **Week, Month, 3 Months, Year, All Time** sit directly above the chart with no heading. **3 Months** is selected first. Changing it redraws the chart. | ☐ | |
@@ -337,6 +345,37 @@ The Progress tab now has four tabs: **Overview**, **Exercises**, **Charts** and 
 | PRG-76 | 🟡 | Look at every number on these pages. | Only kg (never lb); thousands have a comma (1,250); no more than one decimal. | ☐ | |
 | PRG-77 | 🟡 | Read all the new text. | No dashes used as punctuation (only commas, colons, plain hyphens). | ☐ | |
 | PRG-78 | 🟡 | Make a year of history (`python tools/sample-data/make_sample_db.py year.db 0 52`), import it and use all four tabs. | About 140 sessions and 2,000 sets load in a second or two; scrolling, tabs and the exercise chart stay smooth. | ☐ | |
+
+---
+
+## 10A. Goals, streak care and motivation
+
+These need history to show up. Use the sample data from section 10 (`make_sample_db.py`; its newest session can be moved back with the second argument to test the comeback card, for example `python make_sample_db.py old.db 20`).
+
+| ID | Pri | Steps | Expected | Result | Notes |
+|---|---|---|---|---|---|
+| GOL-01 | 🔴 | Open an exercise you lift with weight (My Progress > Exercises > one). Under the chart find **Goal** and tap **Set a goal**. | A sheet "Goal for <exercise>" shows your heaviest so far, a target weight (a sensible default a little above it) and date chips **4 weeks, 8 weeks, 12 weeks, No date**. | ☐ | |
+| GOL-02 | 🔴 | Save a goal of 60 kg for 8 weeks. | The Goal card shows a ring with the percent, "60 kg on one set" and a sentence such as "52.5 of 60 kg, 70% of the way. 8 weeks left, on track." The chart switches to **Heaviest set** and shows a gold dotted line "Goal 60". | ☐ | |
+| GOL-03 | 🟡 | Make the goal harder than your pace (for example a very near date), or let the date pass. | The sentence says "a little behind, still within reach", or "The date has passed, and it is fine to move it". Never scolding. | ☐ | |
+| GOL-04 | 🟡 | Lift the target on one set (or set a goal at or below your heaviest). | Ring turns green at 100% and the sentence reads "Goal reached: 60 kg on <exercise>. Well done!". | ☐ | |
+| GOL-05 | 🟡 | Tap **Edit**, change the weight, keep **No date** selected. | Saves with the date you already had. **Remove goal** deletes it. | ☐ | |
+| GOL-06 | 🟡 | On a different metric (Estimated max) with a goal set, look at the Goal card. | A **Show on chart** link switches to Heaviest set, where the dotted line is drawn. | ☐ | |
+| GOL-07 | 🟡 | Open **Overview**. | A **Goals** card lists up to 4 goals with a ring and sentence each; tapping one opens the exercise. With none, it explains goals and has **Choose an exercise**. | ☐ | |
+| GOL-08 | 🟡 | Set a goal that is within 20 percent of done (you at least 80% there). Open Home. | The one motivation card reads "Nearly there: <exercise>" with the sentence. Tapping opens the exercise. | ☐ | |
+| GOL-09 | 🔴 | Skip this week's training until Thursday or later, with a streak of 1 or more weeks. Open Home. | The card "Keep your streak going": "3 days left this week. One session keeps your 9 week streak." On Sunday: "Last day of the week. One session today keeps your 9 week streak." It does not show Monday to Wednesday, or once you trained this week. | ☐ | |
+| GOL-10 | 🔴 | On that card tap **Ill or away? Mark this week as a rest week**. | The card becomes "Rest week is on. Your streak is safe..." with **Undo**. The streak number stays the same on Home and Overview (it holds, it does not grow). Next week, if you train, the streak carries on. | ☐ | |
+| GOL-11 | 🟡 | On Overview tap "Ill or away this week? Mark it as a rest week", then tap it again. | It turns on ("Rest week is on, your streak is safe. Tap to undo.") and back off. Home agrees. | ☐ | |
+| GOL-12 | 🔴 | Use data whose newest session is 10 or more days old (`make_sample_db.py old.db 12`). Open Home. | The card "Welcome back": 10 to 20 days "A short break is nothing...", 21 to 41 days "Start a little lighter...", 42 or more days "A long break is just part of the story...". Never a count of missed days. | ☐ | |
+| GOL-13 | 🟡 | Train on an exercise for 4 weeks without any rise in its best (or use data that is flat). Open Overview and that exercise. | A card "A little stuck on <exercise>?" with one gentle tip (easier week, one more rep, a variation, sleep and food, slower lowering). **Hide this for 4 weeks** on the exercise page hides it, and it comes back later. | ☐ | |
+| GOL-14 | 🟡 | Be 1 to 3 sessions from a badge (for example 8 of 10 sessions) with nothing more urgent. Open Home. | "Your next badge": "2 more sessions to the "10 sessions" badge." Tapping opens My Progress. | ☐ | |
+| GOL-15 | 🟡 | Overview: tap **Write it** on **Why I started**, type a line, save. Then open Home on a calm day. | The line appears on Overview in italics and on Home as "Why you started" when nothing more urgent is showing. **Edit** changes it; saving an empty line clears it. It stays on the phone. | ☐ | |
+| GOL-16 | 🟡 | Overview: look at the month card. | "October so far" (or the month just ended in the first 5 days of a month, titled "... in review"): sessions, active days, kg lifted, records, change against the month before, heaviest lift and most trained muscle. | ☐ | |
+| GOL-17 | 🟡 | Tap **Share** on the month card. | The share sheet opens with the card as a picture (no Share button in it, "Urudhi" in the corner); the text version is used if the phone cannot share a picture. | ☐ | |
+| GOL-18 | ⚪ | In a month with no sessions, open the month card. | "No sessions in <month> yet. One workout is all it takes to start the month." | ☐ | |
+| GOL-19 | 🟡 | Check every motivation text. | Warm, never scolding, no dashes used as punctuation, English only (or the personal build's own voice for the notes). | ☐ | |
+| GOL-20 | 🟡 | Close and reopen the app. | Goals, the weekly number, rest weeks, hidden tips, "Why I started" and the dismissed checklist are all still there. | ☐ | |
+| GOL-21 | ⚪ | Charts tab: look at the three buttons at the top. | They are named by question: **Getting stronger? (By exercise)**, **Doing enough? (By workout)**, **Balanced? (Overall)**. They behave as before. | ☐ | |
+| GOL-22 | ⚪ | Switch between Overview, Exercises and back several times. | The numbers appear at once (no spinner after the first load) and refresh a moment later. | ☐ | |
 
 ---
 
@@ -527,7 +566,7 @@ Happens every time?  (always / sometimes / once)
 | Section | 🔴 count | Done | Failed | Notes |
 |---|---|---|---|---|
 | 1 Install | 1 | | | |
-| 2 Home | 3 | | | |
+| 2 Home | 4 | | | |
 | 3 Settings | 1 | | | |
 | 4 Workouts | 3 | | | |
 | 5 Weekdays | 1 | | | |
@@ -537,9 +576,10 @@ Happens every time?  (always / sometimes / once)
 | 9 Doing a workout | 8 | | | |
 | 9A Workout screen (incl. RES) | 17 | | | |
 | 9B Look, feel, personal | 7 | | | |
+| 10A Goals and motivation | 5 | | | |
 | 10 Progress | 19 | | | |
 | 11 Backup | 2 | | | |
 | 12-17 AI Coach | 15 | | | |
 | 18 Dark theme | 1 | | | |
 
-**Total 🔴 cases: 90.**
+**Total 🔴 cases: 98.**

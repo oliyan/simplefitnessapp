@@ -21,6 +21,10 @@ import { useTranslation } from 'react-i18next';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { useSettings } from '../context/SettingsContext';
 import ProgressHighlights from '../components/ProgressHighlights';
+import GraphModeRibbon from '../components/progress/charts/GraphModeRibbon';
+import TimeFrameChips from '../components/progress/charts/TimeFrameChips';
+import { ChartInfoButton, ChartHelpBox } from '../components/progress/charts/ChartHelp';
+import ChartSentence, { chartSentence } from '../components/progress/charts/ChartSentence';
 import StickyYAxis from '../components/StickyYAxis';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { WeightLogStackParamList } from '../App';
@@ -3175,97 +3179,33 @@ const calculateCES = (sets: LogData[]): number => {
     );
   };
 
-  // The explanation of the chart sits behind a small (i) button instead of taking space all the time.
-  const renderInfoButton = () => {
-    if (!getChartExplanation().text) return null;
-    return (
-      <TouchableOpacity
-        onPress={() => setShowChartHelp((v) => !v)}
-        accessibilityRole="button"
-        accessibilityLabel="What does this chart show?"
-        style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
-      >
-        <Ionicons name={showChartHelp ? 'information-circle' : 'information-circle-outline'} size={24} color={theme.accent} />
-      </TouchableOpacity>
-    );
-  };
+  // Small pieces live in components/progress/charts: the (i) button and help box, the sentence, the chips.
+  const renderInfoButton = () =>
+    getChartExplanation().text ? <ChartInfoButton open={showChartHelp} onPress={() => setShowChartHelp((v) => !v)} /> : null;
 
-  const renderChartHelp = () => {
-    if (!showChartHelp || !getChartExplanation().text) return null;
-    return (
-      <View style={[styles.infoBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.infoTitle, { color: theme.text }]}>{getChartExplanation().title}</Text>
-        <Text style={[styles.infoText, { color: theme.text }]}>{getChartExplanation().text}</Text>
-      </View>
-    );
-  };
+  const renderChartHelp = () =>
+    showChartHelp && getChartExplanation().text ? <ChartHelpBox title={getChartExplanation().title} text={getChartExplanation().text} /> : null;
 
-  // One plain sentence about the line that is drawn, so the chart does not have to be decoded.
   const renderChartSentence = () => {
-    if (isLoading || !chartData || chartData.length === 0) return null;
+    if (isLoading || calculationType === 'MuscleDistribution' || calculationType === 'OverallMuscleGroups') return null;
     const timeBased = graphMode === 'Time' && calculationType === 'Time';
-    if (calculationType === 'MuscleDistribution' || calculationType === 'OverallMuscleGroups') return null;
-    let text: string;
-    if (chartData.length < 2) {
-      text = 'One data point so far. Log again and a line appears.';
-    } else if (timeBased) {
-      const avg = chartData.reduce((a, p) => a + p.y, 0) / chartData.length;
-      text = `Your sessions average ${Math.round(avg / 60)} minutes.`;
-    } else if (percentageChange !== null) {
-      const rounded = Math.round(Math.abs(percentageChange));
-      text =
-        percentageChange === 999 ? 'Up from nothing. A great start.'
-        : percentageChange >= 1 ? `Up ${rounded}% over this time frame.`
-        : percentageChange <= -1 ? `Down ${rounded}% over this time frame. A lighter spell is normal and you can build back.`
-        : 'Holding steady over this time frame.';
-    } else {
-      return null;
-    }
-    return <Text style={{ color: theme.text, fontSize: 15, lineHeight: 21, marginTop: 10 }}>{text}</Text>;
+    const average = timeBased && chartData.length > 0 ? chartData.reduce((sum, point) => sum + point.y, 0) / chartData.length : null;
+    return <ChartSentence text={chartSentence({ count: chartData?.length ?? 0, averageSeconds: average, percentChange: percentageChange })} />;
   };
 
-  // Render timeframe selector buttons
-  const renderTimeFrameButtons = () => {
-    const timeFrames: { value: TimeFrame; label: string }[] = [
-      { value: 'week', label: t('Week') },
-      { value: 'month', label: t('Month') },
-      { value: '3months', label: t('3 Months') },
-      { value: 'year', label: t('Year') },
-      { value: 'all', label: t('All Time') }
-    ];
-
-    return (
-      <View style={styles.timeFrameContainer}>
-        <View style={styles.timeFrameRow}>
-          {timeFrames.map((frame) => (
-            <TouchableOpacity
-              key={frame.value}
-              style={[
-                styles.timeFrameButton,
-                timeFrame === frame.value && styles.timeFrameButtonActive,
-                { 
-                  backgroundColor: timeFrame === frame.value ? theme.buttonBackground : theme.card,
-                }
-              ]}
-              onPress={() => setTimeFrame(frame.value)}
-            >
-              <Text 
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                style={[
-                  styles.timeFrameButtonText, 
-                  timeFrame === frame.value && styles.timeFrameButtonTextActive,
-                  { color: timeFrame === frame.value ? theme.buttonText : theme.text }
-                ]}
-              >
-                {frame.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    );
-  };
+  const renderTimeFrameButtons = () => (
+    <TimeFrameChips<TimeFrame>
+      value={timeFrame}
+      onChange={setTimeFrame}
+      options={[
+        { value: 'week', label: t('Week') },
+        { value: 'month', label: t('Month') },
+        { value: '3months', label: t('3 Months') },
+        { value: 'year', label: t('Year') },
+        { value: 'all', label: t('All Time') },
+      ]}
+    />
+  );
 
   // Render day dropdown button - hide for Time mode
   const renderDayDropdown = () => {
@@ -3420,40 +3360,7 @@ const calculateCES = (sets: LogData[]): number => {
 
 
   // One ribbon with three segments; the selected one is filled. It sits at the top of the screen.
-  const renderGraphModeToggle = () => {
-    const segments: Array<{ mode: 'Exercise' | 'Time' | 'Overall'; icon: string; label: string }> = [
-      { mode: 'Exercise', icon: 'bicycle-outline', label: t('Exercise Stats') },
-      { mode: 'Time', icon: 'barbell-outline', label: t('Workout Stats') },
-      { mode: 'Overall', icon: 'pie-chart-outline', label: t('Overall Stats') },
-    ];
-    return (
-      <View style={[styles.graphModeRibbon, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        {segments.map((segment, index) => {
-          const selected = graphMode === segment.mode;
-          return (
-            <TouchableOpacity
-              key={segment.mode}
-              style={[
-                styles.graphModeSegment,
-                index > 0 && { borderLeftWidth: 1, borderLeftColor: theme.border },
-                selected && { backgroundColor: theme.buttonBackground },
-              ]}
-              onPress={() => setGraphMode(segment.mode)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name={segment.icon} size={20} color={selected ? theme.buttonText : theme.text} />
-              <Text
-                style={[styles.graphModeSegmentText, { color: selected ? theme.buttonText : theme.text }]}
-                numberOfLines={2}
-              >
-                {segment.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    );
-  };
+  const renderGraphModeToggle = () => <GraphModeRibbon mode={graphMode} onChange={setGraphMode} />;
 
   // Inside the Progress tabs the page already scrolls, so the charts are laid out in a plain view.
   const Wrapper: any = embedded ? View : ScrollView;

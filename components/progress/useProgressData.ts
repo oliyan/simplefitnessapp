@@ -11,10 +11,16 @@ export interface ProgressData {
   sets: ProgSet[];
 }
 
-// Every finished session and its sets, reloaded each time the Progress tab comes into view.
+// The last result is kept for the whole session, so switching tabs shows the numbers at once and the
+// fresh ones replace them a moment later (no spinner, no jump).
+let cached: { sessions: ProgSession[]; sets: ProgSet[] } | null = null;
+
+// Every finished session and its sets, reloaded each time the screen comes into view.
 export default function useProgressData(): ProgressData {
   const db = useSQLiteContext();
-  const [state, setState] = useState<Omit<ProgressData, 'reload'>>({ loading: true, sessions: [], sets: [] });
+  const [state, setState] = useState<Omit<ProgressData, 'reload'>>(
+    cached ? { loading: false, ...cached } : { loading: true, sessions: [], sets: [] },
+  );
   const [tick, setTick] = useState(0);
 
   useFocusEffect(
@@ -41,7 +47,9 @@ export default function useProgressData(): ProgressData {
              ORDER BY w.workout_date, wl.weight_log_id;`,
           );
           if (!active) return;
-          setState({ loading: false, sessions, sets: rows.filter((r) => ids.has(r.logId)) });
+          const sets = rows.filter((r) => ids.has(r.logId));
+          cached = { sessions, sets };
+          setState({ loading: false, sessions, sets });
         } catch (error) {
           console.error('Error loading progress data:', error);
           if (active) setState((s) => ({ ...s, loading: false }));

@@ -350,3 +350,22 @@ export const monthReview = (
   };
 };
 
+
+// ---------------------------------------------------------------- home helpers
+
+export const partOfDay = (hour: number): string => (hour < 5 ? 'Hello' : hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : hour < 22 ? 'Good evening' : 'Hello');
+
+// About how long a workout takes: the average of past sessions of the same day when there are any
+// (stored in seconds), otherwise about two and a half minutes a set plus five to warm up.
+export const estimateMinutes = (sets: number, avgSeconds: number | null): number => {
+  if (avgSeconds && avgSeconds >= 600 && avgSeconds <= 4 * 3600) return Math.round(avgSeconds / 300) * 5;
+  return Math.max(10, Math.round((sets * 2.5 + 5) / 5) * 5);
+};
+
+// The first sentence of a note, kept short enough for a card.
+export const firstSentence = (text: string, max = 130): string => {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  const end = clean.search(/[.!?](\s|$)/);
+  const sentence = end > 0 ? clean.slice(0, end + 1) : clean;
+  return sentence.length > max ? `${sentence.slice(0, max - 3).trimEnd()}...` : sentence;
+};
