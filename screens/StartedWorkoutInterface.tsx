@@ -51,6 +51,8 @@ import { AutoSizeText, ResizeTextMode } from 'react-native-auto-size-text';
 import WeightSuggestionBadge from '../components/WeightSuggestionBadge';
 import RestRing from '../components/RestRing';
 import Celebration from '../components/Celebration';
+import { loadFinishStats, FinishStats } from '../utils/finishStats';
+import { formatKg } from '../utils/progressStats';
 import {
     DifficultyLevel,
     analyzeDifficultyAndSuggestWeight,
@@ -154,6 +156,7 @@ export default function StartedWorkoutInterface() {
   const [isCompletingSet, setIsCompletingSet] = useState(false);
   const [restTotal, setRestTotal] = useState(30);
   const [celebration, setCelebration] = useState<string | null>(null);
+  const [finishStats, setFinishStats] = useState<FinishStats | null>(null);
   const checkScale = useRef(new Animated.Value(0)).current;
 
   // Fixing a set that was already logged (weight and reps only).
@@ -1562,6 +1565,18 @@ export default function StartedWorkoutInterface() {
     );
   };
   
+  // When the workout is finished, work out what it added up to: kg lifted, new records, the week streak.
+  useEffect(() => {
+    if (timerState.workoutStage !== 'completed') return;
+    let active = true;
+    loadFinishStats(db, workout_log_id).then((stats) => {
+      if (active) setFinishStats(stats);
+    });
+    return () => {
+      active = false;
+    };
+  }, [timerState.workoutStage]);
+
   const renderCompletedScreen = () => {
     const loggedSets = allSets.filter(set => set.set_logged);
     
@@ -1592,8 +1607,35 @@ export default function StartedWorkoutInterface() {
               </Text>
               <Text style={[styles.completedStatLabel, { color: theme.text }]}>{t('setsCompleted')}</Text>
             </View>
+
+            {finishStats && finishStats.volume > 0 ? (
+              <View style={styles.completedStatItem}>
+                <Text style={[styles.completedStatValue, { color: theme.text }]}>{formatKg(finishStats.volume)}</Text>
+                <Text style={[styles.completedStatLabel, { color: theme.text }]}>kg lifted</Text>
+              </View>
+            ) : null}
           </View>
         </View>
+
+        {finishStats && finishStats.records.length > 0 ? (
+          <View style={[styles.finishNote, { backgroundColor: 'rgba(224,164,0,0.16)', borderColor: '#E0A400' }]}>
+            <Text style={{ color: theme.text, fontWeight: '800', fontSize: 16, marginBottom: 4 }}>
+              {finishStats.records.length === 1 ? 'A new record!' : `${finishStats.records.length} new records!`}
+            </Text>
+            {finishStats.records.slice(0, 4).map((r) => (
+              <Text key={r.name} style={{ color: theme.text, lineHeight: 22 }}>
+                {r.name}: {formatKg(r.wt)} kg x {r.reps}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+
+        {finishStats && finishStats.streak > 0 ? (
+          <Text style={{ color: theme.text, opacity: 0.8, textAlign: 'center', marginBottom: 12 }}>
+            {finishStats.streak === 1 ? 'Week 1 of your streak. A fine start.' : `${finishStats.streak} weeks in a row. Keep it going!`}
+            {finishStats.sessionsThisWeek > 1 ? `  ${finishStats.sessionsThisWeek} sessions this week.` : ''}
+          </Text>
+        ) : null}
 
         {noteText('finish') ? (
           <View style={[styles.finishNote, { backgroundColor: theme.accentSoft, borderColor: theme.accent }]}>
@@ -1608,6 +1650,13 @@ export default function StartedWorkoutInterface() {
           <Text style={[styles.buttonText, { color: theme.buttonText }]}>
             {t('workoutDoneButton')}
           </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ alignItems: 'center', paddingVertical: 12, minHeight: 44, justifyContent: 'center' }}
+          onPress={() => (navigation as any).navigate('My Progress')}
+          accessibilityRole="button"
+        >
+          <Text style={{ color: theme.accent, fontWeight: '800' }}>See my progress</Text>
         </TouchableOpacity>
       </View>
     );

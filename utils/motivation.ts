@@ -370,3 +370,30 @@ export const firstSentence = (text: string, max = 130): string => {
   const sentence = end > 0 ? clean.slice(0, end + 1) : clean;
   return sentence.length > max ? `${sentence.slice(0, max - 3).trimEnd()}...` : sentence;
 };
+
+// ---------------------------------------------------------------- finish screen
+
+export interface FinishStats {
+  volume: number; // kg lifted in this session
+  records: { name: string; wt: number; reps: number }[]; // new records set in this session
+  streak: number; // weeks in a row, counting this one
+  sessionsThisWeek: number;
+}
+
+// Pure part: what a just-finished session adds up to, given all the history including it.
+export const finishStatsFor = (sessions: ProgSession[], sets: ProgSet[], logId: number, today: Date, restWeeks: number[]): FinishStats | null => {
+  const me = sessions.find((s) => s.logId === logId);
+  if (!me) return null;
+  const mine = sets.filter((s) => s.logId === logId);
+  const records = recentRecords(sets, 1000)
+    .filter((r) => r.d === me.d)
+    .map((r) => ({ name: r.name, wt: r.wt, reps: r.reps }));
+  const rows = sessions.map((s) => ({ workout_log_id: s.logId, workout_date: s.d, workout_name: s.name, day_name: s.day, logged: 1 }));
+  const start = Math.floor(weekStart(today).getTime() / 1000);
+  return {
+    volume: totalVolume(mine),
+    records,
+    streak: weeklyStreak(rows, today, restWeeks),
+    sessionsThisWeek: sessions.filter((s) => s.d >= start).length,
+  };
+};

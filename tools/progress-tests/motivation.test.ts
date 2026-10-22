@@ -2,7 +2,7 @@
 import assert from 'assert';
 import {
   normaliseGoals, DEFAULT_GOALS, weeklyTarget, goalProgress, streakGuard, comeback, nextMilestone, findPlateau,
-  pickHomeCard, homeInsight, checklistSteps, monthReview, reviewMonthFor, weekKey, LiftGoal, partOfDay, estimateMinutes, firstSentence,
+  pickHomeCard, homeInsight, checklistSteps, monthReview, reviewMonthFor, weekKey, LiftGoal, partOfDay, estimateMinutes, firstSentence, finishStatsFor,
 } from '../../utils/motivation';
 import { weeklyStreak } from '../../utils/dashboardStats';
 import { badges, ProgSet, ProgSession } from '../../utils/progressStats';
@@ -163,5 +163,17 @@ assert.strictEqual(firstSentence('Keep your elbows tucked. Breathe out on the pu
 assert.strictEqual(firstSentence('No full stop here'), 'No full stop here');
 assert.ok(firstSentence('x'.repeat(300)).length <= 130);
 assert.strictEqual(firstSentence('  Spaces   and \n lines. More.  '), 'Spaces and lines.');
+
+// --- finish screen: the newest bench session (19 Oct, 43 kg) raised the record
+const lastLog = sessions.find((x) => x.d === day(2026, 10, 19))!;
+const fs = finishStatsFor(sessions, sets, lastLog.logId, WED, [])!;
+assert.strictEqual(fs.volume, 43 * 8 + 43 * 8 + 43 * 6);
+assert.strictEqual(fs.records.length, 1);
+assert.strictEqual(fs.records[0].name, 'Bench Press');
+assert.strictEqual(fs.streak, 4);
+assert.strictEqual(fs.sessionsThisWeek, 1);
+assert.strictEqual(finishStatsFor(sessions, sets, 999, WED, []), null, 'unknown session');
+const first = sessions.find((x) => x.d === day(2026, 9, 28))!;
+assert.strictEqual(finishStatsFor(sessions, sets, first.logId, WED, [])!.records.length, 0, 'the first time only sets the baseline');
 
 console.log('motivation: all checks passed');
