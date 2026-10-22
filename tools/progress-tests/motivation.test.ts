@@ -77,6 +77,7 @@ assert.strictEqual(gp.achieved, false);
 assert.strictEqual(gp.weeksLeft, 11); // 71 days, rounded up
 assert.strictEqual(gp.pace, 'on');
 assert.match(gp.sentence, /^43 of 50 kg, 42% of the way\. 11 weeks left, on track\.$/);
+assert.match(goalProgress({ ...goal, startValue: 43 }, sets, WED).sentence, /^Starting line: 43 kg, aiming for 50 kg\. 11 weeks left/);
 const behind = goalProgress({ ...goal, createdAt: day(2026, 8, 1), by: day(2026, 11, 15) }, sets, WED);
 assert.strictEqual(behind.pace, 'behind');
 assert.match(behind.sentence, /a little behind, still within reach\.$/);

@@ -101,7 +101,7 @@ export const goalProgress = (goal: LiftGoal, sets: ProgSet[], today: Date): Goal
   let sentence: string;
   if (achieved) sentence = `Goal reached: ${formatKg(best)} kg on ${goal.name}. Well done!`;
   else {
-    const head = `${formatKg(best)} of ${formatKg(goal.target)} kg, ${Math.round(pct * 100)}% of the way.`;
+    const head = pct <= 0 ? `Starting line: ${formatKg(best)} kg, aiming for ${formatKg(goal.target)} kg.` : `${formatKg(best)} of ${formatKg(goal.target)} kg, ${Math.round(pct * 100)}% of the way.`;
     if (weeksLeft === null) sentence = head;
     else if (goal.by! < now) sentence = `${head} The date has passed, and it is fine to move it.`;
     else sentence = `${head} ${weeksLeft} ${weeksLeft === 1 ? 'week' : 'weeks'} left, ${pace === 'on' ? 'on track' : 'a little behind, still within reach'}.`;

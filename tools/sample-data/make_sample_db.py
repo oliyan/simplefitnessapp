@@ -1,6 +1,6 @@
 """Builds a SimpleDB.db with about 12 weeks of believable workout history, for trying the Progress screens.
 
-    python make_sample_db.py out.db [days_back_for_last_session] [weeks]
+    python make_sample_db.py out.db [days_back_for_last_session] [weeks] [1 = schedule today's workout]
 
 Copy the file to the phone or emulator (adb push out.db /sdcard/Download/SimpleDB.db) and use
 Settings > Import data. It replaces everything in the app, so use a test install.
@@ -11,6 +11,7 @@ import sqlite3, sys, random, datetime
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'sample.db'
 LAST = int(sys.argv[2]) if len(sys.argv) > 2 else 0          # 0 = the newest session is today
 WEEKS = int(sys.argv[3]) if len(sys.argv) > 3 else 12        # how many weeks of history
+TODAY_PLAN = len(sys.argv) > 4 and sys.argv[4] == '1'         # also schedule today's (not yet done) workout
 TZ = datetime.timezone(datetime.timedelta(hours=5, minutes=30))   # the test emulator's zone (India, no DST); change to yours
 random.seed(7)
 
@@ -84,6 +85,12 @@ for idx, d in enumerate(sessions):
             db.execute('INSERT INTO Weight_Log (workout_log_id, logged_exercise_id, exercise_name, set_number, weight_logged, reps_logged, muscle_group) '
                        'VALUES (?, ?, ?, ?, ?, ?, ?)', (lid, lex, ename, s, wt, r, mg))
             n += 1
+if TODAY_PLAN:
+    d = datetime.datetime.now(TZ).date()
+    mid = int(datetime.datetime(d.year, d.month, d.day, tzinfo=TZ).timestamp())
+    cur = db.execute('INSERT INTO Workout_Log (workout_name, day_name, workout_date) VALUES (?, ?, ?)', (PLAN, 'Pull', mid))
+    for ename, sets, reps, mg, w0, step in DAYS['Pull']:
+        db.execute('INSERT INTO Logged_Exercises (workout_log_id, exercise_name, sets, reps, muscle_group) VALUES (?, ?, ?, ?, ?)', (cur.lastrowid, ename, sets, reps, mg))
 db.execute('PRAGMA user_version = 1')
 db.commit()
 print(len(sessions), 'sessions,', n, 'sets ->', OUT)

@@ -220,6 +220,8 @@ Do these during a workout, ideally one with at least three exercises. Set the re
 | WRK-20 | 🔴 | After finishing, open the workout from the calendar. | All logged sets are there, including extra ones and corrected ones. A renamed extra set appears under its own name. Sets Completed on the finish screen equals the number you logged. | ☐ | |
 | WRK-21 | 🟡 | Put the app in the background in the middle of typing a set, then come back. | The numbers you typed and your position are unchanged. | ☐ | |
 | WRK-22 | ⚪ | Do WRK-02, WRK-04 and WRK-08 in **dark theme**. | Chips, hints and the greyed-out button are readable. | ☐ | |
+| WRK-23 | 🔴 | Finish a workout in which you beat your best on an exercise. | The finish screen shows time, sets completed and **kg lifted**, a gold card "A new record!" (or "2 new records!") listing each lift, a line such as "9 weeks in a row. Keep it going!" (and "3 sessions this week" from the second), and a **See my progress** link that opens My Progress. **Done** still returns as before. | ☐ | |
+| WRK-24 | 🟡 | Finish a first-ever workout, or one without any new record. | No record card (the first time only sets the baseline); the streak line reads "Week 1 of your streak. A fine start." for a first week. | ☐ | |
 | RES-01 | 🔴 | Start a workout, log 2 sets, then leave (Back → Exit). Look at **Home** and the **calendar day**. | The session is **not** shown as Done. Home's Today card says **Resume workout**; the calendar day offers **Resume workout** (not just a log). The Exit message says your logged sets are saved. | ☐ | |
 | RES-02 | 🔴 | Tap **Resume workout**, then Start Workout. | The 2 logged sets are ticked (`✓1 ✓2`), you land on set 3, counts are right (`2/4`), and nothing is logged twice. The workout timer continues from the time you had before leaving (it does not restart at 00:00:00). | ☐ | |
 | RES-03 | 🔴 | Finish the workout with **Finish Workout**. The summary appears; leave it with Done **or** the Back button. | Home shows **Done ✓** for it and no Resume button remains. | ☐ | |
@@ -574,7 +576,7 @@ Happens every time?  (always / sometimes / once)
 | 7 Schedule a plan | 6 | | | |
 | 8 Calendar | 4 | | | |
 | 9 Doing a workout | 8 | | | |
-| 9A Workout screen (incl. RES) | 17 | | | |
+| 9A Workout screen (incl. RES) | 18 | | | |
 | 9B Look, feel, personal | 7 | | | |
 | 10A Goals and motivation | 5 | | | |
 | 10 Progress | 19 | | | |
@@ -582,4 +584,4 @@ Happens every time?  (always / sometimes / once)
 | 12-17 AI Coach | 15 | | | |
 | 18 Dark theme | 1 | | | |
 
-**Total 🔴 cases: 98.**
+**Total 🔴 cases: 99.**

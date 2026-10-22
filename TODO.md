@@ -17,22 +17,15 @@ Things we agreed to do later. Nothing here is started except where a heading say
 
 - Show the video link on the exercise name in the plan editor too.
 
-## My Progress page: make it welcoming and fun
+## My Progress, Home and motivation: built
 
-Status: **built** (Overview, Exercises, Charts and History tabs, a page per exercise). Test cases are `PRG-xx` in `docs/TEST_CASES.md` (section 10); the number crunching is checked by `node -r sucrase/register tools/progress-tests/progressStats.test.ts`; `tools/sample-data/make_sample_db.py` makes a believable history to look at it with.
+Status: **built**. What exists is described in the README (Feature tour and "Goals, streaks and motivation"). Test cases: `HOM-xx`, `PRG-xx` and `GOL-xx` in `docs/TEST_CASES.md`. The number crunching is checked by the scripts in `tools/progress-tests/`, and `tools/sample-data/make_sample_db.py` makes a believable history to look at it with.
 
-Done from the original brief:
-
-- Overview first: streak, sessions this week, badges, a plain sentence about the last 30 days, the week recap (shareable as a picture), a 12 week consistency grid, most improved and recent records, best lifts and body weight (moved up from the bottom), muscle balance with a front and back body map, ten calm milestones, a one-time celebration for a new record (off when the phone has "Remove animations" on).
-- Exercises: one searchable list with a tiny trend line and percent for each, muscle filter chips, and a page per exercise with a switch between estimated max, heaviest set and total lifted, time frame chips, a scrub chart (drag a finger), gold record dots, a trend line, faint dotted lines for breaks of two weeks or more, a plain sentence, a comparison with the period before, tiles, last session set by set, and records.
-- Charts tab keeps the full tools with plain names (Estimated max, Effort score, Each set, Duration), time frame buttons above the chart with 3 months as the default, the explanation behind an (i) button, a sentence under the chart, an opening view of the most recently trained lift, and colour-blind safe colours.
-- History tab with a visible delete button on each plan, friendly empty states, skeleton loaders, pull to refresh, one-time hints, 44 dp tap targets, screen reader labels.
-- Decisions: kg only, share is opt-in (the person taps Share and picks where it goes), badges stay calm and few.
+Done: Overview, Exercises, Charts (grouped by question) and History tabs; a page per exercise with a scrub chart, goal, comparison with the period before and stall tips; goals per lift with a dotted target line; a weekly goal that follows the plan; rest weeks; welcome back; next badge; "why I started"; month in review; a thinner Home that points into Progress; a richer finish screen; cached progress data; colour-blind safe colours; picture sharing that only happens when you tap Share.
 
 Still open:
 
-- A dotted target line on a chart "when one exists": the app has no target weight per exercise to draw, so it needs a target concept first.
-- Group the Charts tab's nine chart types into two or three friendly questions ("Am I getting stronger?", "Am I doing enough?", "Am I balanced?").
-- Split `screens/GraphsWorkoutDetails.tsx` (about 4,000 lines, the three modes repeat the same block) into one component per chart plus shared pieces, and cache the data between tab switches.
-- Coach voice for the progress text in builds that have one (the text is neutral today).
+- `screens/GraphsWorkoutDetails.tsx` is still about 4,000 lines. The ribbon, time frame buttons, help button and sentence are now small components in `components/progress/charts/`, but the chart renderers and their data code are still in the one file. Split them one chart at a time.
+- Coach voice for the Home and Progress cards in builds that have one (the card text is neutral today; only the note at the top of Home uses the sender's voice).
 - Watch real use: show it to 3 people who are not into fitness apps and see where they pause.
+- Ideas not built: progress photos (decided against for now), a weekly challenge, plateau tips that use the person's own notes.
