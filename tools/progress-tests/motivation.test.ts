@@ -62,7 +62,7 @@ assert.strictEqual(streakGuard([], THU, []), null);
 // --- comeback
 assert.strictEqual(comeback(sessions, WED), null, 'trained two days ago');
 const later = new Date(2026, 10, 12); // 24 days after 19 Oct
-assert.match(comeback(sessions, later)!.message, /^Welcome back! Start a little lighter/);
+assert.match(comeback(sessions, later)!.message, /^Start a little lighter/);
 assert.match(comeback(sessions, new Date(2026, 9, 31))!.message, /short break is nothing/);
 assert.match(comeback(sessions, new Date(2026, 11, 30))!.message, /long break/);
 assert.strictEqual(comeback([], WED), null);
@@ -144,6 +144,7 @@ assert.strictEqual(mr.topMuscle, 'chest');
 assert.strictEqual(mr.bestLift!.wt, 43);
 assert.match(mr.text, /^October so far on Urudhi\n3 sessions on 3 days\n/);
 assert.ok(!NOPE.test(mr.text));
+assert.strictEqual(mr.change, null, 'a partial month is not compared with a whole one');
 assert.strictEqual(monthReview(sessions, sets, new Date(2026, 10, 2), 2026, 9).partial, false);
 assert.strictEqual(monthReview([], [], WED, 2026, 9).sessions, 0);
 assert.strictEqual(weekKey(WED), day(2026, 10, 19));

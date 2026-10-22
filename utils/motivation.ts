@@ -151,10 +151,10 @@ export const comeback = (sessions: ProgSession[], today: Date): Comeback | null 
   if (days < 10) return null;
   const message =
     days >= 42
-      ? 'Welcome back. A long break is just part of the story. Start light today and let it come back to you.'
+      ? 'A long break is just part of the story. Start light today and let it come back to you.'
       : days >= 21
-        ? 'Welcome back! Start a little lighter than you left off. Your body remembers more than you think.'
-        : 'Welcome back! A short break is nothing. Ease in today and the rhythm returns.';
+        ? 'Start a little lighter than you left off. Your body remembers more than you think.'
+        : 'A short break is nothing. Ease in today and the rhythm returns.';
   return { days, message };
 };
 
@@ -265,8 +265,8 @@ export const pickHomeCard = ({ sessions, sets, today, goals, doneToday }: HomeCa
 };
 
 // One line for Home's progress card.
-export const homeInsight = (sessions: ProgSession[], sets: ProgSet[], today: Date, restWeeks: number[]): string => {
-  const fresh: PersonalRecord | null = freshRecord(sets, today);
+export const homeInsight = (sessions: ProgSession[], sets: ProgSet[], today: Date, restWeeks: number[], skipRecord = false): string => {
+  const fresh: PersonalRecord | null = skipRecord ? null : freshRecord(sets, today);
   if (fresh) return `New record: ${fresh.name}, ${formatKg(fresh.wt)} kg x ${fresh.reps}.`;
   const mi = mostImproved(sets, today);
   if (mi) return `${mi.name} is up ${Math.round(mi.pct)}% in the last 2 months.`;
@@ -332,8 +332,9 @@ export const monthReview = (
   const topMuscle = [...muscles.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
   let bestLift: MonthReview['bestLift'] = null;
   for (const s of st) if (s.wt > 0 && (!bestLift || s.wt > bestLift.wt)) bestLift = { name: s.name, wt: s.wt, reps: s.reps };
-  const change = percentChange(prevVolume, volume);
   const partial = seconds(midnight(today)) < to - DAY;
+  // A month still in progress is not compared with a whole one; that would always look like a drop.
+  const change = partial ? null : percentChange(prevVolume, volume);
   const label = MONTHS[month];
   const lines = [
     `${label}${partial ? ' so far' : ''} on ${signature}`,

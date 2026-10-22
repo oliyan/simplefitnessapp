@@ -223,6 +223,11 @@ export default function Home({ navigation }: any) {
               </Text>
             )}
           </View>
+          {target === 0 && (
+            <TouchableOpacity onPress={() => setGoalModal(true)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
+              <Text style={{ color: theme.accent, fontWeight: '800' }}>Set a weekly goal</Text>
+            </TouchableOpacity>
+          )}
           {target > 0 && (
             <TouchableOpacity onPress={() => setGoalModal(true)} accessibilityRole="button" accessibilityLabel="Change the weekly goal" style={{ padding: 4 }}>
               <Ring size={52} stroke={6} progress={done / target} color={done >= target ? '#28A745' : undefined}>
@@ -341,7 +346,7 @@ export default function Home({ navigation }: any) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ color: theme.text, fontWeight: '800', fontSize: 16 }}>Your progress</Text>
-              <Text style={{ color: theme.text, opacity: 0.8, lineHeight: 20, marginTop: 2 }}>{homeInsight(sessions, sets, today, goals.restWeeks)}</Text>
+              <Text style={{ color: theme.text, opacity: 0.8, lineHeight: 20, marginTop: 2 }}>{homeInsight(sessions, sets, today, goals.restWeeks, !!fresh)}</Text>
             </View>
             <View style={{ flexDirection: 'row', marginLeft: 10 }}>
               {grid.map((col, w) => (
