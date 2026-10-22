@@ -255,7 +255,7 @@ export interface Hero {
   sentence: string;
 }
 
-export const heroSummary = (sessions: ProgSession[], sets: ProgSet[], today: Date): Hero => {
+export const heroSummary = (sessions: ProgSession[], sets: ProgSet[], today: Date, restWeeks: number[] = []): Hero => {
   const rows: WorkoutRow[] = sessions.map((s) => ({ workout_log_id: s.logId, workout_date: s.d, workout_name: s.name, day_name: s.day, logged: 1 }));
   const startThis = seconds(weekStart(today));
   const todayTs = seconds(midnight(today));
@@ -276,7 +276,7 @@ export const heroSummary = (sessions: ProgSession[], sets: ProgSet[], today: Dat
   else if (volumeChange <= -1) sentence = `You lifted ${formatLifted(volume30)} in the last 30 days, a bit less than the 30 before. Easy weeks happen.`;
   else sentence = `You lifted ${formatLifted(volume30)} in the last 30 days, about the same as the 30 before.`;
   return {
-    streak: weeklyStreak(rows, today),
+    streak: weeklyStreak(rows, today, restWeeks),
     sessionsThisWeek: sessions.filter((s) => s.d >= startThis).length,
     volume30,
     volumePrev30,
@@ -405,11 +405,14 @@ export interface Badge {
   earned: boolean;
   icon: string;
   progress: string; // e.g. "7 of 10"
+  value: number; // how far along
+  goal: number; // what it takes
+  unit: string; // sessions, weeks, kg
 }
 
 export const totalVolume = (sets: ProgSet[]): number => sets.reduce((a, s) => a + s.wt * s.reps, 0);
 
-export const badges = (sessions: ProgSession[], sets: ProgSet[], today: Date): Badge[] => {
+export const badges = (sessions: ProgSession[], sets: ProgSet[], today: Date, restWeeks: number[] = []): Badge[] => {
   const n = sessions.length;
   const rows: WorkoutRow[] = sessions.map((s) => ({ workout_log_id: s.logId, workout_date: s.d, workout_name: s.name, day_name: s.day, logged: 1 }));
   const perWeek = new Map<number, number>();
@@ -426,22 +429,25 @@ export const badges = (sessions: ProgSession[], sets: ProgSet[], today: Date): B
     run = i > 0 && k - weekKeys[i - 1] === 7 * DAY ? run + 1 : 1;
     longest = Math.max(longest, run);
   });
-  const current = weeklyStreak(rows, today);
+  const current = weeklyStreak(rows, today, restWeeks);
   longest = Math.max(longest, current);
   const kg = totalVolume(sets);
   const hasRecord = recentRecords(sets, 1).length > 0;
   const of = (v: number, goal: number) => `${Math.min(v, goal).toLocaleString('en-US')} of ${goal.toLocaleString('en-US')}`;
+  const mk = (id: string, title: string, hint: string, earned: boolean, icon: string, value: number, goal: number, unit: string): Badge => ({
+    id, title, hint, earned, icon, progress: of(value, goal), value: Math.min(value, goal), goal, unit,
+  });
   return [
-    { id: 'first', title: 'First workout', hint: 'Log your first session', earned: n >= 1, icon: 'flag', progress: of(n, 1) },
-    { id: 'ten', title: '10 sessions', hint: 'Log 10 sessions', earned: n >= 10, icon: 'barbell', progress: of(n, 10) },
-    { id: 'twentyfive', title: '25 sessions', hint: 'Log 25 sessions', earned: n >= 25, icon: 'medal', progress: of(n, 25) },
-    { id: 'fifty', title: '50 sessions', hint: 'Log 50 sessions', earned: n >= 50, icon: 'ribbon', progress: of(n, 50) },
-    { id: 'fullweek', title: 'Full week', hint: 'Train 3 times in one week', earned: bestWeek >= 3, icon: 'calendar', progress: of(bestWeek, 3) },
-    { id: 'streak4', title: '4 weeks in a row', hint: 'Train in 4 weeks running', earned: longest >= 4, icon: 'flame', progress: of(longest, 4) },
-    { id: 'streak8', title: '8 weeks in a row', hint: 'Train in 8 weeks running', earned: longest >= 8, icon: 'bonfire', progress: of(longest, 8) },
-    { id: 'record', title: 'First record', hint: 'Lift more than your best on an exercise', earned: hasRecord, icon: 'trophy', progress: hasRecord ? '1 of 1' : '0 of 1' },
-    { id: 'tonne', title: 'One tonne', hint: 'Lift 1,000 kg in total', earned: kg >= 1000, icon: 'cube', progress: of(Math.round(kg), 1000) },
-    { id: 'tentonnes', title: 'Ten tonnes', hint: 'Lift 10,000 kg in total', earned: kg >= 10000, icon: 'planet', progress: of(Math.round(kg), 10000) },
+    mk('first', 'First workout', 'Log your first session', n >= 1, 'flag', n, 1, 'sessions'),
+    mk('ten', '10 sessions', 'Log 10 sessions', n >= 10, 'barbell', n, 10, 'sessions'),
+    mk('twentyfive', '25 sessions', 'Log 25 sessions', n >= 25, 'medal', n, 25, 'sessions'),
+    mk('fifty', '50 sessions', 'Log 50 sessions', n >= 50, 'ribbon', n, 50, 'sessions'),
+    mk('fullweek', 'Full week', 'Train 3 times in one week', bestWeek >= 3, 'calendar', bestWeek, 3, 'sessions'),
+    mk('streak4', '4 weeks in a row', 'Train in 4 weeks running', longest >= 4, 'flame', longest, 4, 'weeks'),
+    mk('streak8', '8 weeks in a row', 'Train in 8 weeks running', longest >= 8, 'bonfire', longest, 8, 'weeks'),
+    mk('record', 'First record', 'Lift more than your best on an exercise', hasRecord, 'trophy', hasRecord ? 1 : 0, 1, 'records'),
+    mk('tonne', 'One tonne', 'Lift 1,000 kg in total', kg >= 1000, 'cube', Math.round(kg), 1000, 'kg'),
+    mk('tentonnes', 'Ten tonnes', 'Lift 10,000 kg in total', kg >= 10000, 'planet', Math.round(kg), 10000, 'kg'),
   ];
 };
 
@@ -459,7 +465,7 @@ export interface Recap {
 }
 
 // The week so far if it has anything in it, otherwise the one before.
-export const weeklyRecap = (sessions: ProgSession[], sets: ProgSet[], today: Date, signature = 'Urudhi'): Recap => {
+export const weeklyRecap = (sessions: ProgSession[], sets: ProgSet[], today: Date, signature = 'Urudhi', restWeeks: number[] = []): Recap => {
   const thisStart = weekStart(today);
   const pick = (start: Date) => {
     const a = seconds(start);
@@ -477,7 +483,7 @@ export const weeklyRecap = (sessions: ProgSession[], sets: ProgSet[], today: Dat
   for (const s of w.st) if (s.wt > 0 && (!top || s.wt > top.wt)) top = { name: s.name, wt: s.wt, reps: s.reps };
   const volume = totalVolume(w.st);
   const rows: WorkoutRow[] = sessions.map((s) => ({ workout_log_id: s.logId, workout_date: s.d, workout_name: s.name, day_name: s.day, logged: 1 }));
-  const streak = weeklyStreak(rows, today);
+  const streak = weeklyStreak(rows, today, restWeeks);
   const lines = [
     `${label} on ${signature}`,
     `${w.ses.length} ${w.ses.length === 1 ? 'session' : 'sessions'}, ${w.st.length} sets`,

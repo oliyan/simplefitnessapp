@@ -7,6 +7,10 @@ import { useTheme } from '../context/ThemeContext';
 import { WeightLogStackParamList } from '../App';
 import useProgressData from '../components/progress/useProgressData';
 import ProgressChart from '../components/progress/ProgressChart';
+import Ring from '../components/goals/Ring';
+import GoalEditor from '../components/goals/GoalEditor';
+import useGoals from '../utils/useGoals';
+import { goalProgress, findPlateau, bestWeight, LiftGoal } from '../utils/motivation';
 import {
   MetricKind, FRAMES, FrameKey, exerciseSeries, inFrame, insightFor, isLoaded, metricHelp, metricLabel, metricUnit,
   formatKg, shortDate, percentChange, compareWithPrevious, compareSentence,
@@ -28,6 +32,8 @@ export default function ExerciseProgress() {
   const [metric, setMetric] = useState<MetricKind>('e1rm');
   const [frame, setFrame] = useState<FrameKey | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const { goals, update } = useGoals();
 
   useEffect(() => {
     if (!metrics.includes(metric)) setMetric(metrics[0]);
@@ -44,6 +50,14 @@ export default function ExerciseProgress() {
   const activeMetric = metrics.includes(metric) ? metric : metrics[0];
 
   const comparison = useMemo(() => compareWithPrevious(all, activeFrame, today), [all, activeFrame, today]);
+  const goal = goals.lifts.find((g) => g.name === name);
+  const gp = goal ? goalProgress(goal, own, today) : null;
+  const plateau = useMemo(() => findPlateau(own, today, goals.plateauHidden), [own, today, goals.plateauHidden]);
+  const saveGoal = (g: LiftGoal) => {
+    update({ lifts: [...goals.lifts.filter((x) => x.name !== name), g] });
+    setEditingGoal(false);
+    setMetric('weight');
+  };
   const records = useMemo(() => [...all].filter((p) => p.isRecord).reverse().slice(0, 5), [all]);
   const best = all.length ? all.reduce((a, b) => (b.v > a.v ? b : a)) : null;
   const last = all.length ? all[all.length - 1] : null;
@@ -116,11 +130,58 @@ export default function ExerciseProgress() {
                 <Text style={[muted, { marginTop: 8, textAlign: 'center' }]}>One session so far. Log it once more and a line appears.</Text>
               </View>
             ) : (
-              <ProgressChart points={points} metric={activeMetric} />
+              <ProgressChart points={points} metric={activeMetric} target={activeMetric === 'weight' ? goal?.target ?? null : null} />
             )}
             <Text style={{ color: theme.text, fontSize: 15, lineHeight: 21, marginTop: 12 }}>{insightFor(points, activeMetric)}</Text>
             {comparison && <Text style={[muted, { fontSize: 13, lineHeight: 19, marginTop: 6 }]}>{compareSentence(comparison, metricUnit(activeMetric))}</Text>}
           </View>
+
+          {loaded && (
+            <View style={card}>
+              <Text style={{ color: theme.text, fontWeight: '800', fontSize: 16, marginBottom: 8 }}>Goal</Text>
+              {goal && gp ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ring size={72} stroke={8} progress={gp.pct} color={gp.achieved ? '#28A745' : undefined}>
+                    <Text style={{ color: theme.text, fontWeight: '900' }}>{Math.round(gp.pct * 100)}%</Text>
+                  </Ring>
+                  <View style={{ flex: 1, marginLeft: 14 }}>
+                    <Text style={{ color: theme.text, fontWeight: '800' }}>{formatKg(goal.target)} kg on one set</Text>
+                    <Text style={[muted, { lineHeight: 19, marginTop: 2 }]}>{gp.sentence}</Text>
+                    <View style={{ flexDirection: 'row', marginTop: 6 }}>
+                      <TouchableOpacity onPress={() => setEditingGoal(true)} style={styles.linkButton}>
+                        <Text style={{ color: theme.accent, fontWeight: '800' }}>Edit</Text>
+                      </TouchableOpacity>
+                      {activeMetric !== 'weight' && (
+                        <TouchableOpacity onPress={() => setMetric('weight')} style={styles.linkButton}>
+                          <Text style={{ color: theme.accent, fontWeight: '800' }}>Show on chart</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View>
+                  <Text style={[muted, { lineHeight: 20 }]}>A number to aim for makes every session count. It shows as a dotted line on the Heaviest set chart.</Text>
+                  <TouchableOpacity onPress={() => setEditingGoal(true)} style={[styles.goalButton, { backgroundColor: theme.buttonBackground }]}>
+                    <Text style={{ color: theme.buttonText, fontWeight: '800' }}>Set a goal</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
+          {plateau && (
+            <View style={[card, { backgroundColor: theme.accentSoft }]}>
+              <Text style={{ color: theme.text, fontWeight: '800', fontSize: 16, marginBottom: 4 }}>A little stuck?</Text>
+              <Text style={{ color: theme.text, lineHeight: 20 }}>This has not gone up in about 4 weeks. That happens to everyone. {plateau.tip}</Text>
+              <TouchableOpacity
+                onPress={() => update({ plateauHidden: { ...goals.plateauHidden, [name]: Math.floor(Date.now() / 1000) + 28 * 86400 } })}
+                style={styles.linkButton}
+              >
+                <Text style={{ color: theme.accent, fontWeight: '800' }}>Hide this for 4 weeks</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={styles.statRow}>
             <Tile label="Best" value={best ? `${formatKg(best.v)} ${metricUnit(activeMetric)}` : '-'} sub={best ? shortDate(best.d) : ''} />
@@ -156,6 +217,18 @@ export default function ExerciseProgress() {
           )}
         </ScrollView>
       )}
+      <GoalEditor
+        visible={editingGoal}
+        exercise={name}
+        current={bestWeight(own, name)}
+        existing={goal}
+        onSave={saveGoal}
+        onRemove={() => {
+          update({ lifts: goals.lifts.filter((x) => x.name !== name) });
+          setEditingGoal(false);
+        }}
+        onClose={() => setEditingGoal(false)}
+      />
     </View>
   );
 
@@ -184,5 +257,7 @@ const styles = StyleSheet.create({
   info: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
   statRow: { flexDirection: 'row', marginBottom: 14 },
   tile: { flex: 1, borderWidth: 1, borderRadius: 16, padding: 12, marginRight: 8 },
+  linkButton: { paddingVertical: 10, paddingRight: 16, minHeight: 44, justifyContent: 'center' },
+  goalButton: { borderRadius: 16, paddingVertical: 12, alignItems: 'center', marginTop: 10, minHeight: 44, justifyContent: 'center' },
   setRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 7 },
 });

@@ -10,6 +10,10 @@ import {
   weeklyRecap, freshRecord, formatKg, shortDate, metricUnit, AREA_OF,
 } from '../../utils/progressStats';
 import ProgressHighlights from '../ProgressHighlights';
+import Ring from '../goals/Ring';
+import SimpleEditor from '../goals/SimpleEditor';
+import useGoals from '../../utils/useGoals';
+import { goalProgress, findPlateau, monthReview, reviewMonthFor, weekKey } from '../../utils/motivation';
 import Celebration from '../Celebration';
 import BodyMap from './BodyMap';
 import FirstVisitTip from './FirstVisitTip';
@@ -28,15 +32,24 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
   const today = useMemo(() => new Date(), []);
   const [celebration, setCelebration] = useState<string | null>(null);
   const recapRef = useRef<View>(null);
+  const monthRef = useRef<View>(null);
   const [capturing, setCapturing] = useState(false);
+  const [editingWhy, setEditingWhy] = useState(false);
+  const { goals, update } = useGoals();
+  const rest = goals.restWeeks;
+  const thisWeek = weekKey(today);
+  const resting = rest.includes(thisWeek);
 
-  const hero = useMemo(() => heroSummary(sessions, sets, today), [sessions, sets, today]);
+  const hero = useMemo(() => heroSummary(sessions, sets, today, rest), [sessions, sets, today, rest]);
   const grid = useMemo(() => consistencyGrid(sessions, sets, today, 12), [sessions, sets, today]);
   const records = useMemo(() => recentRecords(sets, 4), [sets]);
   const improved = useMemo(() => mostImproved(sets, today), [sets, today]);
   const loads = useMemo(() => muscleLoads(sets, today, 30), [sets, today]);
-  const shelf = useMemo(() => badges(sessions, sets, today), [sessions, sets, today]);
-  const recap = useMemo(() => weeklyRecap(sessions, sets, today, 'Urudhi'), [sessions, sets, today]);
+  const shelf = useMemo(() => badges(sessions, sets, today, rest), [sessions, sets, today, rest]);
+  const recap = useMemo(() => weeklyRecap(sessions, sets, today, 'Urudhi', rest), [sessions, sets, today, rest]);
+  const ym = reviewMonthFor(today);
+  const review = useMemo(() => monthReview(sessions, sets, today, ym.year, ym.month, 'Urudhi'), [sessions, sets, today]);
+  const plateau = useMemo(() => findPlateau(sets, today, goals.plateauHidden), [sets, today, goals.plateauHidden]);
 
   // Celebrate a new personal record once, the first time the page is opened after it happened.
   useEffect(() => {
@@ -65,15 +78,15 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
 
   // Shares the recap card as a picture; if the phone cannot, shares the same numbers as plain text.
   // Nothing leaves the phone until the person taps Share and picks where it goes.
-  const shareRecap = async () => {
+  const shareCard = async (ref: React.RefObject<View>, fallbackText: string, dialogTitle: string) => {
     try {
-      if (recapRef.current && (await Sharing.isAvailableAsync())) {
+      if (ref.current && (await Sharing.isAvailableAsync())) {
         // The Share button hides itself while the picture is taken, so it is not in the picture.
         setCapturing(true);
         await new Promise((resolve) => setTimeout(resolve, 80));
-        const uri = await captureRef(recapRef, { format: 'png', quality: 1 });
+        const uri = await captureRef(ref, { format: 'png', quality: 1 });
         setCapturing(false);
-        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Share your week' });
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle });
         return;
       }
     } catch (error) {
@@ -81,11 +94,13 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
       console.error('Sharing the picture failed, sharing text instead:', error);
     }
     try {
-      await Share.share({ message: recap.text });
+      await Share.share({ message: fallbackText });
     } catch (error) {
       console.error('Share failed:', error);
     }
   };
+  const shareRecap = () => shareCard(recapRef, recap.text, 'Share your week');
+  const shareMonth = () => shareCard(monthRef, review.text, 'Share your month');
 
   const heat = (level: number, future: boolean) => {
     if (future) return 'transparent';
@@ -123,6 +138,15 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
           </View>
         </View>
         <Text style={[styles.sentence, { color: theme.text }]}>{hero.sentence}</Text>
+        <TouchableOpacity
+          onPress={() => update({ restWeeks: resting ? rest.filter((w) => w !== thisWeek) : [...rest, thisWeek] })}
+          accessibilityRole="button"
+          style={{ marginTop: 8, minHeight: 44, justifyContent: 'center' }}
+        >
+          <Text style={{ color: theme.accent, fontWeight: '700' }}>
+            {resting ? 'Rest week is on, your streak is safe. Tap to undo.' : 'Ill or away this week? Mark it as a rest week.'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Weekly recap */}
@@ -146,6 +170,64 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
           </Text>
         )}
         <Text style={{ color: theme.accent, fontWeight: '800', fontSize: 12, textAlign: 'right', marginTop: 8 }}>Urudhi</Text>
+      </View>
+
+      {/* Month in review */}
+      <View ref={monthRef} collapsable={false} style={card}>
+        <View style={styles.rowBetween}>
+          <Text style={heading}>{review.label}{review.partial ? ' so far' : ' in review'}</Text>
+          <TouchableOpacity onPress={shareMonth} accessibilityRole="button" accessibilityLabel="Share this month" style={[styles.pill, { borderColor: theme.border, opacity: capturing ? 0 : 1 }]}>
+            <Ionicons name="share-social-outline" size={16} color={theme.accent} />
+            <Text style={{ color: theme.accent, fontWeight: '700', marginLeft: 6 }}>Share</Text>
+          </TouchableOpacity>
+        </View>
+        {review.sessions === 0 ? (
+          <Text style={muted}>No sessions in {review.label} yet. One workout is all it takes to start the month.</Text>
+        ) : (
+          <>
+            <View style={styles.statRow}>
+              <Stat value={String(review.sessions)} label={review.sessions === 1 ? 'session' : 'sessions'} color={theme.text} />
+              <Stat value={String(review.activeDays)} label="active days" color={theme.text} />
+              <Stat value={formatKg(review.volume)} label="kg lifted" color={theme.text} />
+              <Stat value={String(review.records)} label={review.records === 1 ? 'record' : 'records'} color={theme.text} />
+            </View>
+            {review.change !== null && Math.abs(review.change) >= 1 && (
+              <Text style={[muted, { marginTop: 8 }]}>{Math.abs(Math.round(review.change))}% {review.change > 0 ? 'more' : 'less'} lifted than the month before.</Text>
+            )}
+            {review.bestLift && <Text style={[muted, { marginTop: 4 }]}>Heaviest: {review.bestLift.name}, {formatKg(review.bestLift.wt)} kg x {review.bestLift.reps}</Text>}
+            {review.topMuscle && <Text style={[muted, { marginTop: 4 }]}>Most trained: {review.topMuscle}</Text>}
+          </>
+        )}
+        <Text style={{ color: theme.accent, fontWeight: '800', fontSize: 12, textAlign: 'right', marginTop: 8 }}>Urudhi</Text>
+      </View>
+
+      {/* Goals */}
+      <View style={card}>
+        <Text style={heading}>Goals</Text>
+        {goals.lifts.length === 0 ? (
+          <>
+            <Text style={muted}>A goal turns training into a game you can win. Pick a lift and a weight to aim for.</Text>
+            <TouchableOpacity onPress={onFindExercises} style={[styles.goalLink, { backgroundColor: theme.buttonBackground }]}>
+              <Text style={{ color: theme.buttonText, fontWeight: '800' }}>Choose an exercise</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          goals.lifts.slice(0, 4).map((g) => {
+            const p = goalProgress(g, sets, today);
+            return (
+              <TouchableOpacity key={g.name} onPress={() => onOpenExercise(g.name)} style={styles.goalRow} accessibilityRole="button">
+                <Ring size={52} stroke={6} progress={p.pct} color={p.achieved ? '#28A745' : undefined}>
+                  <Text style={{ color: theme.text, fontWeight: '800', fontSize: 12 }}>{Math.round(p.pct * 100)}%</Text>
+                </Ring>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={{ color: theme.text, fontWeight: '800' }} numberOfLines={1}>{g.name}</Text>
+                  <Text style={[muted, { fontSize: 13 }]} numberOfLines={2}>{p.sentence}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={theme.text} />
+              </TouchableOpacity>
+            );
+          })
+        )}
       </View>
 
       {/* Consistency */}
@@ -202,6 +284,13 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
         </View>
       )}
 
+      {plateau && (
+        <TouchableOpacity onPress={() => onOpenExercise(plateau.name)} style={[card, { backgroundColor: theme.accentSoft }]} accessibilityRole="button">
+          <Text style={heading}>A little stuck on {plateau.name}?</Text>
+          <Text style={{ color: theme.text, lineHeight: 20 }}>It has not gone up in about 4 weeks, which happens to everyone. {plateau.tip}</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Best lifts and body weight */}
       <ProgressHighlights />
 
@@ -220,6 +309,20 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
             <Text style={[styles.barValue, { color: theme.text }]}>{l.sets}</Text>
           </View>
         ))}
+      </View>
+
+      {/* Why I started */}
+      <View style={card}>
+        <View style={styles.rowBetween}>
+          <Text style={heading}>Why I started</Text>
+          <TouchableOpacity onPress={() => setEditingWhy(true)} accessibilityRole="button" style={[styles.pill, { borderColor: theme.border }]}>
+            <Ionicons name="create-outline" size={16} color={theme.accent} />
+            <Text style={{ color: theme.accent, fontWeight: '700', marginLeft: 6 }}>{goals.why ? 'Edit' : 'Write it'}</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={goals.why ? { color: theme.text, fontSize: 16, lineHeight: 23, fontStyle: 'italic' } : muted}>
+          {goals.why || 'Write down, in a line or two, why you are doing this. It will be here for the days you need a reminder.'}
+        </Text>
       </View>
 
       {/* Badges */}
@@ -243,6 +346,19 @@ export default function OverviewTab({ sessions, sets, onOpenExercise, onFindExer
           ))}
         </View>
       </View>
+
+      <SimpleEditor
+        visible={editingWhy}
+        title="Why I started"
+        hint="A line or two for the hard days. It stays on this phone."
+        initial={goals.why}
+        placeholder="For my health, for my kids, to feel strong..."
+        onSave={(v) => {
+          update({ why: v });
+          setEditingWhy(false);
+        }}
+        onClose={() => setEditingWhy(false)}
+      />
 
       <TouchableOpacity onPress={onFindExercises} style={[styles.linkButton, { backgroundColor: theme.buttonBackground }]}>
         <Text style={{ color: theme.buttonText, fontWeight: '800', fontSize: 16 }}>See each exercise</Text>
@@ -282,5 +398,7 @@ const styles = StyleSheet.create({
   badgeWrap: { flexDirection: 'row', flexWrap: 'wrap' },
   badge: { width: '20%', alignItems: 'center', marginBottom: 12, minHeight: 48 },
   badgeCircle: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  goalLink: { borderRadius: 16, paddingVertical: 12, alignItems: 'center', marginTop: 10, minHeight: 44, justifyContent: 'center' },
+  goalRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, minHeight: 56 },
   linkButton: { borderRadius: 16, paddingVertical: 14, alignItems: 'center', marginBottom: 20 },
 });

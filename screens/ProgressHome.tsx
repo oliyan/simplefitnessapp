@@ -13,6 +13,7 @@ import HistoryTab from '../components/progress/HistoryTab';
 import EmptyProgress from '../components/progress/EmptyProgress';
 import Skeleton from '../components/progress/Skeleton';
 import GraphsWorkoutDetails from './GraphsWorkoutDetails';
+import useGoals from '../utils/useGoals';
 
 type Nav = StackNavigationProp<WeightLogStackParamList, 'ProgressHome'>;
 type TabKey = 'overview' | 'exercises' | 'charts' | 'history';
@@ -31,6 +32,12 @@ export default function ProgressHome() {
   const { loading, sessions, sets, reload } = useProgressData();
   const [tab, setTab] = useState<TabKey>('overview');
   const [refreshing, setRefreshing] = useState(false);
+  const { goals, ready, update } = useGoals();
+
+  // Remembers that the person has looked here, for the first-week checklist on Home.
+  useEffect(() => {
+    if (ready && !goals.progressVisited) update({ progressVisited: true });
+  }, [ready]);
 
   useEffect(() => {
     (async () => {

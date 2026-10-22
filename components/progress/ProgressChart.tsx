@@ -8,6 +8,7 @@ interface Props {
   points: SeriesPoint[];
   metric: MetricKind;
   height?: number;
+  target?: number | null; // a goal, drawn as a dotted line (only for kg metrics)
 }
 
 const PAD_L = 40;
@@ -17,7 +18,7 @@ const PAD_B = 24;
 
 // One value per session. Press and drag a finger along the chart to read each session; the
 // personal records are drawn as larger gold dots, and a faint dashed line shows the overall direction.
-export default function ProgressChart({ points, metric, height = 220 }: Props) {
+export default function ProgressChart({ points, metric, height = 220, target = null }: Props) {
   const { theme } = useTheme();
   const [width, setWidth] = useState(300);
   const [active, setActive] = useState<number | null>(null);
@@ -26,6 +27,8 @@ export default function ProgressChart({ points, metric, height = 220 }: Props) {
   const geometry = useMemo(() => {
     if (points.length === 0) return { min: 0, max: 1, xs: [] as number[], y: (_v: number) => 0, innerH: 0 };
     const vs = points.map((p) => p.v);
+    // A goal joins the chart's range, unless it is so far away it would flatten the line.
+    if (target && target <= Math.max(...vs) * 1.6) vs.push(target);
     let min = Math.min(...vs);
     let max = Math.max(...vs);
     if (min === max) {
@@ -43,7 +46,7 @@ export default function ProgressChart({ points, metric, height = 220 }: Props) {
     const xs = points.map((p) => (points.length === 1 ? PAD_L + innerW / 2 : PAD_L + ((p.d - t0) / spanT) * innerW));
     const y = (v: number) => PAD_T + (1 - (v - min) / (max - min)) * innerH;
     return { min, max, xs, y, innerH };
-  }, [points, width, height]);
+  }, [points, width, height, target]);
 
   const nearest = (x: number) => {
     let best = 0;
@@ -76,6 +79,7 @@ export default function ProgressChart({ points, metric, height = 220 }: Props) {
 
   if (points.length === 0) return null;
   const { min, max, xs, y } = geometry;
+  const showTarget = !!target && target <= Math.max(...points.map((p) => p.v)) * 1.6;
   const trend = trendLine(points);
   const ticks = [0, 0.5, 1].map((f) => min + f * (max - min));
   const dense = points.length > 30; // many sessions: smaller dots so the line stays readable
@@ -97,6 +101,14 @@ export default function ProgressChart({ points, metric, height = 220 }: Props) {
           {trend && (
             <Line x1={xs[0]} y1={y(trend[0])} x2={xs[xs.length - 1]} y2={y(trend[1])} stroke={theme.accent} strokeOpacity={0.4} strokeWidth={2} strokeDasharray="6 5" />
           )}
+          {showTarget && target ? (
+            <>
+              <Line x1={PAD_L} x2={width - PAD_R} y1={y(target)} y2={y(target)} stroke="#E0A400" strokeWidth={2} strokeDasharray="2 6" strokeLinecap="round" />
+              <SvgText x={width - PAD_R} y={y(target) - 5} fontSize={11} fontWeight="bold" fill="#E0A400" textAnchor="end">
+                {`Goal ${formatKg(target)}`}
+              </SvgText>
+            </>
+          ) : null}
           {points.slice(1).map((pt, k) => {
             const i = k + 1;
             // A break of two weeks or more (rest, travel, illness) is drawn faint and dashed, not as a steep climb.

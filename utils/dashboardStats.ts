@@ -69,16 +69,21 @@ export const buildWeek = (rows: WorkoutRow[], today: Date): WeekCell[] => {
 
 // Weeks in a row (Monday to Sunday) with at least one logged session. A week that has
 // just started with nothing logged yet does not break a streak from the weeks before it.
-export const weeklyStreak = (rows: WorkoutRow[], today: Date): number => {
+// `restWeeks` are Mondays (Unix seconds) the person marked as a rest week: such a week keeps the
+// streak alive without adding to it, so an illness or a trip does not wipe out a long run.
+export const weeklyStreak = (rows: WorkoutRow[], today: Date, restWeeks: number[] = []): number => {
   const weeksWithLogs = new Set<number>();
   for (const r of rows) {
     if (r.logged) weeksWithLogs.add(toSeconds(weekStart(new Date(r.workout_date * 1000))));
   }
+  const rest = new Set(restWeeks);
   let cursor = weekStart(today);
-  if (!weeksWithLogs.has(toSeconds(cursor))) cursor = addDays(cursor, -7);
+  if (!weeksWithLogs.has(toSeconds(cursor)) && !rest.has(toSeconds(cursor))) cursor = addDays(cursor, -7);
   let streak = 0;
-  while (weeksWithLogs.has(toSeconds(cursor))) {
-    streak++;
+  for (;;) {
+    const key = toSeconds(cursor);
+    if (weeksWithLogs.has(key)) streak++;
+    else if (!rest.has(key)) break;
     cursor = addDays(cursor, -7);
   }
   return streak;
